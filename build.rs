@@ -16,11 +16,11 @@ fn main() -> anyhow::Result<()> {
         // Future; might be possible once https://github.com/rust-lang/cargo/issues/9096 hits Cargo nightly:
         //let ulp_elf = PathBuf::from(env::var_os("CARGO_BIN_FILE_RUST_ESP32_ULP_BLINK_rust_esp32_ulp_blink").unwrap());
 
-        let ulp_elf = PathBuf::from("ulp").join("rust-esp32-ulp-blink");
-        symgen::run(&ulp_elf, 0x5000_0000)?; // This is where the RTC Slow Mem is mapped within the ESP32-S2 memory space
-        bingen::run(&ulp_elf)?;
+        //let ulp_elf = PathBuf::from("ulp").join("rust-esp32-ulp-blink");
+        //symgen::run(&ulp_elf, 0x5000_0000)?; // This is where the RTC Slow Mem is mapped within the ESP32-S2 memory space
+        //bingen::run(&ulp_elf)?;
 
-        cargo::track_file(ulp_elf);
+        //cargo::track_file(ulp_elf);
     }
 
     cfg.output();
