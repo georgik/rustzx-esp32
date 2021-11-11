@@ -1,7 +1,3 @@
-[toolchain]
-channel = "esp-1.56.0.1"
-targets = [ "riscv32imc-esp-espidf" ]
-
 [build]
 # Uncomment the relevant target for your chip here (ESP32, ESP32-S2, ESP32-S3 or ESP32-C3)
 #target = "xtensa-esp32-espidf"
