@@ -4,7 +4,8 @@ use rustzx_core::{
     zx::video::colors::{ZXBrightness, ZXColor},
 };
 
-const RGBA_PIXEL_SIZE: usize = 4;
+// const RGBA_PIXEL_SIZE: usize = 4;
+const RGBA_PIXEL_SIZE: usize = 2;
 
 #[derive(Clone)]
 pub struct FrameBufferContext;

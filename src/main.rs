@@ -78,9 +78,10 @@ use embedded_graphics::{
 
 
 
-
+const BUILD_TIME : &str = include!(concat!(env!("OUT_DIR"), "/timestamp.txt"));
 
 fn main() -> Result<()> {
+    println!("Build timestamp: {}", BUILD_TIME);
     esp_idf_sys::link_patches();
 
     test_print();
@@ -109,14 +110,14 @@ fn main() -> Result<()> {
     let sclk= pins.gpio6;
     let sdo=pins.gpio7;
     let cs=pins.gpio5;
- 
+
     let config = <spi::config::Config as Default>::default()
         .baudrate(80.MHz().into())
         .bit_order(spi::config::BitOrder::MSBFirst);
- 
+
     let mut backlight = backlight.into_output()?;
     backlight.set_high()?;
- 
+
     println!("Initializing SPI");
     let di = SPIInterfaceNoCS::new(
         spi::Master::<spi::SPI3, _, _, _, _>::new(
@@ -131,19 +132,18 @@ fn main() -> Result<()> {
         )?,
         dc.into_output()?,
     );
- 
+
     let reset = rst.into_output()?;
- 
+
     println!("Initializing display driver");
     let mut display = st7789::ST7789::new(di, reset, 240, 240);
 
     AnyError::<st7789::Error<_>>::wrap(|| {
         display.init(&mut delay::Ets)?;
         display.set_orientation(st7789::Orientation::Landscape)?;
- 
-        println!("Clearing display to red color");
-        display.clear(Rgb565::RED.into())
- 
+
+        println!("Clearing display");
+        display.clear(Rgb565::WHITE.into())
     });
 
     println!("Spawning emulator thread");
@@ -171,9 +171,8 @@ fn main() -> Result<()> {
        println!("Sending image to display");
        let raw_image = ImageRaw::<Rgb565>::new(data, 256);
 
-       let image = Image::new(&raw_image, Point::zero());
-       image.draw(&mut display)
-       // display.draw(data);
+       let sub_image = raw_image.sub_image(&Rectangle::new(Point::new(0, 0), Size::new(240, 192)));
+       Image::new(&sub_image, Point::new(0, 0)).draw(&mut display)
    });
 
 //    thread::spawn(move||{
@@ -187,12 +186,9 @@ fn main() -> Result<()> {
        AnyError::<st7789::Error<_>>::wrap(|| {
            let data = emulator.screen_buffer().rgba_data();
            let raw_image = ImageRaw::<Rgb565>::new(data, 256);
-
-           let image = Image::new(&raw_image, Point::zero());
-           image.draw(&mut display)
-           // display.draw(data);
+           let sub_image = raw_image.sub_image(&Rectangle::new(Point::new(0, 0), Size::new(240, 192)));
+           Image::new(&sub_image, Point::new(0, 0)).draw(&mut display)
        });
-       
 
    }
 //    println!("Leaving emulator loop");
