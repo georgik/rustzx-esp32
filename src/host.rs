@@ -32,6 +32,15 @@ pub(crate) struct Esp32HostContext<D: DrawTarget> {
     color_conv: fn(ZXColor, ZXBrightness) -> D::Color,
 }
 
+impl<D: DrawTarget> Esp32HostContext<D> {
+    pub(crate) fn new(display: Rc<D>, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Self {
+        Self {
+            display,
+            color_conv,
+        }
+    }
+}
+
 impl<D: DrawTarget> Clone for Esp32HostContext<D> {
     fn clone(&self) -> Self {
         Self {
@@ -53,8 +62,8 @@ where
     }
 }
 
-struct EmbeddedGraphicsFrameBuffer<D: DrawTarget> {
-    display: Rc<D>,
+pub(crate) struct EmbeddedGraphicsFrameBuffer<D: DrawTarget> {
+    display: Option<Rc<D>>,
     color_conv: fn(ZXColor, ZXBrightness) -> D::Color,
 }
 
@@ -68,21 +77,27 @@ where
     fn new(
         _width: usize,
         _height: usize,
-        _source: FrameBufferSource,
+        source: FrameBufferSource,
         context: Self::Context,
     ) -> Self {
         Self {
-            display: context.display,
+            display: if matches!(source, FrameBufferSource::Border) {
+                Some(context.display)
+            } else {
+                None
+            },
             color_conv: context.color_conv,
         }
     }
 
     fn set_color(&mut self, x: usize, y: usize, color: ZXColor, brightness: ZXBrightness) {
-        Pixel(
-            Point::new(x as i32, y as i32),
-            (self.color_conv)(color, brightness),
-        )
-        .draw(Rc::<D>::get_mut(&mut self.display).unwrap())
-        .unwrap();
+        if let Some(display) = self.display.as_mut() {
+            Pixel(
+                Point::new(x as i32, y as i32),
+                (self.color_conv)(color, brightness),
+            )
+            .draw(Rc::<D>::get_mut(display).unwrap())
+            .unwrap();
+        }
     }
 }

@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 #[cfg(all(feature = "kaluga_ili9341", not(esp32s2)))]
 compile_error!(
     "The `kaluga_ili9341` feature can only be built for the `xtensa-esp32s2-espidf` target."
@@ -54,7 +56,7 @@ use st7789;
 macro_rules! create {
     ($peripherals:expr) => {{
         #[cfg(feature = "ttgo")]
-        let result = ttgo_create_display(
+        let result = display::ttgo_create_display(
             $peripherals.pins.gpio4,
             $peripherals.pins.gpio16,
             $peripherals.pins.gpio23,
@@ -65,7 +67,7 @@ macro_rules! create {
         );
 
         #[cfg(feature = "heltec")]
-        let result = heltec_create_display(
+        let result = display::heltec_create_display(
             $peripherals.pins.gpio16,
             $peripherals.i2c0,
             $peripherals.pins.gpio4,
@@ -73,7 +75,7 @@ macro_rules! create {
         );
 
         #[cfg(feature = "esp32s3_usb_otg")]
-        let result = esp32s3_usb_otg_create_display(
+        let result = display::esp32s3_usb_otg_create_display(
             $peripherals.pins.gpio9,
             $peripherals.pins.gpio4,
             $peripherals.pins.gpio8,
@@ -84,7 +86,7 @@ macro_rules! create {
         );
 
         #[cfg(feature = "kaluga_ili9341")]
-        let result = kaluga_create_display_ili9341(
+        let result = display::kaluga_create_display_ili9341(
             $peripherals.pins.gpio6,
             $peripherals.pins.gpio13,
             $peripherals.pins.gpio16,
@@ -95,7 +97,7 @@ macro_rules! create {
         );
 
         #[cfg(feature = "kaluga_st7789")]
-        let result = kaluga_create_display_st7789(
+        let result = display::kaluga_create_display_st7789(
             $peripherals.pins.gpio6,
             $peripherals.pins.gpio13,
             $peripherals.pins.gpio16,
@@ -125,9 +127,9 @@ pub(crate) fn ttgo_create_display(
         SPIInterfaceNoCS<
             spi::Master<
                 spi::SPI2,
-                gpio::Gpio18<gpio::Output>,
-                gpio::Gpio19<gpio::Output>,
-                gpio::Gpio21<gpio::Input>,
+                gpio::Gpio18<gpio::Unknown>,
+                gpio::Gpio19<gpio::Unknown>,
+                gpio::Gpio21<gpio::Unknown>,
                 gpio::Gpio5<gpio::Unknown>,
             >,
             gpio::Gpio16<gpio::Output>,
@@ -172,14 +174,16 @@ pub(crate) fn ttgo_create_display(
         .map_err(AnyError::into)?;
 
     // The TTGO board's screen does not start at offset 0x0, and the physical size is 135x240, instead of 240x320
-    let top_left = Point::new(52, 40);
+    /*let top_left = Point::new(52, 40);
     let size = Size::new(135, 240);
 
     Ok(
         display.cropped(&embedded_graphics::primitives::Rectangle::new(
             top_left, size,
         )),
-    )
+    )*/
+
+    Ok(display)
 }
 
 #[cfg(feature = "kaluga_ili9341")]

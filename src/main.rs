@@ -36,7 +36,7 @@ fn main() -> Result<()> {
     emulate_zx(display::create!(peripherals)?, display::color_conv)
 }
 
-fn emulate_zx<D>(display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Result<()>
+fn emulate_zx<D>(mut display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Result<()>
 where
     D: DrawTarget + Dimensions + Send + 'static,
     D::Error: core::fmt::Debug,
@@ -58,10 +58,7 @@ where
 
     let mut emulator: Emulator<host::Esp32Host<D>> = Emulator::new(
         settings,
-        host::Esp32HostContext {
-            display: Rc::new(display),
-            color_conv,
-        },
+        host::Esp32HostContext::new(Rc::new(display), color_conv),
     )
     .map_err(AnyError::into)?;
 
