@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::time::SystemTime;
+use std::time::Instant;
 
 use log::*;
 
@@ -46,7 +46,7 @@ impl EmbeddedGraphicsFrameBuffer {
         display: &mut D,
         color_conv: fn(ZXColor, ZXBrightness) -> D::Color,
     ) -> Result<(), D::Error> {
-        let start_time = SystemTime::now();
+        let start_time = Instant::now();
 
         let mut changed = self.changed.borrow_mut();
 
@@ -77,10 +77,9 @@ impl EmbeddedGraphicsFrameBuffer {
             }
         }
 
-        if let Ok(elapsed) = start_time.elapsed() {
-            if elapsed.as_millis() > 50 {
-                info!("Screen blit took {}ms - slow", elapsed.as_millis());
-            }
+        let elapsed = start_time.elapsed();
+        if elapsed.as_millis() > 50 {
+            info!("Screen blit took {}ms - slow", elapsed.as_millis());
         }
 
         Ok(())
