@@ -56,11 +56,9 @@ where
         load_default_rom: true,
     };
 
-    let mut emulator: Emulator<host::Esp32Host<D>> = Emulator::new(
-        settings,
-        host::Esp32HostContext::new(Rc::new(display), color_conv),
-    )
-    .map_err(AnyError::into)?;
+    let mut emulator: Emulator<host::Esp32Host<D>> =
+        Emulator::new(settings, host::Esp32HostContext::new(display, color_conv))
+            .map_err(AnyError::into)?;
 
     info!("Entering emulator loop");
 
@@ -71,9 +69,9 @@ where
             .emulate_frames(MAX_FRAME_TIME)
             .map_err(AnyError::into)?;
 
-        trace!("loop: {}", emulator_dt.as_millis());
+        info!("loop: {}", emulator_dt.as_millis());
 
         // Yield
-        thread::sleep(Duration::from_secs(0));
+        //thread::sleep(Duration::from_secs(0));
     }
 }

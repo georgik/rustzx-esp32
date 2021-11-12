@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
@@ -28,14 +29,14 @@ where
 }
 
 pub(crate) struct Esp32HostContext<D: DrawTarget> {
-    display: Rc<D>,
+    display: Rc<RefCell<D>>,
     color_conv: fn(ZXColor, ZXBrightness) -> D::Color,
 }
 
 impl<D: DrawTarget> Esp32HostContext<D> {
-    pub(crate) fn new(display: Rc<D>, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Self {
+    pub(crate) fn new(display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Self {
         Self {
-            display,
+            display: Rc::new(RefCell::new(display)),
             color_conv,
         }
     }
@@ -63,7 +64,7 @@ where
 }
 
 pub(crate) struct EmbeddedGraphicsFrameBuffer<D: DrawTarget> {
-    display: Option<Rc<D>>,
+    display: Option<Rc<RefCell<D>>>,
     color_conv: fn(ZXColor, ZXBrightness) -> D::Color,
 }
 
@@ -81,7 +82,7 @@ where
         context: Self::Context,
     ) -> Self {
         Self {
-            display: if matches!(source, FrameBufferSource::Border) {
+            display: if matches!(source, FrameBufferSource::Screen) {
                 Some(context.display)
             } else {
                 None
@@ -92,11 +93,13 @@ where
 
     fn set_color(&mut self, x: usize, y: usize, color: ZXColor, brightness: ZXBrightness) {
         if let Some(display) = self.display.as_mut() {
+            let mut display = display.borrow_mut();
+
             Pixel(
                 Point::new(x as i32, y as i32),
                 (self.color_conv)(color, brightness),
             )
-            .draw(Rc::<D>::get_mut(display).unwrap())
+            .draw(&mut *display)
             .unwrap();
         }
     }
