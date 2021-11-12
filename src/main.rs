@@ -1,6 +1,5 @@
 //#![feature(backtrace)]
 
-use std::rc::Rc;
 use std::{thread, time::*};
 
 use anyhow::*;
@@ -56,20 +55,30 @@ where
         load_default_rom: true,
     };
 
-    let mut emulator: Emulator<host::Esp32Host<D>> =
-        Emulator::new(settings, host::Esp32HostContext::new(display, color_conv))
-            .map_err(AnyError::into)?;
+    let mut emulator: Emulator<host::Esp32Host> =
+        Emulator::new(settings, host::Esp32HostContext {}).map_err(AnyError::into)?;
 
     info!("Entering emulator loop");
 
     loop {
-        const MAX_FRAME_TIME: Duration = Duration::from_millis(100);
+        const MAX_FRAME_DURATION: Duration = Duration::from_millis(2000);
 
-        let emulator_dt = emulator
-            .emulate_frames(MAX_FRAME_TIME)
+        let duration = emulator
+            .emulate_frames(MAX_FRAME_DURATION)
             .map_err(AnyError::into)?;
 
-        info!("loop: {}", emulator_dt.as_millis());
+        if duration > MAX_FRAME_DURATION {
+            info!(
+                "Emulation was constrained to {}ms, took {}ms",
+                MAX_FRAME_DURATION.as_millis(),
+                duration.as_millis()
+            );
+        }
+
+        emulator
+            .screen_buffer()
+            .blit(&mut display, color_conv)
+            .map_err(AnyError::into)?;
 
         // Yield
         //thread::sleep(Duration::from_secs(0));
