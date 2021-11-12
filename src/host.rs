@@ -23,7 +23,7 @@ where
     type Context = Esp32HostContext<D>;
     type EmulationStopwatch = InstantStopwatch;
     type FrameBuffer = EmbeddedGraphicsFrameBuffer<D>;
-    type TapeAsset = FileAsset;
+    type TapeAsset = FileAsset; // TODO
     type IoExtender = StubIoExtender;
 }
 

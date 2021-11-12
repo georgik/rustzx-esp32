@@ -26,7 +26,7 @@ compile_error!(
     feature = "heltec",
     feature = "esp32s3_usb_otg"
 )))]
-compile_error!("You have to define at exactly one board with a LED screen.");
+compile_error!("You have to define exactly one board with a LED screen using one of the features `ttgo`, `kaluga_ili9341`, `kaluga_st7789`, `esp32s3_usb_otg` or `heltec`.");
 
 use anyhow::*;
 use log::*;
@@ -45,7 +45,6 @@ use embedded_graphics::prelude::*;
 
 use ili9341;
 
-use rustzx_core::host::FrameBuffer;
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
 
@@ -53,9 +52,9 @@ use ssd1306::mode::DisplayConfig;
 use st7789;
 
 macro_rules! create {
-    ($peripherals:expr) => {
+    ($peripherals:expr) => {{
         #[cfg(feature = "ttgo")]
-        ttgo_create_display(
+        let result = ttgo_create_display(
             $peripherals.pins.gpio4,
             $peripherals.pins.gpio16,
             $peripherals.pins.gpio23,
@@ -63,18 +62,18 @@ macro_rules! create {
             $peripherals.pins.gpio18,
             $peripherals.pins.gpio19,
             $peripherals.pins.gpio5,
-        )
+        );
 
         #[cfg(feature = "heltec")]
-        heltec_create_display(
+        let result = heltec_create_display(
             $peripherals.pins.gpio16,
             $peripherals.i2c0,
             $peripherals.pins.gpio4,
             $peripherals.pins.gpio15,
-        )
+        );
 
         #[cfg(feature = "esp32s3_usb_otg")]
-        esp32s3_usb_otg_create_display(
+        let result = esp32s3_usb_otg_create_display(
             $peripherals.pins.gpio9,
             $peripherals.pins.gpio4,
             $peripherals.pins.gpio8,
@@ -82,10 +81,10 @@ macro_rules! create {
             $peripherals.pins.gpio6,
             $peripherals.pins.gpio7,
             $peripherals.pins.gpio5,
-        )
+        );
 
         #[cfg(feature = "kaluga_ili9341")]
-        kaluga_create_display_ili9341(
+        let result = kaluga_create_display_ili9341(
             $peripherals.pins.gpio6,
             $peripherals.pins.gpio13,
             $peripherals.pins.gpio16,
@@ -93,10 +92,10 @@ macro_rules! create {
             $peripherals.pins.gpio15,
             $peripherals.pins.gpio9,
             $peripherals.pins.gpio11,
-        )
+        );
 
         #[cfg(feature = "kaluga_st7789")]
-        kaluga_create_display_st7789(
+        let result = kaluga_create_display_st7789(
             $peripherals.pins.gpio6,
             $peripherals.pins.gpio13,
             $peripherals.pins.gpio16,
@@ -104,19 +103,13 @@ macro_rules! create {
             $peripherals.pins.gpio15,
             $peripherals.pins.gpio9,
             $peripherals.pins.gpio11,
-        )
-    };
+        );
+
+        result
+    }};
 }
 
-macro_rules! color_conv {
-    ($peripherals:expr) => {
-        #[cfg(any(feature = "ttgo", feature = "esp32s3_usb_otg", feature = "kaluga_ili9341", feature = "kaluga_st7789"))]
-        to_565_color
-
-        #[cfg(feature = "heltec")]
-        to_mono_color
-    };
-}
+pub(crate) use create;
 
 #[cfg(feature = "ttgo")]
 pub(crate) fn ttgo_create_display(
@@ -438,7 +431,13 @@ pub(crate) fn esp32s3_usb_otg_create_display(
     Ok(display)
 }
 
-fn to_565_color(color: ZXColor, _brightness: ZXBrightness) -> Rgb565 {
+#[cfg(any(
+    feature = "ttgo",
+    feature = "esp32s3_usb_otg",
+    feature = "kaluga_ili9341",
+    feature = "kaluga_st7789"
+))]
+pub(crate) fn color_conv(color: ZXColor, _brightness: ZXBrightness) -> Rgb565 {
     match color {
         ZXColor::Black => Rgb565::BLACK,
         ZXColor::Blue => Rgb565::BLUE,
@@ -451,7 +450,8 @@ fn to_565_color(color: ZXColor, _brightness: ZXBrightness) -> Rgb565 {
     }
 }
 
-fn to_mono_color(color: ZXColor, _brightness: ZXBrightness) -> BinaryColor {
+#[cfg(feature = "heltec")]
+pub(crate) fn color_conv(color: ZXColor, _brightness: ZXBrightness) -> BinaryColor {
     match color {
         ZXColor::Black | ZXColor::Blue | ZXColor::Purple => BinaryColor::Off,
         _ => BinaryColor::On,

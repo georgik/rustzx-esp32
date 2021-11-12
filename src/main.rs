@@ -33,7 +33,7 @@ fn main() -> Result<()> {
 
     let peripherals = Peripherals::take().unwrap();
 
-    emulate_zx(display::create!(peripherals)?, display::color_conv!())
+    emulate_zx(display::create!(peripherals)?, display::color_conv)
 }
 
 fn emulate_zx<D>(display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Result<()>

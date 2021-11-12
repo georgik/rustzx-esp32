@@ -1,17 +1,14 @@
 [package]
 name = "rustzx-esp32"
-version = "0.20.0"
+version = "0.2.0"
 authors = ["georgik"]
 edition = "2018"
 categories = ["embedded", "hardware-support"]
 keywords = ["embedded", "idf", "esp-idf", "esp32", "zx"]
-description = "Emulation of Spectrum ZX on ESP32"
+description = "Emulation of Spectrum ZX on the ESP32"
 repository = "https://github.com/georgik/rustzx-esp32"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-
-[patch.crates-io]
-esp-idf-hal = { path = "../esp-idf-hal" }
 
 [profile.dev]
 # symbols are nice and they don't increase the size on Flash
@@ -22,11 +19,10 @@ opt-level = "z"
 opt-level = "s"
 
 [features]
+default = ["ttgo"]
+
 # Enable this feature for the build to use ESP-IDF native tooling instead of PlatformIO under the hood
 native = ["esp-idf-sys/native"]
-
-# Enable this feature if you are building for QEMU
-qemu = []
 
 # Enable this feature in case you have a Kaluga ILI9341 board and would like to see a LED screen demo
 kaluga_ili9341 = []
@@ -46,8 +42,8 @@ esp32s3_usb_otg = []
 anyhow = {version = "1", features = ["backtrace"]}
 log = "0.4"
 esp-idf-sys = { version = "0.24", features = ["binstart"] }
-esp-idf-svc = "0.28"
-esp-idf-hal = "0.23"
+esp-idf-svc = "0.29"
+esp-idf-hal = "0.24"
 embedded-svc = "0.12"
 embedded-hal = "0.2"
 embedded-graphics = "0.7"
