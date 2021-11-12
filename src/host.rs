@@ -2,6 +2,8 @@ use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
+use log::*;
+
 use embedded_graphics::prelude::*;
 
 use rustzx_core::host::FrameBuffer;
@@ -66,6 +68,8 @@ where
 pub(crate) struct EmbeddedGraphicsFrameBuffer<D: DrawTarget> {
     display: Option<Rc<RefCell<D>>>,
     color_conv: fn(ZXColor, ZXBrightness) -> D::Color,
+    buffer: Vec<ZXColor>,
+    buffer_width: usize,
 }
 
 impl<D> FrameBuffer for EmbeddedGraphicsFrameBuffer<D>
@@ -75,32 +79,49 @@ where
 {
     type Context = Esp32HostContext<D>;
 
-    fn new(
-        _width: usize,
-        _height: usize,
-        source: FrameBufferSource,
-        context: Self::Context,
-    ) -> Self {
-        Self {
-            display: if matches!(source, FrameBufferSource::Screen) {
-                Some(context.display)
-            } else {
-                None
+    fn new(width: usize, height: usize, source: FrameBufferSource, context: Self::Context) -> Self {
+        match source {
+            FrameBufferSource::Screen => {
+                let mut buffer: Vec<ZXColor> = Vec::new(); // TODO: Optimize storage
+                for y in 0..height {
+                    for x in 0..width {
+                        buffer.push(ZXColor::Red);
+                    }
+                }
+
+                info!("Allocated frame buffer width={}, height={}", width, height);
+
+                Self {
+                    display: Some(context.display),
+                    buffer,
+                    buffer_width: width,
+                    color_conv: context.color_conv,
+                }
+            }
+            FrameBufferSource::Border => Self {
+                display: None,
+                buffer: Vec::new(),
+                buffer_width: 0,
+                color_conv: context.color_conv,
             },
-            color_conv: context.color_conv,
         }
     }
 
     fn set_color(&mut self, x: usize, y: usize, color: ZXColor, brightness: ZXBrightness) {
         if let Some(display) = self.display.as_mut() {
-            let mut display = display.borrow_mut();
+            let pixel = &mut self.buffer[y * self.buffer_width + x];
+            if *pixel as u8 != color as u8 {
+                *pixel = color;
 
-            Pixel(
-                Point::new(x as i32, y as i32),
-                (self.color_conv)(color, brightness),
-            )
-            .draw(&mut *display)
-            .unwrap();
+                let mut display = display.borrow_mut();
+
+                Pixel(
+                    Point::new(x as i32, y as i32),
+                    (self.color_conv)(color, brightness),
+                )
+                .draw(&mut *display)
+                .unwrap();
+            }
         }
     }
 }
