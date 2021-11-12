@@ -19,7 +19,7 @@ opt-level = "z"
 #opt-level = "s"
 
 [features]
-default = ["ttgo"]
+#default = ["ttgo"]
 
 # Enable this feature for the build to use ESP-IDF native tooling instead of PlatformIO under the hood
 native = ["esp-idf-sys/native"]
