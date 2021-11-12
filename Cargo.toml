@@ -24,18 +24,22 @@ opt-level = "z"
 # Enable this feature for the build to use ESP-IDF native tooling instead of PlatformIO under the hood
 native = ["esp-idf-sys/native"]
 
-# Enable this feature in case you have a Kaluga ILI9341 board and would like to see a LED screen demo
+# Enable this feature in case you have a Kaluga ILI9341 board
 kaluga_ili9341 = []
 
-# Enable this feature in case you have a Kaluga ST7789 board and would like to see a LED screen demo
+# Enable this feature in case you have a Kaluga ST7789 board
 kaluga_st7789 = []
 
-# Enable this feature in case you have a TTGO board and would like to see a LED screen demo
+# Enable this feature in case you have a TTGO board
 ttgo = []
 
-# Enable this feature in case you have an ESP32S3-USB-OTG board and would like to see a LED screen demo
+# Enable this feature in case you have a Heltec board
 heltec = []
 
+# Enable this feature in case you have an ESP32S2-USB-OTG preview board
+esp32s2_usb_otg = []
+
+# Enable this feature in case you have an ESP32S3-USB-OTG board
 esp32s3_usb_otg = []
 
 [dependencies]

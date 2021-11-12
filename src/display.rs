@@ -16,6 +16,11 @@ compile_error!("The `ttgo` feature can only be built for the `xtensa-esp32-espid
 #[cfg(all(feature = "heltec", not(esp32)))]
 compile_error!("The `heltec` feature can only be built for the `xtensa-esp32-espidf` target.");
 
+#[cfg(all(feature = "esp32s2_usb_otg", not(esp32s2)))]
+compile_error!(
+    "The `esp32s2_usb_otg` feature can only be built for the `xtensa-esp32s2-espidf` target."
+);
+
 #[cfg(all(feature = "esp32s3_usb_otg", not(esp32s3)))]
 compile_error!(
     "The `esp32s3_usb_otg` feature can only be built for the `xtensa-esp32s3-espidf` target."
@@ -26,9 +31,10 @@ compile_error!(
     feature = "kaluga_st7789",
     feature = "ttgo",
     feature = "heltec",
+    feature = "esp32s2_usb_otg",
     feature = "esp32s3_usb_otg"
 )))]
-compile_error!("You have to define exactly one board with a LED screen using one of the features `ttgo`, `kaluga_ili9341`, `kaluga_st7789`, `esp32s3_usb_otg` or `heltec`.");
+compile_error!("You have to define exactly one board with a LED screen using one of the features `ttgo`, `kaluga_ili9341`, `kaluga_st7789`, `esp32s2_usb_otg`, `esp32s3_usb_otg` or `heltec`.");
 
 use anyhow::*;
 use log::*;
@@ -74,8 +80,8 @@ macro_rules! create {
             $peripherals.pins.gpio15,
         );
 
-        #[cfg(feature = "esp32s3_usb_otg")]
-        let result = display::esp32s3_usb_otg_create_display(
+        #[cfg(any(feature = "esp32s2_usb_otg", feature = "esp32s3_usb_otg"))]
+        let result = display::esp32s2s3_usb_otg_create_display(
             $peripherals.pins.gpio9,
             $peripherals.pins.gpio4,
             $peripherals.pins.gpio8,
@@ -376,8 +382,8 @@ pub(crate) fn heltec_create_display(
     Ok(display)
 }
 
-#[cfg(feature = "esp32s3_usb_otg")]
-pub(crate) fn esp32s3_usb_otg_create_display(
+#[cfg(any(feature = "esp32s2_usb_otg", feature = "esp32s3_usb_otg"))]
+pub(crate) fn esp32s2s3_usb_otg_create_display(
     backlight: gpio::Gpio9<gpio::Unknown>,
     dc: gpio::Gpio4<gpio::Unknown>,
     rst: gpio::Gpio8<gpio::Unknown>,
@@ -400,7 +406,7 @@ pub(crate) fn esp32s3_usb_otg_create_display(
         gpio::Gpio8<gpio::Output>,
     >,
 > {
-    info!("About to initialize the ESP32-S3-USB-OTG SPI LED driver ST7789VW");
+    info!("About to initialize the ESP32-S2/S3-USB-OTG SPI LED driver ST7789VW");
 
     let config = <spi::config::Config as Default>::default()
         .baudrate(80.MHz().into())
@@ -437,6 +443,7 @@ pub(crate) fn esp32s3_usb_otg_create_display(
 
 #[cfg(any(
     feature = "ttgo",
+    feature = "esp32s2_usb_otg",
     feature = "esp32s3_usb_otg",
     feature = "kaluga_ili9341",
     feature = "kaluga_st7789"
