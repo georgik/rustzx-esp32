@@ -75,7 +75,7 @@ jobs:
       - name: Build RustZX for ${{ github.event.inputs.target }}
         working-directory: rustzx-esp32
         run: |
-          source "../rust-build/export-esp-${{ github.event.inputs.toolchain_version }}.sh"
+          source "../export-esp-${{ github.event.inputs.toolchain_version }}.sh"
           cargo +esp-${{ github.event.inputs.toolchain_version }} build --target ${{ github.event.inputs.target }} --release --features "${{ github.event.inputs.board }} native"
       - name: Upload Release Asset
         id: upload-release-asset
