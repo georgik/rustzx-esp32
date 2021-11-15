@@ -85,7 +85,7 @@ macro_rules! create {
             $peripherals.pins.gpio9,
             $peripherals.pins.gpio4,
             $peripherals.pins.gpio8,
-            $peripherals.spi2,
+            $peripherals.spi3,
             $peripherals.pins.gpio6,
             $peripherals.pins.gpio7,
             $peripherals.pins.gpio5,
