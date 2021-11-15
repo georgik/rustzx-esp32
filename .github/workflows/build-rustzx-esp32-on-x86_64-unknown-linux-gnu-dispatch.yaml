@@ -67,7 +67,7 @@ jobs:
         if: ${{ matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-18.04' || matrix.os == 'windows-latest' }}
         uses: seanmiddleditch/gha-setup-ninja@master
       - name: Installing Rust toolchain
-        run: ./rust-build/install-rust-toolchain.sh --toolchain-version ${{ github.event.inputs.toolchain_version }} --export-file "export-esp-${{ github.event.inputs.toolchain_version }}.sh" --extra-crates "ldproxy"
+        run: ./rust-build/install-rust-toolchain.sh --toolchain-version ${{ github.event.inputs.toolchain_version }} --export-file "export-esp-${{ github.event.inputs.toolchain_version }}.sh" --extra-crates "ldproxy" --toolchain-destination "${RUSTUP_HOME}/toolchains/esp-${{ github.event.inputs.toolchain_version }}"
       - name: Check out RustZX-ESP32
         uses: actions/checkout@v2
         with:
