@@ -30,8 +30,8 @@ jobs:
       id: get_latest_release
       with:
         route: GET /repos/{owner}/{repo}/releases/latest
-        owner: esp-rs
-        repo: rust-build
+        owner: georgik
+        repo: rustzx-esp32
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: get upload url
