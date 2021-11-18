@@ -10,8 +10,10 @@ param (
     [String]
     [ValidateSet("esp32s3_usb_otg", "esp32s3_usb_otg", "kaluga")]
     $Board = 'esp32s2_usb_otg',
-    [string]
-    $ApplicationFile=".\target\$Target\release\rustzx-esp32"
+    [String]
+    $ApplicationFile=".\target\$Target\release\rustzx-esp32",
+    [String]
+    $EspIdfVersion="branch:master"
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,6 +23,9 @@ $ErrorActionPreference = "Stop"
 "-Target           = ${Target}"
 "-ToolchainName    = ${ToolchainName}"
 "-ApplicationFile  = ${ApplicationFile}"
+"-EspIdfVersion    = ${EspIdfVersion}"
+
+$env:ESP_IDF_VERSION="branch:master"
 
 # Requires to be executed outside of activated ESP-IDF
 cargo +$ToolchainName build --target $Target --release --features "${Board} native"
