@@ -11,6 +11,10 @@ on:
         description: 'Version of Rust IDF toolchain'
         required: true
         default: '1.56.0.1'
+      esp_idf_version:
+        description: 'ESP-IDF version for embuild'
+        required: true
+        default: 'branch:master'
       target:
         required: true
         default: 'xtensa-esp32s3-espidf'
@@ -77,6 +81,7 @@ jobs:
         working-directory: rustzx-esp32
         run: |
           source "../export-esp-${{ github.event.inputs.toolchain_version }}.sh"
+          export ESP_IDF_VERSION=${{ github.event.inputs.esp_idf_version }}
           cargo +esp-${{ github.event.inputs.toolchain_version }} build --target ${{ github.event.inputs.target }} --release --features "${{ github.event.inputs.board }} native"
       - name: Upload Release Asset
         id: upload-release-asset
