@@ -13,10 +13,10 @@ on:
         default: '1.56.0.1'
       target:
         required: true
-        default: 'xtensa-esp32s2-espidf'
+        default: 'xtensa-esp32s3-espidf'
       board:
         required: true
-        default: 'esp32s2_usb_otg'
+        default: 'esp32s3_usb_otg'
 
 jobs:
   get_release:
