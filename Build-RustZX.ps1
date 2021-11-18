@@ -6,10 +6,10 @@ param (
     $ToolchainName = 'esp-1.56.0.1',
     [String]
     [ValidateSet("xtensa-esp32-espidf", "xtensa-esp32s2-espidf", "xtensa-esp32s3-espidf", "riscv32imc-esp-espidf")]
-    $Target = "xtensa-esp32s2-espidf",
+    $Target = "xtensa-esp32s3-espidf",
     [String]
     [ValidateSet("esp32s3_usb_otg", "esp32s3_usb_otg", "kaluga")]
-    $Board = 'esp32s2_usb_otg',
+    $Board = 'esp32s3_usb_otg',
     [String]
     $ApplicationFile=".\target\$Target\release\rustzx-esp32",
     [String]
