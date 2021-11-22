@@ -19,6 +19,7 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
+$ApplicationImage = "out"
 
 "Processing configuration:"
 "-Board            = ${Board}"
@@ -35,8 +36,10 @@ if (-Not (Test-Path -Path $ApplicationFile -PathType Leaf)) {
 }
 
 # Requires to be executed in activated ESP-IDF
-rm out
-esptool.py --chip ${Chip} elf2image --flash_size 4MB $ApplicationFile -o out
-esptool.py --chip ${Chip} write_flash 0x10000 .\out
+if (Test-Path -Path $ApplicationImage) {
+    Remove-Item $ApplicationImage
+}
+esptool.py --chip ${Chip} elf2image --flash_size 4MB $ApplicationFile -o $ApplicationImage
+esptool.py --chip ${Chip} write_flash 0x10000 $ApplicationImage
 espmonitor.exe ${Port}
 

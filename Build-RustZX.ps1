@@ -8,7 +8,7 @@ param (
     [ValidateSet("xtensa-esp32-espidf", "xtensa-esp32s2-espidf", "xtensa-esp32s3-espidf", "riscv32imc-esp-espidf")]
     $Target = "xtensa-esp32s3-espidf",
     [String]
-    [ValidateSet("esp32s3_usb_otg", "esp32s3_usb_otg", "kaluga")]
+    [ValidateSet("esp32s3_usb_otg", "esp32s3_usb_otg", "kaluga_ili9341", "kaluga_st7789")]
     $Board = 'esp32s3_usb_otg',
     [String]
     $ApplicationFile=".\target\$Target\release\rustzx-esp32",

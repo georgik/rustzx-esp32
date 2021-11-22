@@ -205,7 +205,7 @@ pub(crate) fn kaluga_create_display_ili9341(
     ili9341::Ili9341<
         SPIInterfaceNoCS<
             spi::Master<
-                spi::SPI2,
+                spi::SPI3,
                 gpio::Gpio15<gpio::Output>,
                 gpio::Gpio9<gpio::Output>,
                 gpio::Gpio8<gpio::Input>,
@@ -288,7 +288,7 @@ pub(crate) fn kaluga_create_display_st7789(
     st7789::ST7789<
         SPIInterfaceNoCS<
             spi::Master<
-                spi::SPI2,
+                spi::SPI3,
                 gpio::Gpio15<gpio::Output>,
                 gpio::Gpio9<gpio::Output>,
                 gpio::Gpio8<gpio::Input>,
