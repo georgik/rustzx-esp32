@@ -10,4 +10,11 @@ HW: ESP32 OTG USB with ST7789 display
 - Rust code for ESP32 based on https://github.com/ivmarkov/rust-esp32-std-demo
 - RustZX wrapper code reused from https://github.com/pacmancoder/rustzx
 
+## Build and flash
+
+Using cargo-espflash:
+
+```
+cargo +esp-1.56.0.1 espflash /dev/tty.usbserial-110 --target xtensa-esp32s2-espidf --release --features "esp32s2_usb_otg native"
+```
 
