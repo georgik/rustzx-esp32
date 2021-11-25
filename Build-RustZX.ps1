@@ -13,29 +13,27 @@ param (
     [String]
     $ApplicationFile=".\target\$Target\release\rustzx-esp32",
     [String]
-    $EspIdfVersion="branch:master"
+    $EspIdfVersion="branch:master",
+    [String]
+    $Port = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 "Processing configuration:"
+"-ApplicationFile  = ${ApplicationFile}"
 "-Board            = ${Board}"
+"-EspIdfVersion    = ${EspIdfVersion}"
+"-Port             = ${Port}"
 "-Target           = ${Target}"
 "-ToolchainName    = ${ToolchainName}"
-"-ApplicationFile  = ${ApplicationFile}"
-"-EspIdfVersion    = ${EspIdfVersion}"
 
 $env:ESP_IDF_VERSION="branch:master"
 
-# Requires to be executed outside of activated ESP-IDF
-cargo +$ToolchainName build --target $Target --release --features "${Board} native"
-
-
-# if (-Not (Test-Path -Path $ApplicationFile -PathType Leaf)) {
-#     "$ApplicatioFile does not exist. Build the application"
-# }
-
-# esptool.py --chip esp32s2 elf2image --flash_size 2MB $ApplicationFile -o out
-# esptool.py --chip esp32s2 write_flash 0x10000 .\out
-# espmonitor.exe COM9
-
+if ($false -eq $Port) {
+    # Requires to be executed outside of activated ESP-IDF
+    cargo +$ToolchainName build --target $Target --release --features "${Board} native"
+} else {
+    # Build and flash directly using `cargo install cargo-espflash --git https://github.com/jessebraham/espflash.git --branch fixes/partition-table
+    cargo +$ToolchainName espflash $Port --target $Target --release --features "${Board} native"
+}

@@ -18,3 +18,8 @@ Using cargo-espflash:
 cargo +esp-1.56.0.1 espflash /dev/tty.usbserial-110 --target xtensa-esp32s2-espidf --release --features "esp32s2_usb_otg native"
 ```
 
+With PowerShell:
+
+```
+.\Build-RustZX.ps1 -Target xtensa-esp32s2-espidf -Board kaluga_ili9341 -Port COM23
+```
