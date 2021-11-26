@@ -52,7 +52,7 @@ where
 
     let settings = RustzxSettings {
         machine: ZXMachine::Sinclair48K,
-        emulation_mode: EmulationMode::FrameCount(10),
+        emulation_mode: EmulationMode::FrameCount(2),
         tape_fastload_enabled: true,
         kempston_enabled: false,
         mouse_enabled: false,
@@ -65,13 +65,13 @@ where
     info!("Entering emulator loop");
 
     loop {
-        const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
+        const MAX_FRAME_DURATION: Duration = Duration::from_millis(100);
 
         let duration = emulator
             .emulate_frames(MAX_FRAME_DURATION)
             .map_err(AnyError::into)?;
 
-        info!("Rendering 60 frames took {}ms", duration.as_millis());
+        info!("Rendering 1 frames took {}ms", duration.as_millis());
 
         // TODO: Screen should be constantly updated from within the emulation cycle, using multithreading
         emulator
