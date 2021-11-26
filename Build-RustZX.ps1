@@ -2,6 +2,8 @@
 [CmdletBinding()]
 param (
     [ArgumentCompleter( { return [array](rustup toolchain list) })]
+    [ValidateScript({[array](rustup toolchain list).Contains($_)},
+    ErrorMessage="Toolchain {0} is not installed. Please install the toolchain using scripts from https://github.com/esp-rs/rust-build")]
     [String]
     $ToolchainName = 'esp-1.56.0.1',
     [String]
