@@ -1,7 +1,7 @@
 
 [CmdletBinding()]
 param (
-    [Parameter()]
+    [ArgumentCompleter( { return [array](rustup toolchain list) })]
     [String]
     $ToolchainName = 'esp-1.56.0.1',
     [String]
