@@ -13,9 +13,11 @@ use esp_idf_sys;
 
 use embedded_graphics::prelude::*;
 
+use esp_idf_hal::gpio;
+
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
-use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings};
+use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, zx::keys::ZXKey};
 
 mod display;
 mod host;
@@ -31,11 +33,12 @@ fn main() -> Result<()> {
     env::set_var("RUST_BACKTRACE", "1");
 
     let peripherals = Peripherals::take().unwrap();
+    let button = peripherals.pins.gpio14.into_input()?;
 
-    emulate_zx(display::create!(peripherals)?, display::color_conv)
+    emulate_zx(display::create!(peripherals)?, display::color_conv, button)
 }
 
-fn emulate_zx<D>(mut display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Result<()>
+fn emulate_zx<D>(mut display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color, button: gpio::Gpio14<gpio::Input>) -> Result<()>
 where
     D: DrawTarget + Dimensions + Send + 'static,
     D::Error: core::fmt::Debug,
@@ -45,10 +48,11 @@ where
         .map_err(AnyError::into)?;
 
     info!("Creating emulator");
+    
 
     let settings = RustzxSettings {
         machine: ZXMachine::Sinclair48K,
-        emulation_mode: EmulationMode::FrameCount(60),
+        emulation_mode: EmulationMode::FrameCount(10),
         tape_fastload_enabled: true,
         kempston_enabled: false,
         mouse_enabled: false,
@@ -75,6 +79,9 @@ where
             .blit(&mut display, color_conv)
             .map_err(AnyError::into)?;
 
+        info!("Button {}",button.is_high()?);
+        let key = ZXKey::J;
+        emulator.send_key(key, button.is_high()?);
         // Yield
         //thread::sleep(Duration::from_secs(0));
     }

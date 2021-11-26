@@ -17,7 +17,9 @@ param (
     [String]
     $EspIdfVersion="branch:master",
     [String]
-    $Port = ""
+    $Port = "",
+    [Boolean]
+    $Monitor = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,6 +28,7 @@ $ErrorActionPreference = "Stop"
 "-ApplicationFile  = ${ApplicationFile}"
 "-Board            = ${Board}"
 "-EspIdfVersion    = ${EspIdfVersion}"
+"-Monitor          = ${Monitor}"
 "-Port             = ${Port}"
 "-Target           = ${Target}"
 "-ToolchainName    = ${ToolchainName}"
@@ -37,5 +40,9 @@ if ($false -eq $Port) {
     cargo +$ToolchainName build --target $Target --release --features "${Board} native"
 } else {
     # Build and flash directly using `cargo install cargo-espflash --git https://github.com/jessebraham/espflash.git --branch fixes/partition-table
-    cargo +$ToolchainName espflash $Port --target $Target --release --features "${Board} native"
+    if ($Monitor) {
+        cargo +$ToolchainName espflash $Port --target $Target --release --features "${Board} native" --monitor
+    } else {
+        cargo +$ToolchainName espflash $Port --target $Target --release --features "${Board} native"
+    }
 }
