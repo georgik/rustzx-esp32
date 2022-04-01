@@ -1,0 +1,30 @@
+{
+  "name": "rustzx-esp32",
+  "image": "docker.io/sergiogasquez/esp-rs-env:esp32s3",
+  "settings": {
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modifications",
+    "editor.formatOnType": true,
+    "lldb.executable": "/usr/bin/lldb",
+    "files.watcherExclude": {
+      "**/target/**": true
+    },
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "[rust]": {
+      "editor.defaultFormatter": "matklad.rust-analyzer"
+    }
+  },
+  "extensions": [
+    "matklad.rust-analyzer",
+    "tamasfe.even-better-toml",
+    "vadimcn.vscode-lldb",
+    "serayuzgur.crates",
+    "mutantdino.resourcemonitor",
+    "yzhang.markdown-all-in-one"
+  ],
+  "containerUser": "vscode",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/vscode/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/home/vscode/workspace/"
+}
+
