@@ -4,10 +4,10 @@ tasks:
   - name: Adopt environment in the container image to gitpod user
     init: |
       ln -s /home/vscode/.rustup /home/gitpod/.rustup
-      mkdir /home/gitpod/.cargo
+      mkdir /home/.gitpod/.cargo
       ln -s /home/vscode/.cargo/bin /home/gitpod/.cargo/bin
       ln -s /home/vscode/.cargo/env /home/gitpod/.cargo/env
     command: |
       source /home/gitpod/.cargo/env
       source /home/vscode/export-rust.sh
-    
+
