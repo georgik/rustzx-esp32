@@ -5,8 +5,6 @@ use std::{thread, time::*};
 use anyhow::*;
 use log::*;
 
-use embedded_svc::anyerror::*;
-
 use esp_idf_hal::prelude::*;
 
 use esp_idf_sys;
@@ -41,8 +39,7 @@ where
     D::Error: core::fmt::Debug,
 {
     display
-        .clear(color_conv(ZXColor::Red, ZXBrightness::Normal))
-        .map_err(AnyError::into)?;
+        .clear(color_conv(ZXColor::Red, ZXBrightness::Normal));
 
     info!("Creating emulator");
 
@@ -56,7 +53,7 @@ where
     };
 
     let mut emulator: Emulator<host::Esp32Host> =
-        Emulator::new(settings, host::Esp32HostContext {}).map_err(AnyError::into)?;
+        Emulator::new(settings, host::Esp32HostContext {}).unwrap();
 
     info!("Entering emulator loop");
 
@@ -64,16 +61,14 @@ where
         const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
 
         let duration = emulator
-            .emulate_frames(MAX_FRAME_DURATION)
-            .map_err(AnyError::into)?;
+            .emulate_frames(MAX_FRAME_DURATION);
 
-        info!("Rendering 60 frames took {}ms", duration.as_millis());
+        // info!("Rendering 60 frames took {}ms", duration.as_millis().unwrap());
 
         // TODO: Screen should be constantly updated from within the emulation cycle, using multithreading
         emulator
             .screen_buffer()
-            .blit(&mut display, color_conv)
-            .map_err(AnyError::into)?;
+            .blit(&mut display, color_conv);
 
         // Yield
         //thread::sleep(Duration::from_secs(0));

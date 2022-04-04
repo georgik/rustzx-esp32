@@ -39,8 +39,6 @@ compile_error!("You have to define exactly one board with a LED screen using one
 use anyhow::*;
 use log::*;
 
-use embedded_svc::anyerror::*;
-
 use esp_idf_hal::gpio;
 use esp_idf_hal::prelude::*;
 use esp_idf_hal::spi;
@@ -58,6 +56,7 @@ use rustzx_core::zx::video::colors::ZXColor;
 
 use ssd1306::mode::DisplayConfig;
 use st7789;
+ use embedded_hal::digital::v2::OutputPin;
 
 macro_rules! create {
     ($peripherals:expr) => {{
@@ -174,10 +173,9 @@ pub(crate) fn ttgo_create_display(
         320,
     );
 
-    display.init(&mut delay::Ets).map_err(AnyError::into)?;
+    display.init(&mut delay::Ets);
     display
-        .set_orientation(st7789::Orientation::Portrait)
-        .map_err(AnyError::into)?;
+        .set_orientation(st7789::Orientation::Portrait);
 
     // The TTGO board's screen does not start at offset 0x0, and the physical size is 135x240, instead of 240x320
     /*let top_left = Point::new(52, 40);
@@ -272,7 +270,6 @@ pub(crate) fn kaluga_create_display_ili9341(
         KalugaOrientation::Landscape,
         ili9341::DisplaySize240x320,
     )
-    .map_err(AnyError::into)
 }
 
 #[cfg(feature = "kaluga_st7789")]
@@ -326,10 +323,9 @@ pub(crate) fn kaluga_create_display_st7789(
 
     let mut display = st7789::ST7789::new(di, reset, 320, 240);
 
-    display.init(&mut delay::Ets).map_err(AnyError::into)?;
+    display.init(&mut delay::Ets)?;
     display
-        .set_orientation(st7789::Orientation::Landscape)
-        .map_err(AnyError::into)?;
+        .set_orientation(st7789::Orientation::Landscape)?;
 
     Ok(display)
 }
@@ -377,7 +373,7 @@ pub(crate) fn heltec_create_display(
     )
     .into_buffered_graphics_mode();
 
-    display.init().map_err(AnyError::into)?;
+    display.init();
 
     Ok(display)
 }
@@ -409,8 +405,8 @@ pub(crate) fn esp32s2s3_usb_otg_create_display(
     info!("About to initialize the ESP32-S2/S3-USB-OTG SPI LED driver ST7789VW");
 
     let config = <spi::config::Config as Default>::default()
-        .baudrate(80.MHz().into())
-        .bit_order(spi::config::BitOrder::MSBFirst);
+        .baudrate(80.MHz().into());
+        // .bit_order(spi::config::BitOrder::MSBFirst);
 
     let mut backlight = backlight.into_output()?;
     backlight.set_high()?;
@@ -433,10 +429,9 @@ pub(crate) fn esp32s2s3_usb_otg_create_display(
 
     let mut display = st7789::ST7789::new(di, reset, 240, 240);
 
-    display.init(&mut delay::Ets).map_err(AnyError::into)?;
+    display.init(&mut delay::Ets);
     display
-        .set_orientation(st7789::Orientation::Landscape)
-        .map_err(AnyError::into)?;
+        .set_orientation(st7789::Orientation::Landscape);
 
     Ok(display)
 }
