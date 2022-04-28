@@ -10,6 +10,10 @@ HW: ESP32 OTG USB with ST7789 display
 - Rust code for ESP32 based on https://github.com/ivmarkov/rust-esp32-std-demo
 - RustZX wrapper code reused from https://github.com/pacmancoder/rustzx
 
+## Build using GitPod
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/)
+
 ## Build
 
 Open in VS Code with Dev Container support.
