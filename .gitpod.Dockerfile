@@ -1,5 +1,5 @@
 # Note: It's not possible to use gitpod/workspace-base image, because it has old version of cmake
-FROM debian:bullseye
+FROM  gitpod/workspace-base
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
@@ -9,14 +9,11 @@ ARG CONTAINER_GROUP=gitpod
 ARG TOOLCHAIN_VERSION=1.60.0.1
 
 # Install dependencies
-RUN apt-get update \
-  && apt-get install -y git curl gcc ninja-build cmake libudev-dev \
+RUN sudo install-packages git curl gcc ninja-build libudev-dev \
   python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang \
   && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts \
-  && pip3 install websockets==10.2 \
-  && adduser --disabled-password --gecos "" ${CONTAINER_USER}
+  && pip3 install websockets==10.2
 
-USER ${CONTAINER_USER}
 WORKDIR /home/${CONTAINER_USER}
 
 # Install toolchain with extra crates
@@ -36,5 +33,3 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 esp32s3 \
   && rm -rf .espressif/dist \
   && rm -rf .espressif/frameworks/esp-idf-v4.4/docs
-
-CMD [ "/bin/bash" ]
