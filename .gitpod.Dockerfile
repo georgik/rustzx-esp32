@@ -1,6 +1,5 @@
 # Note: It's not possible to use gitpod/workspace-base image, because it has old version of cmake
 FROM debian:bullseye
-ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
