@@ -36,3 +36,5 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 esp32s3 \
   && rm -rf .espressif/dist \
   && rm -rf .espressif/frameworks/esp-idf-v4.4/docs
+
+CMD [ "/bin/bash" ]
