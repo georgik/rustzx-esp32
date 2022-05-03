@@ -1,6 +1,9 @@
 {
   "name": "rustzx-esp32",
-  "image": "docker.io/sergiogasquez/esp-rs-env:espidf_v4.4",
+  //"image": "docker.io/sergiogasquez/esp-rs-env:espidf_v4.4",
+  "build": {
+    "dockerfile": "../Containerfile"
+  },
   "settings": {
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,

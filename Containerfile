@@ -7,7 +7,6 @@ ENV LANG=C.UTF-8
 # Set users
 ARG CONTAINER_USER=esp
 ARG CONTAINER_GROUP=esp
-ARG SECONDARY_USER=gitpod
 ARG TOOLCHAIN_VERSION=1.60.0.1
 ARG NIGHTLY_VERSION=nightly
 
@@ -17,9 +16,7 @@ RUN apt-get update \
   python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang \
   && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts \
   && pip3 install websockets==10.2 \
-  && adduser --disabled-password --gecos "" ${CONTAINER_USER} \
-  && adduser --disabled-password --gecos "" ${SECONDARY_USER} \
-  && usermod -a -G ${CONTAINER_GROUP} ${SECONDARY_USER}
+  && adduser --disabled-password --gecos "" ${CONTAINER_USER}
 
 USER ${CONTAINER_USER}
 WORKDIR /home/${CONTAINER_USER}

@@ -34,6 +34,3 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     .espressif/frameworks/esp-idf-v4.4 \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 esp32s3 \
   && rm -rf .espressif/dist
-
-CMD [ "/bin/bash", \
-  "-c", "source /home/gitpod/export-rust.sh; export IDF_TOOLS_PATH=/home/gitpod/.espressif; source /home/gitpod/.espressif/frameworks/esp-idf-v4.4/export.sh; /bin/bash"]
