@@ -26,14 +26,14 @@ ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
 ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
   https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1-linux-x86_64.sh \
   /home/${CONTAINER_USER}/cmake-install.sh
-RUN chmod a+x /home/${CONTAINER_USER}/cmake-install.sh \
+RUN chmod a+x /home/gitpod/cmake-install.sh \
   && mkdir -p /home/gitpod/opt \
   && ./cmake-3.23.1-linux-x86_64.sh --prefix=/home/gitpod/opt --skip-license
 
 RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && ./${INSTALL_RUST_TOOLCHAIN} \
     --extra-crates "ldproxy cargo-espflash espmonitor bindgen" \
-    --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
+    --clear-cache "YES" --export-file /home/gitpod/export-rust.sh \
   && mkdir -p .espressif/frameworks/ \
   && git clone --branch "release/v4.4" -q --depth 1 --shallow-submodules \
     --recursive https://github.com/espressif/esp-idf.git \
