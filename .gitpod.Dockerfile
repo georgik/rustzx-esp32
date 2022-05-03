@@ -1,5 +1,5 @@
 
-FROM gitpod/workspace-full
+FROM gitpod/workspace-gitpod
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
@@ -11,13 +11,10 @@ ARG TOOLCHAIN_VERSION=1.60.0.1
 ARG NIGHTLY_VERSION=nightly
 
 # Install dependencies
-RUN sudo apt-get update \
-  && sudo apt-get install -y vim nano git curl gcc ninja-build cmake libudev-dev \
+RUN sudo install-packages vim nano git curl gcc ninja-build cmake libudev-dev \
   python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang \
-  && sudo apt-get clean -y && sudo rm -rf /var/lib/apt/lists/* /tmp/library-scripts \
-  && sudo pip3 install websockets==10.2 \
+  && pip3 install websockets==10.2
 
-USER ${CONTAINER_USER}
 WORKDIR /home/${CONTAINER_USER}
 
 # Install toolchain with extra crates
