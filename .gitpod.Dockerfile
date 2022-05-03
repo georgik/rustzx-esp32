@@ -10,7 +10,7 @@ ARG CONTAINER_GROUP=gitpod
 ARG TOOLCHAIN_VERSION=1.60.0.1
 
 # Install dependencies
-RUN sudo install-packages vim nano git curl gcc ninja-build cmake libudev-dev \
+RUN apt-get install git curl gcc ninja-build cmake libudev-dev \
   python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang \
   && pip3 install websockets==10.2
 
