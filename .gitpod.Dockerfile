@@ -13,6 +13,7 @@ RUN sudo install-packages git curl gcc ninja-build libudev-dev \
   python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang \
   && pip3 install websockets==10.2
 
+USER ${CONTAINER_USER}
 WORKDIR /home/${CONTAINER_USER}
 
 # Install toolchain with extra crates
