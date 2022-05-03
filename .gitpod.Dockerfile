@@ -1,5 +1,5 @@
-ARG VARIANT=bullseye
-FROM debian:${VARIANT}
+
+FROM gitpod/workspace-full
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
