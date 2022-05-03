@@ -45,6 +45,5 @@ RUN .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 esp32s3 \
   && rm -rf .espressif/dist
 
 # Set enviroment variables
-SHELL [ "/bin/bash", \
-  "-c", "source /home/${CONTAINER_USER}/export-rust.sh;", \
-  "-c", "source /home/${CONTAINER_USER}/.espressif/frameworks/esp-idf-v4.4/export.sh" ]
+CMD [ "/bin/bash", \
+  "-c", "source ./export-rust.sh; source .espressif/frameworks/esp-idf-v4.4/export.sh; /bin/bash"]
