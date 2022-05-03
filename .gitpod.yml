@@ -3,12 +3,10 @@
 image:
   file: .gitpod.Dockerfile
 tasks:
-  - name: Configure path to ESP-IDF Tools
-    env:
-      IDF_TOOLS_PATH: /home/gitpod/.espressif
   - name: Setup environment variables for Rust and ESP-IDF
     command: |
       source /home/gitpod/export-rust.sh
+      export IDF_TOOLS_PATH=/home/gitpod/.espressif
       source /home/gitpod/.espressif/frameworks/esp-idf-v4.4/export.sh
 
 vscode:

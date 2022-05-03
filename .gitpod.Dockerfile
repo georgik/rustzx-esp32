@@ -1,5 +1,6 @@
+# Note: It's not possible to use gitpod/workspace-base image, because it has old version of cmake
+FROM debian:bullseye
 
-FROM gitpod/workspace-base
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
@@ -7,7 +8,6 @@ ENV LANG=C.UTF-8
 ARG CONTAINER_USER=gitpod
 ARG CONTAINER_GROUP=gitpod
 ARG TOOLCHAIN_VERSION=1.60.0.1
-ARG NIGHTLY_VERSION=nightly
 
 # Install dependencies
 RUN sudo install-packages vim nano git curl gcc ninja-build cmake libudev-dev \
@@ -24,10 +24,8 @@ ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
   /home/${CONTAINER_USER}/${INSTALL_RUST_TOOLCHAIN}
 RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && ./${INSTALL_RUST_TOOLCHAIN} \
-    --extra-crates "ldproxy cargo-generate cargo-espflash espmonitor bindgen" \
+    --extra-crates "ldproxy cargo-espflash espmonitor bindgen" \
     --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
-  && rustup component add rust-src --toolchain ${NIGHTLY_VERSION} \
-  && rustup target add riscv32i-unknown-none-elf \
   && mkdir -p .espressif/frameworks/ \
   && git clone --branch "release/v4.4" -q --depth 1 --shallow-submodules \
     --recursive https://github.com/espressif/esp-idf.git \
