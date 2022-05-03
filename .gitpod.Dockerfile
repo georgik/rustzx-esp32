@@ -11,7 +11,6 @@ ARG TOOLCHAIN_VERSION=1.60.0.1
 # Install dependencies
 RUN sudo install-packages git curl gcc ninja-build libudev-dev \
   python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang \
-  && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts \
   && pip3 install websockets==10.2
 
 WORKDIR /home/${CONTAINER_USER}
