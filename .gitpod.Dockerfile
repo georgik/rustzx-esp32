@@ -28,7 +28,7 @@ ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
   /home/${CONTAINER_USER}/cmake-install.sh
 RUN chmod a+x /home/gitpod/cmake-install.sh \
   && mkdir -p /home/gitpod/opt \
-  && ./cmake-3.23.1-linux-x86_64.sh --prefix=/home/gitpod/opt --skip-license
+  && ./cmake-install.sh --prefix=/home/gitpod/opt --skip-license
 
 RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && ./${INSTALL_RUST_TOOLCHAIN} \
