@@ -39,6 +39,7 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && git clone --branch "release/v4.4" -q --depth 1 --shallow-submodules \
     --recursive https://github.com/espressif/esp-idf.git \
     .espressif/frameworks/esp-idf-v4.4 \
-  && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 esp32s3 \
+  && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 \
+  && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s3 \
   && rm -rf .espressif/dist \
   && rm -rf .espressif/frameworks/esp-idf-v4.4/docs
