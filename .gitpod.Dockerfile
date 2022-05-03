@@ -1,6 +1,6 @@
 # Note: It's not possible to use gitpod/workspace-base image, because it has old version of cmake
 FROM debian:bullseye
-
+ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
@@ -35,4 +35,5 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     --recursive https://github.com/espressif/esp-idf.git \
     .espressif/frameworks/esp-idf-v4.4 \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 esp32s3 \
-  && rm -rf .espressif/dist
+  && rm -rf .espressif/dist \
+  && rm -rf .espressif/frameworks/esp-idf-v4.4/docs
