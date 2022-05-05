@@ -19,17 +19,12 @@ WORKDIR /home/${CONTAINER_USER}
 # Install toolchain with extra crates
 ARG INSTALL_RUST_TOOLCHAIN=install-rust-toolchain.sh
 ENV PATH=${PATH}:/home/${CONTAINER_USER}/.cargo/bin:/home/${CONTAINER_USER}/.cargo/bin:/home/${CONTAINER_USER}/opt/bin
-ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
-  https://github.com/esp-rs/rust-build/releases/download/v${TOOLCHAIN_VERSION}/${INSTALL_RUST_TOOLCHAIN} \
-  /home/${CONTAINER_USER}/${INSTALL_RUST_TOOLCHAIN}
 
-# Add newer version of CMake
+# Use LLVM installer
+# Official: https://github.com/esp-rs/rust-build/releases/download/v${TOOLCHAIN_VERSION}/${INSTALL_RUST_TOOLCHAIN}
 ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
-  https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1-linux-x86_64.sh \
-  /home/${CONTAINER_USER}/cmake-install.sh
-RUN chmod a+x /home/gitpod/cmake-install.sh \
-  && mkdir -p /home/gitpod/opt \
-  && ./cmake-install.sh --prefix=/home/gitpod/opt --skip-license
+  https://raw.githubusercontent.com/esp-rs/rust-build/feature/small-llvm/install-rust-toolchain.sh \
+  /home/${CONTAINER_USER}/${INSTALL_RUST_TOOLCHAIN}
 
 RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && ./${INSTALL_RUST_TOOLCHAIN} \
@@ -39,6 +34,7 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && git clone --branch "release/v4.4" -q --depth 1 --shallow-submodules \
     --recursive https://github.com/espressif/esp-idf.git \
     .espressif/frameworks/esp-idf-v4.4 \
+  && python3 .espressif/frameworks/esp-idf-v4.4/tools/idf_tools.py install cmake ninja \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s3 \
   && rm -rf .espressif/dist \
