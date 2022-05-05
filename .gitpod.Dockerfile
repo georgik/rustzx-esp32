@@ -37,6 +37,11 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s3 \
   && rm -rf .espressif/dist \
+  && rm -rf .espressif/frameworks/esp-idf-v4.4/.git \
   && rm -rf .espressif/frameworks/esp-idf-v4.4/docs \
+  && rm -rf .espressif/frameworks/esp-idf-v4.4/examples \
+  && rm -rf .espressif/frameworks/esp-idf-v4.4/tools/esp_app_trace \
+  && rm -rf .espressif/frameworks/esp-idf-v4.4/tools/test_idf_size \
   && pip3 install websockets==10.2 \
   && git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
+
