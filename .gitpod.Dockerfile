@@ -45,14 +45,8 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
 
 # Add support tools in form of binaries to save time for the build
 # This is temporary solution, binaries should be released by projects
-ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
-  https://github.com/esp-rs/rust-build/releases/download/v1.60.0.1/ldproxy-0.3.0-x86_64-unknown-linux-gnu.xz \
-  /home/${CONTAINER_USER}/.cargo/bin/ldproxy
-
-ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
-  https://github.com/esp-rs/rust-build/releases/download/v1.60.0.1/espmonitor-0.7.0-x86_64-unknown-linux-gnu.xz \
-  /home/${CONTAINER_USER}/.cargo/bin/espmonitor
-
-ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
-  https://github.com/esp-rs/rust-build/releases/download/v1.60.0.1/bindgen-0.59.2-x86_64-unknown-linux-gnu.xz \
-  /home/${CONTAINER_USER}/.cargo/bin/bindgen
+RUN curl -L https://github.com/esp-rs/rust-build/releases/download/v1.60.0.1/ldproxy-0.3.0-x86_64-unknown-linux-gnu.xz -o /home/${CONTAINER_USER}/.cargo/bin/ldproxy.xz \
+  && curl -L https://github.com/esp-rs/rust-build/releases/download/v1.60.0.1/espmonitor-0.7.0-x86_64-unknown-linux-gnu.xz -o /home/${CONTAINER_USER}/.cargo/bin/espmonitor.xz \
+  && curl -L https://github.com/esp-rs/rust-build/releases/download/v1.60.0.1/bindgen-0.59.2-x86_64-unknown-linux-gnu.xz -o /home/${CONTAINER_USER}/.cargo/bin/bindgen.xz \
+  && unxz /home/${CONTAINER_USER}/.cargo/bin/*.xz \
+  && chmod a+x /home/${CONTAINER_USER}/.cargo/bin/*
