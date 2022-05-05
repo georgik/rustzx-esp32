@@ -10,8 +10,7 @@ ARG TOOLCHAIN_VERSION=1.60.0.1
 
 # Install dependencies
 RUN sudo install-packages git curl gcc ninja-build libudev-dev \
-  python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang \
-  && pip3 install websockets==10.2
+  python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang
 
 USER ${CONTAINER_USER}
 WORKDIR /home/${CONTAINER_USER}
@@ -38,4 +37,6 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s2 \
   && .espressif/frameworks/esp-idf-v4.4/install.sh esp32s3 \
   && rm -rf .espressif/dist \
-  && rm -rf .espressif/frameworks/esp-idf-v4.4/docs
+  && rm -rf .espressif/frameworks/esp-idf-v4.4/docs \
+  && pip3 install websockets==10.2 \
+  && git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
