@@ -241,8 +241,8 @@ pub(crate) fn kaluga_create_display_ili9341(
     info!("About to initialize the Kaluga ILI9341 SPI LED driver");
 
     let config = <spi::config::Config as Default>::default()
-        .baudrate(40.MHz().into())
-        .bit_order(spi::config::BitOrder::MSBFirst);
+        .baudrate(40.MHz().into());
+        //.bit_order(spi::config::BitOrder::MSBFirst);
 
     let mut backlight = backlight.into_output()?;
     backlight.set_high()?;
@@ -269,7 +269,7 @@ pub(crate) fn kaluga_create_display_ili9341(
         &mut delay::Ets,
         KalugaOrientation::Landscape,
         ili9341::DisplaySize240x320,
-    )
+    ).map_err(|e| anyhow!("Failed to init display"))
 }
 
 #[cfg(feature = "kaluga_st7789")]
