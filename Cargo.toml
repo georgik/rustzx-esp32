@@ -24,6 +24,9 @@ opt-level = "z"
 # Enable this feature for the build to use ESP-IDF native tooling instead of PlatformIO under the hood
 native = ["esp-idf-sys/native"]
 
+# Enable this feature in case you have a ESP32C3 ILI9341 board
+esp32c3_ili9341 = []
+
 # Enable this feature in case you have a Kaluga ILI9341 board
 kaluga_ili9341 = []
 
