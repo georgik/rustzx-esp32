@@ -24,12 +24,25 @@ Run:
 ./build-rustzx.sh
 ```
 
-## Build and flash
-
-Using cargo-espflash:
+Run in with Wokwi simulator:
 
 ```
-cargo +esp-1.56.0.1 espflash /dev/tty.usbserial-110 --target xtensa-esp32s2-espidf --release --features "esp32s2_usb_otg native"
+./run-wokwi.sh
+```
+
+## Build and flash
+
+Build for ESP32-C3 Using cargo-espflash for ESP32-S3 USB OTG:
+
+```
+cargo +esp-1.60.0.1 espflash --target xtensa-esp32s3-espidf --release --features "esp32c3_ili9341"
+```
+
+
+Build for ESP32-S3 USB OTG sing cargo-espflash:
+
+```
+cargo +esp-1.60.0.1 espflash --target xtensa-esp32s3-espidf --release --features "esp32s3_usb_otg"
 ```
 
 With PowerShell:

@@ -5,13 +5,13 @@ param (
     [ValidateScript({[array](rustup toolchain list).Contains($_)},
     ErrorMessage="Toolchain {0} is not installed. Please install the toolchain using scripts from https://github.com/esp-rs/rust-build")]
     [String]
-    $ToolchainName = 'esp-1.56.0.1',
+    $ToolchainName = 'esp-1.60.0.1',
     [String]
     [ValidateSet("xtensa-esp32-espidf", "xtensa-esp32s2-espidf", "xtensa-esp32s3-espidf", "riscv32imc-esp-espidf")]
-    $Target = "xtensa-esp32s3-espidf",
+    $Target = "riscv32imc-esp-espidf",
     [String]
-    [ValidateSet("esp32s3_usb_otg", "esp32s3_usb_otg", "kaluga_ili9341", "kaluga_st7789")]
-    $Board = 'esp32s3_usb_otg',
+    [ValidateSet("esp32s3_usb_otg", "esp32s3_usb_otg", "kaluga_ili9341", "kaluga_st7789", "esp32c3_ili9341")]
+    $Board = 'esp32c3_ili9341',
     [String]
     $ApplicationFile=".\target\$Target\release\rustzx-esp32",
     [String]
