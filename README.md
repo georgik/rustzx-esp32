@@ -12,7 +12,7 @@ HW: ESP32 OTG USB with ST7789 display
 
 ## Build using GitPod
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/tree/target/esp32c3)
 
 ## Build
 
