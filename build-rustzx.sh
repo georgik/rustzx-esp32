@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cargo build --target riscv32imc-esp-espidf --release --features "esp32c3_ili9341"
+cargo +nightly build --target riscv32imc-esp-espidf --release --features "esp32c3_ili9341"
 
