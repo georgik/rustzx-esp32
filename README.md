@@ -1,18 +1,24 @@
-# RustZX for ESP32 - experimental version
+# RustZX for ESP32-C3
 
 Goal of the project: Run ZX Spectrum on ESP32
 
-HW: ESP32 OTG USB with ST7789 display
-
-
-## References
-
-- Rust code for ESP32 based on https://github.com/ivmarkov/rust-esp32-std-demo
-- RustZX wrapper code reused from https://github.com/pacmancoder/rustzx
+Hardware: ESP32-C3 and ILI9341 display
 
 ## Build using GitPod
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/tree/target/esp32c3)
+[![Open ESP32-C3 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/tree/target/esp32c3)
+
+```
+cargo build --release
+```
+
+### Other targets
+
+[![Open ESP32 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/)
+
+[![Open ESP32-S2 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/tree/target/esp32s2)
+
+[![Open ESP32-S2 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/tree/target/esp32s3)
 
 ## Build
 
@@ -21,7 +27,7 @@ Open in VS Code with Dev Container support.
 Run:
 
 ```
-./build-rustzx.sh
+cargo build --release
 ```
 
 Run in with Wokwi simulator:
@@ -30,23 +36,27 @@ Run in with Wokwi simulator:
 ./run-wokwi.sh
 ```
 
-## Build and flash
+## Build on local machine
 
-Build for ESP32-C3 Using cargo-espflash for ESP32-S3 USB OTG:
-
-```
-cargo +esp-1.60.0.1 espflash --target xtensa-esp32s3-espidf --release --features "esp32c3_ili9341"
-```
-
-
-Build for ESP32-S3 USB OTG sing cargo-espflash:
+Install rust nightly toolchain with LLVM and use export-rust to configure `LIBCLANG_PATH` using `export-rust.sh`:
 
 ```
-cargo +esp-1.60.0.1 espflash --target xtensa-esp32s3-espidf --release --features "esp32s3_usb_otg"
+curl -L -O https://raw.githubusercontent.com/esp-rs/rust-build/feature/small-llvm/install-rust-toolchain.sh
+chmod a+x install-rust-toolchain.sh
+./install-rust-toolcha.sh \
+    --extra-crates "cargo-espflash ldproxy espmonitor" \
+    --build-target "esp32c3" \
+    --export-file export-rust.sh
+source export-rust.sh
 ```
 
-With PowerShell:
+Build and flash
 
 ```
-.\Build-RustZX.ps1 -Target xtensa-esp32s2-espidf -Board kaluga_ili9341 -Port COM23
+cargo espflash
 ```
+
+## References
+
+- Rust code for ESP32 based on https://github.com/ivmarkov/rust-esp32-std-demo
+- RustZX wrapper code reused from https://github.com/pacmancoder/rustzx
