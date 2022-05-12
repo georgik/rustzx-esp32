@@ -55,6 +55,24 @@ Build and flash
 cargo espflash
 ```
 
+## HW Setup
+
+### Display connection
+
+| ESP32-DevKitS-V1.1 | ILI9341       | Cable color |
+|--------------------|---------------|-------------|
+| GND                | GND           | black       |
+| 3.3V               | 3.3V          | red         |
+| RST                | GPIO10        | orange      |
+| CLK                | GPIO6         | yellow      |
+| D_C                | GPIO3         | green       |
+| CS                 | GPIO2         | blue        |
+| MOSI               | GPIO7         | purple      |
+| MISO               | not connected | -           |
+
+
+Wokwi related project: https://wokwi.com/projects/330910629554553426 - [diagram.json](docs/diagram.json)
+
 ## References
 
 - Rust code for ESP32 based on https://github.com/ivmarkov/rust-esp32-std-demo
