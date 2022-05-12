@@ -4,6 +4,8 @@ Goal of the project: Run ZX Spectrum on ESP32
 
 HW: ESP32 with ILI9341
 
+![RustZX-ESP32](docs/rustzx-esp32-ili9341.png)
+
 ## Build using GitPod
 
 [![Open ESP32 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/)
@@ -62,16 +64,19 @@ With PowerShell:
 
 ### Display connection
 
-| ESP32-DevKitS-V1.1 | ILI9341       |
-|--------------------|---------------|
-| GND                | GND           |
-| 3.3V               | 3.3V          |
-| RST                | GPIO4         |
-| CLK                | GPIO18        |
-| D_C                | GPIO2         |
-| CS                 | GPIO15        |
-| MOSI               | GPIO23        |
-| MISO               | not connected |
+| ESP32-DevKitS-V1.1 | ILI9341       | Cable color |
+|--------------------|---------------|-------------|
+| GND                | GND           | black       |
+| 3.3V               | 3.3V          | red         |
+| RST                | GPIO4         | orange      |
+| CLK                | GPIO18        | yellow      |
+| D_C                | GPIO2         | green       |
+| CS                 | GPIO15        | blue        |
+| MOSI               | GPIO23        | purple      |
+| MISO               | not connected | -           |
+
+
+Wokwi related project: https://wokwi.com/projects/331440829570744915 - [diagram.json](docs/diagram.json)
 
 ## References
 
