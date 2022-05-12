@@ -11,9 +11,7 @@ find target -name partition-table.bin -exec cp {} . \;
 
 cd ~/esp32-wokwi-gitpod-websocket-server/
 
-# ESP32S2 board
-#export WOKWI_PROJECT_ID="330831847505265234"
-# ESP32C3
+# ESP32 board
 export WOKWI_PROJECT_ID="331440829570744915"
 export ESP_BOOTLOADER_OFFSET="0x1000"
 export ESP_PARTITION_TABLE_OFFSET="0x8000"
