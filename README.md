@@ -64,16 +64,16 @@ With PowerShell:
 
 ### Display connection
 
-| ESP32-DevKitS-V1.1 | ILI9341       | Cable color |
-|--------------------|---------------|-------------|
-| GND                | GND           | black       |
-| 3.3V               | 3.3V          | red         |
-| RST                | GPIO4         | orange      |
-| CLK                | GPIO18        | yellow      |
-| D_C                | GPIO2         | green       |
-| CS                 | GPIO15        | blue        |
-| MOSI               | GPIO23        | purple      |
-| MISO               | not connected | -           |
+| ILI9341 |  ESP32-DevKitS-V1.1 | Cable color |
+----------|---------------------|-------------|
+| GND     | GND                 | black       |
+| 3.3V    | 3.3V                | red         |
+| RST     | GPIO4               | orange      |
+| CLK     | GPIO18              | yellow      |
+| D_C     | GPIO2               | green       |
+| CS      | GPIO15              | blue        |
+| MOSI    | GPIO23              | purple      |
+| MISO    | not connected       | -           |
 
 
 Wokwi related project: https://wokwi.com/projects/331440829570744915 - [diagram.json](docs/diagram.json)
