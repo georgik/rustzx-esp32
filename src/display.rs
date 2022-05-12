@@ -105,13 +105,13 @@ macro_rules! create {
 
         #[cfg(feature = "esp32_ili9341")]
         let result = display::esp32_create_display_ili9341(
-            $peripherals.pins.gpio4,
-            $peripherals.pins.gpio3,
-            $peripherals.pins.gpio10,
-            $peripherals.spi2,
-            $peripherals.pins.gpio6,
-            $peripherals.pins.gpio7,
+            $peripherals.pins.gpio17,
             $peripherals.pins.gpio2,
+            $peripherals.pins.gpio4,
+            $peripherals.spi3,
+            $peripherals.pins.gpio18,
+            $peripherals.pins.gpio23,
+            $peripherals.pins.gpio15,
         );
 
         #[cfg(feature = "esp32c3_ili9341")]
@@ -216,26 +216,26 @@ pub(crate) fn ttgo_create_display(
 
 #[cfg(feature = "esp32_ili9341")]
 pub(crate) fn esp32_create_display_ili9341(
-    backlight: gpio::Gpio4<gpio::Unknown>,
-    dc: gpio::Gpio3<gpio::Unknown>,
-    rst: gpio::Gpio10<gpio::Unknown>,
-    spi: spi::SPI2,
-    sclk: gpio::Gpio6<gpio::Unknown>,
-    sdo: gpio::Gpio7<gpio::Unknown>,
-    cs: gpio::Gpio2<gpio::Unknown>,
+    backlight: gpio::Gpio17<gpio::Unknown>,
+    dc: gpio::Gpio2<gpio::Unknown>,
+    rst: gpio::Gpio4<gpio::Unknown>,
+    spi: spi::SPI3,
+    sclk: gpio::Gpio18<gpio::Unknown>,
+    sdo: gpio::Gpio23<gpio::Unknown>,
+    cs: gpio::Gpio15<gpio::Unknown>,
 ) -> Result<
     ili9341::Ili9341<
         SPIInterfaceNoCS<
             spi::Master<
-                spi::SPI2,
-                gpio::Gpio6<gpio::Output>,
-                gpio::Gpio7<gpio::Output>,
+                spi::SPI3,
+                gpio::Gpio18<gpio::Output>,
+                gpio::Gpio23<gpio::Output>,
                 gpio::Gpio8<gpio::Input>,
-                gpio::Gpio2<gpio::Unknown>,
+                gpio::Gpio15<gpio::Unknown>,
             >,
-            gpio::Gpio3<gpio::Output>,
+            gpio::Gpio2<gpio::Output>,
         >,
-        gpio::Gpio10<gpio::Output>,
+        gpio::Gpio4<gpio::Output>,
     >,
 > {
     // Kaluga needs customized screen orientation commands
@@ -262,7 +262,7 @@ pub(crate) fn esp32_create_display_ili9341(
         }
     }
 
-    info!("About to initialize the ESP32C3 ILI9341 SPI LED driver");
+    info!("About to initialize the ESP32 ILI9341 SPI LED driver");
 
     let config = <spi::config::Config as Default>::default()
         .baudrate(40.MHz().into());
@@ -272,7 +272,7 @@ pub(crate) fn esp32_create_display_ili9341(
     backlight.set_high()?;
 
     let di = SPIInterfaceNoCS::new(
-        spi::Master::<spi::SPI2, _, _, _, _>::new(
+        spi::Master::<spi::SPI3, _, _, _, _>::new(
             spi,
             spi::Pins {
                 sclk: sclk.into_output()?,
