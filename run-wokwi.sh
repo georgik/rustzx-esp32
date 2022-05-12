@@ -4,7 +4,7 @@ set -e
 
 pip3 install websockets==10.2
 
-cargo +esp espflash save-image app.bin --target riscv32imc-esp-espidf --release --features "esp32c3_ili9341"
+cargo +nightly espflash save-image app.bin --target riscv32imc-esp-espidf --release --features "esp32c3_ili9341"
 
 find target -name bootloader.bin -exec cp {} . \;
 find target -name partition-table.bin -exec cp {} . \;
