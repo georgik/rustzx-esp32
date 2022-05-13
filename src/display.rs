@@ -323,10 +323,13 @@ pub(crate) fn esp32c3_create_display_ili9341(
 > {
     // Kaluga needs customized screen orientation commands
     // (not a surprise; quite a few ILI9341 boards need these as evidences in the TFT_eSPI & lvgl ESP32 C drivers)
+    // Display orientation: https://cdn-shop.adafruit.com/datasheets/ILI9341.pdf
+    // Page 209
     pub enum KalugaOrientation {
         Portrait,
         PortraitFlipped,
         Landscape,
+        LandscapeVericallyFlipped,
         LandscapeFlipped,
     }
 
@@ -334,6 +337,7 @@ pub(crate) fn esp32c3_create_display_ili9341(
         fn mode(&self) -> u8 {
             match self {
                 Self::Portrait => 0,
+                Self::LandscapeVericallyFlipped => 0x20,
                 Self::Landscape => 0x20 | 0x40,
                 Self::PortraitFlipped => 0x80 | 0x40,
                 Self::LandscapeFlipped => 0x80 | 0x20,
@@ -341,7 +345,7 @@ pub(crate) fn esp32c3_create_display_ili9341(
         }
 
         fn is_landscape(&self) -> bool {
-            matches!(self, Self::Landscape | Self::LandscapeFlipped)
+            matches!(self, Self::Landscape | Self::LandscapeFlipped | Self::LandscapeVericallyFlipped)
         }
     }
 
