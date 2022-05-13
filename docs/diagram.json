@@ -1,0 +1,29 @@
+{
+    "version": 1,
+    "author": "Uri Shaked",
+    "editor": "wokwi",
+    "parts": [
+      { "type": "board-esp32-c3-rust-1", "id": "esp", "top": -197.97, "left": -396, "attrs": {} },
+      {
+        "type": "wokwi-ili9341",
+        "id": "lcd1",
+        "top": -254.1,
+        "left": -177.67,
+        "rotate": 90,
+        "attrs": {}
+      }
+    ],
+    "connections": [
+      [ "esp:21", "$serialMonitor:RX", "", [] ],
+      [ "esp:20", "$serialMonitor:TX", "", [] ],
+      [ "lcd1:VCC", "esp:3V3", "red", [ "h0", "*", "h100" ] ],
+      [ "lcd1:GND", "esp:GND", "black", [ "h10", "*", "h100" ] ],
+      [ "lcd1:CS", "esp:2", "blue", [ "h10", "*", "h100" ] ],
+      [ "lcd1:RST", "esp:10", "orange", [ "h10", "*", "h10" ] ],
+      [ "lcd1:D/C", "esp:3", "yellow", [ "h5" ] ],
+      [ "lcd1:MOSI", "esp:7", "green", [ "h25", "*", "h10" ] ],
+      [ "lcd1:SCK", "esp:6", "purple", [ "h10", "*", "h100" ] ],
+      [ "lcd1:LED", "esp:4", "green", [ "h10", "*", "h120" ] ]
+    ],
+    "serialMonitor": { "display": "auto" }
+  }

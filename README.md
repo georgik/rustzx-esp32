@@ -4,6 +4,8 @@ Goal of the project: Run ZX Spectrum on ESP32
 
 Hardware: ESP32-C3 and ILI9341 display
 
+![RustZX-ESP32](docs/rustzx-esp32-ili9341.png)
+
 ## Build using GitPod
 
 [![Open ESP32-C3 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/tree/target/esp32c3)
