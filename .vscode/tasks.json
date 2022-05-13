@@ -18,7 +18,7 @@
     {
       "label": "Run Wokwi simulation",
       "type": "shell",
-      "command": "bash /home/esp/workspace/run-wokwi.sh",
+      "command": "bash run-wokwi.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },
