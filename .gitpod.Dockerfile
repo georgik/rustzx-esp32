@@ -40,4 +40,5 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
   && rm -rf .espressif/frameworks/esp-idf-v4.4/examples \
   && rm -rf .espressif/frameworks/esp-idf-v4.4/tools/esp_app_trace \
   && rm -rf .espressif/frameworks/esp-idf-v4.4/tools/test_idf_size \
-  && git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
+  && git clone https://github.com/SergioGasquez/esp32-wokwi-gitpod-websocket-server.git
+#   && git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git

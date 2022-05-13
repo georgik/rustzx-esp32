@@ -32,12 +32,6 @@ Run:
 ./build-rustzx.sh
 ```
 
-Run in with Wokwi simulator:
-
-```
-./run-wokwi.sh
-```
-
 ## Build and flash
 
 Build for ESP32 Using cargo-espflash for ESP32-S3 USB OTG:
@@ -59,6 +53,17 @@ With PowerShell:
 .\Build-RustZX.ps1 -Target xtensa-esp32s2-espidf -Board kaluga_ili9341 -Port COM23
 ```
 
+## Build and run Wokwi simulation
+
+Run in with Wokwi simulator:
+
+```
+./run-wokwi.sh
+```
+### Debuging with Wokwi
+```
+$HOME/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb target/xtensa-esp32-espidf/debug/rustzx-esp32 -ex "target remote localhost:9333"
+```
 
 ## HW Setup
 

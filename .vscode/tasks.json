@@ -7,6 +7,9 @@
       "label": "Build project",
       "type": "shell",
       "command": "cargo +esp espflash save-image app.bin --target xtensa-esp32-espidf --release --features \"esp32_ili9341\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "group": {
         "kind": "build",
         "isDefault": true
@@ -16,6 +19,9 @@
       "label": "Run Wokwi simulation",
       "type": "shell",
       "command": "bash /home/esp/workspace/run-wokwi.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "group": {
         "kind": "test",
         "isDefault": true
