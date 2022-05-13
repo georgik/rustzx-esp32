@@ -2,7 +2,14 @@
   "name": "rustzx-esp32",
   //"image": "docker.io/sergiogasquez/esp-rs-env:espidf_v4.4",
   "build": {
-    "dockerfile": "../Containerfile"
+    "dockerfile": "../Containerfile",
+    "args": {
+      "CONTAINER_USER": "esp",
+      "CONTAINER_GROUP": "esp",
+      "TOOLCHAIN_VERSION": "1.60.0.1",
+      "ESP_IDF_VERSION": "release/v4.4",
+      "ESP_BOARD": "esp32"
+    }
   },
   "settings": {
     "editor.formatOnPaste": true,
@@ -26,8 +33,10 @@
     "mutantdino.resourcemonitor",
     "yzhang.markdown-all-in-one"
   ],
-  "containerUser": "vscode",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/vscode/workspace,type=bind,consistency=cached",
-  "workspaceFolder": "/home/vscode/workspace/"
+  "forwardPorts": [
+    9012,
+    9333
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/esp/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/home/esp/workspace/"
 }
-
