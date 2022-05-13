@@ -52,7 +52,7 @@ RUN git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
 
 # Activate ESP environment
 ENV IDF_TOOLS_PATH=/home/${CONTAINER_USER}/.espressif
-RUN echo "source /home/${CONTAINER_USER}/.espressif/frameworks/esp-idf-v4.4/export.sh > /dev/null 2>&1" >> ~/.bashrc
+RUN echo "source /home/${CONTAINER_USER}/.espressif/frameworks/esp-idf/export.sh > /dev/null 2>&1" >> ~/.bashrc
 RUN echo "source /home/${CONTAINER_USER}/export-rust.sh > /dev/null 2>&1" >> ~/.bashrc
 
 ENV CURRENT_PROJECT=/home/esp/workspace/
