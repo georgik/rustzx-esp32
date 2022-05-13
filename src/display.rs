@@ -378,7 +378,7 @@ pub(crate) fn esp32c3_create_display_ili9341(
         di,
         reset,
         &mut delay::Ets,
-        KalugaOrientation::Landscape,
+        KalugaOrientation::LandscapeVericallyFlipped,
         ili9341::DisplaySize240x320,
     ).map_err(|e| anyhow!("Failed to init display"))
 }
