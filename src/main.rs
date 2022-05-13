@@ -39,7 +39,7 @@ where
     D::Error: core::fmt::Debug,
 {
     display
-        .clear(color_conv(ZXColor::Red, ZXBrightness::Normal));
+        .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal));
 
     info!("Creating emulator");
 
