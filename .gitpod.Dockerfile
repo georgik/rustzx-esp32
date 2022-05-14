@@ -9,7 +9,7 @@ ARG CONTAINER_GROUP=gitpod
 ARG TOOLCHAIN_VERSION=1.60.0.1
 
 # Install dependencies
-RUN sudo install-packages git curl gcc ninja-build libudev-dev \
+RUN sudo install-packages git curl gcc ninja-build libudev-dev libpython2.7 \
   python3 python3-pip libusb-1.0-0 libssl-dev pkg-config libtinfo5 clang
 
 USER ${CONTAINER_USER}

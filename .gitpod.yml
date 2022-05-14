@@ -17,6 +17,9 @@ vscode:
     - vadimcn.vscode-lldb
     - anwar.resourcemonitor
     - yzhang.markdown-all-in-one
+    - webfreak.debug
 ports:
   - port: 9012
+    visibility: public
+  - port: 9333
     visibility: public
