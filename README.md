@@ -26,21 +26,25 @@ cargo build --release
 
 Open in VS Code with Dev Container support.
 
-Run:
+- Terminal approach:
 
-```
-./build-rustzx.sh
-```
-The default build task is already set to build the project, and it can be used
-in VsCode and Gitpod:
-- From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Build Task` command.
-- `Terminal`-> `Run Build Task` in the menu.
-- With `Ctrl-Shift-B` or `Cmd-Shift-B`.
-- From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
-  select `Build Project`.
-- From UI: Press `Build Project` on the left side of the Status Bar.
+    ```
+    ./build-rustzx.sh
+    ```
+- [Devcontainers] UI approach:
+
+    The default build task is already set to build the project, and it can be used
+    in VsCode and Gitpod:
+    - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Build Task` command.
+    - `Terminal`-> `Run Build Task` in the menu.
+    - With `Ctrl-Shift-B` or `Cmd-Shift-B`.
+    - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
+    select `Build Project`.
+    - From UI: Press `Build Project` on the left side of the Status Bar.
 
 ## Build and flash
+
+> Flashing is not available when using Devcontainers
 
 Build for ESP32 Using cargo-espflash for ESP32-S3 USB OTG:
 
@@ -63,34 +67,40 @@ With PowerShell:
 
 ## Build and run Wokwi simulation
 
-Run in with Wokwi simulator:
+- Terminal approach:
 
-```
-./run-wokwi.sh
-```
+    ```
+    ./run-wokwi.sh
+    ```
+- [Devcontainers] UI approach:
 
-The default test task is already set to build the project, and it can be used
-in VsCode and Gitpod:
-- From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Test Task` command
-- With `Ctrl-Shift-,` or `Cmd-Shift-,`
-    > Note: This Shortcut is not available in Gitpod by default.
-- From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
-  select `Build & Run Wokwi`.
-- From UI: Press `Build & Run Wokwi` on the left side of the Status Bar.
+    The default test task is already set to build the project, and it can be used
+    in VsCode and Gitpod:
+    - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Test Task` command
+    - With `Ctrl-Shift-,` or `Cmd-Shift-,`
+        > Note: This Shortcut is not available in Gitpod by default.
+    - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
+    select `Build & Run Wokwi`.
+    - From UI: Press `Build & Run Wokwi` on the left side of the Status Bar.
 
 ### Debuging with Wokwi
-```
-$HOME/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb target/xtensa-esp32-espidf/debug/rustzx-esp32 -ex "target remote localhost:9333"
-```
 
-Debug using with VsCode or Gitpod is also possible:
-1. Run the Wokwi Simulation
-   > Note that the simulation will pause if the browser tab is on the background
-2. Go to `Run and Debug` section of the IDE (`Ctrl-Shift-D or Cmd-Shift-D`)
-3. Choose the proper session:
-    - `VsCode: Wokwi Debug`
-    - `Gitpod: Wokwi Debug`
-4. Start Debugging (`F5`)
+Wokwi offers debugging with GDB.
+
+- [Devcontainers] Terminal approach:
+    ```
+    $HOME/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb target/xtensa-esp32-espidf/debug/rustzx-esp32 -ex "target remote localhost:9333"
+    ```
+- [Devcontainers] UI approach:
+
+    Debug using with VsCode or Gitpod is also possible:
+    1. Run the Wokwi Simulation
+        > Note that the simulation will pause if the browser tab is on the background
+    2. Go to `Run and Debug` section of the IDE (`Ctrl-Shift-D or Cmd-Shift-D`)
+    3. Choose the proper session:
+        - `VsCode: Wokwi Debug`
+        - `Gitpod: Wokwi Debug`
+    4. Start Debugging (`F5`)
 
 ## HW Setup
 
