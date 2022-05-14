@@ -33,11 +33,12 @@ Run:
 ```
 The default build task is already set to build the project, and it can be used
 in VsCode and Gitpod:
-- From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Build Task` command
+- From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Build Task` command.
 - `Terminal`-> `Run Build Task` in the menu.
-- With `Ctrl-Shift-B` or `Cmd-Shift-B`
+- With `Ctrl-Shift-B` or `Cmd-Shift-B`.
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
-  select `Build Project`
+  select `Build Project`.
+- From UI: Press `Build Project` on the left side of the Status Bar.
 
 ## Build and flash
 
@@ -72,9 +73,10 @@ The default test task is already set to build the project, and it can be used
 in VsCode and Gitpod:
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Test Task` command
 - With `Ctrl-Shift-,` or `Cmd-Shift-,`
-    > Note: This Shortcut is not available in Gitpod by default
+    > Note: This Shortcut is not available in Gitpod by default.
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
-  select `Build & Run Wokwi`
+  select `Build & Run Wokwi`.
+- From UI: Press `Build & Run Wokwi` on the left side of the Status Bar.
 
 ### Debuging with Wokwi
 ```
