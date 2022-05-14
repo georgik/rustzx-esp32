@@ -32,7 +32,8 @@
     "serayuzgur.crates",
     "mutantdino.resourcemonitor",
     "yzhang.markdown-all-in-one",
-    "webfreak.debug"
+    "webfreak.debug",
+    "actboy168.tasks"
   ],
   "forwardPorts": [
     9012,
