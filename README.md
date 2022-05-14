@@ -72,6 +72,7 @@ The default test task is already set to build the project, and it can be used
 in VsCode and Gitpod:
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Test Task` command
 - With `Ctrl-Shift-,` or `Cmd-Shift-,`
+    > Note: This Shortcut is not available in Gitpod by default
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
   select `Build & Run Wokwi`
 
