@@ -32,12 +32,12 @@ Run:
 ./build-rustzx.sh
 ```
 The default build task is already set to build the project, and it can be used
-in VsCode:
+in VsCode and Gitpod:
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Build Task` command
 - `Terminal`-> `Run Build Task` in the menu.
 - With `Ctrl-Shift-B` or `Cmd-Shift-B`
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
-  select `Build project`
+  select `Build Project`
 
 ## Build and flash
 
@@ -69,11 +69,11 @@ Run in with Wokwi simulator:
 ```
 
 The default test task is already set to build the project, and it can be used
-in VsCode:
+in VsCode and Gitpod:
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Test Task` command
 - With `Ctrl-Shift-,` or `Cmd-Shift-,`
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
-  select `Run Wokwi simulation`
+  select `Build & Run Wokwi`
 
 ### Debuging with Wokwi
 ```
