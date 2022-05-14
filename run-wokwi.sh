@@ -12,16 +12,17 @@ fi
 
 pip3 install websockets==10.2
 
-cargo +esp espflash save-image app.bin --target xtensa-esp32-espidf --features "esp32_ili9341"
-
-find target -name bootloader.bin -exec cp {} . \;
-find target -name partition-table.bin -exec cp {} . \;
+cargo +esp espflash save-image app.bin --merge --target xtensa-esp32-espidf --features "esp32_ili9341"
 
 # ESP32 board
 export ESP_BOARD="esp32"
 export WOKWI_PROJECT_ID="331440829570744915"
-export ESP_BOOTLOADER_OFFSET="0x1000"
-export ESP_PARTITION_TABLE_OFFSET="0x8000"
-export ESP_APP_OFFSET="0x10000"
+ESP_ARCH=""
+if [ "${ESP_BOARD}" == "esp32c3" ]; then
+    ESP_ARCH="riscv32imc-esp-espidf"
+else
+    ESP_ARCH="xtensa-esp32-espidf"
+fi
+export ESP_ARCH=${ESP_ARCH}
 
 python3  ~/esp32-wokwi-gitpod-websocket-server/server.py
