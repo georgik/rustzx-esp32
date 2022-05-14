@@ -4,9 +4,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build project",
+      "label": "Build Project",
       "type": "shell",
-      "command": "cargo +esp espflash save-image app.bin --target xtensa-esp32-espidf --release --features \"esp32_ili9341\"",
+      "command": "./build-rustzx.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -16,9 +16,9 @@
       }
     },
     {
-      "label": "Run Wokwi simulation",
+      "label": "Build & Run Wokwi",
       "type": "shell",
-      "command": "bash run-wokwi.sh",
+      "command": "./run-wokwi.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -26,6 +26,6 @@
         "kind": "test",
         "isDefault": true
       }
-    }
+    },
   ]
 }
