@@ -14,7 +14,6 @@ vscode:
   extensions:
     - matklad.rust-analyzer
     - tamasfe.even-better-toml
-    - vadimcn.vscode-lldb
     - anwar.resourcemonitor
     - yzhang.markdown-all-in-one
     - webfreak.debug
