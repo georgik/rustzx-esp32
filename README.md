@@ -32,7 +32,7 @@ Run:
 ./build-rustzx.sh
 ```
 The default build task is already set to build the project, and it can be used
-in VsCode and Gitpod:
+in VsCode:
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Build Task` command
 - `Terminal`-> `Run Build Task` in the menu.
 - With `Ctrl-Shift-B` or `Cmd-Shift-B`
@@ -69,11 +69,12 @@ Run in with Wokwi simulator:
 ```
 
 The default test task is already set to build the project, and it can be used
-in VsCode and Gitpod:
+in VsCode:
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Test Task` command
 - With `Ctrl-Shift-,` or `Cmd-Shift-,`
 - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
   select `Run Wokwi simulation`
+
 ### Debuging with Wokwi
 ```
 $HOME/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb target/xtensa-esp32-espidf/debug/rustzx-esp32 -ex "target remote localhost:9333"
