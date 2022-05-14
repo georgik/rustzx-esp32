@@ -79,6 +79,15 @@ in VsCode and Gitpod:
 $HOME/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb target/xtensa-esp32-espidf/debug/rustzx-esp32 -ex "target remote localhost:9333"
 ```
 
+Debugging with VsCode and Gitpod is also possible:
+1. Run the Wokwi Simulation
+   > Note that the simulation will pause if the browser tab is on the background
+2. Go to `Run and Debug` section of the IDE (`Ctrl-Shift-D or Cmd-Shift-D`)
+3. Choose the proper session:
+    - `VsCode: Wokwi Debug`
+    - `Gitpod: Wokwi Debug`
+4. Start Debugging (`F5`)
+
 ## HW Setup
 
 ### Display connection
