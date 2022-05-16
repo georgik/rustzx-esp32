@@ -8,15 +8,19 @@ tasks:
      source /home/gitpod/export-rust.sh
      export IDF_TOOLS_PATH=/home/gitpod/.espressif
      source /home/gitpod/.espressif/frameworks/esp-idf-v4.4/export.sh
-     export CURRENT_PROJECT=/workspace/rustzx-esp32/
+     export CURRENT_PROJECT=rustzx-esp32
 
 vscode:
   extensions:
     - matklad.rust-analyzer
     - tamasfe.even-better-toml
-    - vadimcn.vscode-lldb
     - anwar.resourcemonitor
     - yzhang.markdown-all-in-one
+    - webfreak.debug
+    - actboy168.tasks
+    - serayuzgur.crates
 ports:
   - port: 9012
+    visibility: public
+  - port: 9333
     visibility: public

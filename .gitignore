@@ -1,4 +1,6 @@
 /.vscode
+!.vscode/task.json
+!.vscode/launch.json
 /.embuild
 /target
 /Cargo.lock
