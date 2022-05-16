@@ -244,6 +244,7 @@ pub(crate) fn esp32_create_display_ili9341(
         Portrait,
         PortraitFlipped,
         Landscape,
+        LandscapeVericallyFlipped,
         LandscapeFlipped,
     }
 
@@ -251,6 +252,7 @@ pub(crate) fn esp32_create_display_ili9341(
         fn mode(&self) -> u8 {
             match self {
                 Self::Portrait => 0,
+                Self::LandscapeVericallyFlipped => 0x20,
                 Self::Landscape => 0x20 | 0x40,
                 Self::PortraitFlipped => 0x80 | 0x40,
                 Self::LandscapeFlipped => 0x80 | 0x20,
@@ -258,7 +260,7 @@ pub(crate) fn esp32_create_display_ili9341(
         }
 
         fn is_landscape(&self) -> bool {
-            matches!(self, Self::Landscape | Self::LandscapeFlipped)
+            matches!(self, Self::Landscape | Self::LandscapeFlipped | Self::LandscapeVericallyFlipped)
         }
     }
 
@@ -291,7 +293,7 @@ pub(crate) fn esp32_create_display_ili9341(
         di,
         reset,
         &mut delay::Ets,
-        KalugaOrientation::Landscape,
+        KalugaOrientation::LandscapeVericallyFlipped,
         ili9341::DisplaySize240x320,
     ).map_err(|e| anyhow!("Failed to init display"))
 }
