@@ -48,8 +48,7 @@ RUN mkdir -p .espressif/frameworks/ \
     && rm -rf .espressif/frameworks/esp-idf/tools/test_idf_size
 
 # Clone esp32-wokwi-gitpod-websocket-server
-# RUN git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
-RUN git clone https://github.com/SergioGasquez/esp32-wokwi-gitpod-websocket-server.git
+RUN git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
 
 # Activate ESP environment
 ENV IDF_TOOLS_PATH=/home/${CONTAINER_USER}/.espressif
