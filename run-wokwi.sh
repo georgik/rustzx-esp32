@@ -8,7 +8,6 @@ if [ "${USER}" == "gitpod" ]; then
         source /home/gitpod/export-rust.sh > /dev/null 2>&1
         export IDF_TOOLS_PATH=/home/gitpod/.espressif
         source /home/gitpod/.espressif/frameworks/esp-idf-v4.4/export.sh > /dev/null 2>&1
-        export CURRENT_PROJECT=/workspace/rustzx-esp32
     }
 fi
 
@@ -17,6 +16,7 @@ pip3 install websockets==10.2
 # ESP32 board
 export ESP_BOARD="esp32"
 export ESP_ELF="rustzx-esp32"
+export CURRENT_PROJECT=/workspace/rustzx-esp32
 export WOKWI_PROJECT_ID="331440829570744915"
 
 if [ "${ESP_BOARD}" == "esp32c3" ]; then
