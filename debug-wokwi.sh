@@ -18,7 +18,7 @@ pip3 install websockets==10.2
 
 # ESP32 board
 export ESP_BOARD="esp32s2"
-export ESP_ELF="rustzx-esp32s2"
+export ESP_ELF="rustzx-esp32"
 
 if [ "${ESP_BOARD}" == "esp32c3" ]; then
     export WOKWI_PROJECT_ID="330910629554553426"
