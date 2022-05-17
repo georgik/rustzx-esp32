@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "gdb",
+      "request": "attach",
+      "name": "VsCode: Wokwi Debug",
+      "executable": "${workspaceFolder}/target/xtensa-esp32s2-espidf/debug/rustzx-esp32",
+      "target": "localhost:9333",
+      "remote": true,
+      "gdbpath": "/home/esp/.espressif/tools/xtensa-esp32s2-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32s2-elf/bin/xtensa-esp32s2-elf-gdb",
+      "cwd": "${workspaceRoot}",
+      "stopAtConnect": true,
+      "valuesFormatting": "parseText"
+    },
+    {
+      "type": "gdb",
+      "request": "attach",
+      "name": "Gitpod: Wokwi Debug",
+      "executable": "${workspaceFolder}/target/xtensa-esp32s2-espidf/debug/rustzx-esp32",
+      "target": "localhost:9333",
+      "remote": true,
+      "gdbpath": "/home/gitpod/.espressif/tools/xtensa-esp32s2-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32s2-elf/bin/xtensa-esp32s2-elf-gdb",
+      "cwd": "${workspaceRoot}",
+      "stopAtConnect": true,
+      "valuesFormatting": "parseText"
+    },
+  ]
+}
