@@ -99,7 +99,7 @@ macro_rules! create {
             $peripherals.pins.gpio16,
             $peripherals.spi3,
             $peripherals.pins.gpio15,
-            $peripherals.pins.gpio7,
+            $peripherals.pins.gpio9,
             $peripherals.pins.gpio11,
         );
 
