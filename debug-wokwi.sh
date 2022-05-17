@@ -26,7 +26,7 @@ if [ "${ESP_BOARD}" == "esp32c3" ]; then
     export ESP_BOOTLOADER_OFFSET="0x0000"
     export ESP_PARTITION_TABLE_OFFSET="0x8000"
     export ESP_APP_OFFSET="0x10000"
-else if [ "${ESP_BOARD}" == "esp32s2" ]; then
+elif [ "${ESP_BOARD}" == "esp32s2" ]; then
     export WOKWI_PROJECT_ID="330910629554553426"
     export ESP_ARCH="xtensa-esp32s2-espidf"
     export ESP_BOOTLOADER_OFFSET="0x0000"
