@@ -16,7 +16,7 @@ fi
 
 pip3 install websockets==10.2
 
-# ESP32 board
+# ESP32C3 board
 export ESP_BOARD="esp32c3"
 export ESP_ELF="rustzx-esp32"
 export WOKWI_PROJECT_ID="331440829570744915"
@@ -33,9 +33,9 @@ else
     export ESP_APP_OFFSET="0x10000"
 fi
 
-cargo +esp espflash save-image app.bin --target "${ESP_ARCH}" --release --features "esp32c3_ili9341"
+cargo +esp espflash save-image app.bin --target "${ESP_ARCH}" --features "esp32c3_ili9341"
 
-find target/${ESP_ARCH}/release -name bootloader.bin -exec cp {} . \;
-find target/${ESP_ARCH}/release -name partition-table.bin -exec cp {} . \;
+find target/${ESP_ARCH}/debug -name bootloader.bin -exec cp {} . \;
+find target/${ESP_ARCH}/debug -name partition-table.bin -exec cp {} . \;
 
 python3  ~/esp32-wokwi-gitpod-websocket-server/server.py
