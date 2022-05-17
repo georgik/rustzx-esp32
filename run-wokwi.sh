@@ -40,7 +40,7 @@ else
     export ESP_APP_OFFSET="0x10000"
 fi
 
-cargo +esp espflash save-image app.bin --target "${ESP_ARCH}" --release --features "esp32s2_ili9341"
+cargo +esp espflash save-image app.bin --target "${ESP_ARCH}" --release --features "kaluga_ili9341"
 
 find target/${ESP_ARCH}/release -name bootloader.bin -exec cp {} . \;
 find target/${ESP_ARCH}/release -name partition-table.bin -exec cp {} . \;

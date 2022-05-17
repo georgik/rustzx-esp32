@@ -8,4 +8,4 @@ if [ "${USER}" == "gitpod" ]; then
     export CURRENT_PROJECT=rustzx-esp32
 fi
 
-cargo +esp build --target xtensa-esp32s2-espidf --release --features "esp32s2_ili9341"
+cargo +esp build --target xtensa-esp32s2-espidf --release --features "kaluga_ili9341"
