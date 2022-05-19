@@ -7,7 +7,7 @@ ENV LANG=C.UTF-8
 # Arguments
 ARG CONTAINER_USER=esp
 ARG CONTAINER_GROUP=esp
-ARG TOOLCHAIN_VERSION=1.60.0.1
+ARG TOOLCHAIN_VERSION=1.61.0.0
 ARG ESP_IDF_VERSION=release/v4.4
 ARG ESP_BOARD=esp32
 ARG INSTALL_RUST_TOOLCHAIN=install-rust-toolchain.sh
@@ -47,3 +47,4 @@ RUN echo "source /home/${CONTAINER_USER}/export-rust.sh > /dev/null 2>&1" >> ~/.
 
 ENV CURRENT_PROJECT=rustzx-esp32
 CMD [ "/bin/bash" ]
+
