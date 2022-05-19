@@ -26,7 +26,7 @@ ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
 
 RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     && ./${INSTALL_RUST_TOOLCHAIN} \
-    --extra-crates "cargo-espflash ldproxy espmonitor" \
+    --extra-crates "cargo-espflash ldproxy" \
     --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
     --esp-idf-version "release/v4.4" \
     --minified-esp-idf "YES" \
