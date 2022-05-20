@@ -10,6 +10,14 @@ Hardware: ESP32-C3 (e.g. ESP32-C3-DevKit-RUST-1) and ILI9341 display
 
 [![Open ESP32-C3 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/tree/target/esp32c3)
 
+### Run simulation
+
+```
+./run-wokwi.sh
+```
+
+### Build the artifact
+
 ```
 cargo build --release
 ```
