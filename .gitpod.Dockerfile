@@ -6,7 +6,7 @@ ENV LANG=C.UTF-8
 # Set users
 ARG CONTAINER_USER=gitpod
 ARG CONTAINER_GROUP=gitpod
-ARG TOOLCHAIN_VERSION=1.61.0.1
+ARG TOOLCHAIN_VERSION=1.61.0.0
 
 # Install dependencies
 RUN sudo install-packages git curl gcc ninja-build libudev-dev libpython2.7 \
