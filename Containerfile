@@ -7,7 +7,7 @@ ENV LANG=C.UTF-8
 # Arguments
 ARG CONTAINER_USER=esp
 ARG CONTAINER_GROUP=esp
-ARG TOOLCHAIN_VERSION=1.60.0.1
+ARG TOOLCHAIN_VERSION=1.61.0.0
 ARG ESP_IDF_VERSION=release/v4.4
 ARG ESP_BOARD=esp32s2
 ARG INSTALL_RUST_TOOLCHAIN=install-rust-toolchain.sh
@@ -25,27 +25,19 @@ WORKDIR /home/${CONTAINER_USER}
 
 # Install toolchain with extra crates
 ENV PATH=${PATH}:/home/${CONTAINER_USER}/.cargo/bin:/home/${CONTAINER_USER}/opt/bin
-# Official https://github.com/esp-rs/rust-build/releases/download/v${TOOLCHAIN_VERSION}/${INSTALL_RUST_TOOLCHAIN} \
+
+# Use Rust and LLVM installer
 ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
-    https://raw.githubusercontent.com/esp-rs/rust-build/feature/small-llvm/${INSTALL_RUST_TOOLCHAIN} \
+    https://github.com/esp-rs/rust-build/releases/download/v${TOOLCHAIN_VERSION}/${INSTALL_RUST_TOOLCHAIN} \
     /home/${CONTAINER_USER}/${INSTALL_RUST_TOOLCHAIN}
+
 RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     && ./${INSTALL_RUST_TOOLCHAIN} \
-    --extra-crates "ldproxy cargo-espflash espmonitor bindgen" \
-    --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh
-
-# Installl ESP-IDF
-RUN mkdir -p .espressif/frameworks/ \
-    && git clone --branch ${ESP_IDF_VERSION} --depth 1 --shallow-submodules \
-    --recursive https://github.com/espressif/esp-idf.git \
-    .espressif/frameworks/esp-idf \
-    && python3 .espressif/frameworks/esp-idf/tools/idf_tools.py install cmake \
-    && .espressif/frameworks/esp-idf/install.sh ${ESP_BOARD} \
-    && rm -rf .espressif/dist \
-    && rm -rf .espressif/frameworks/esp-idf/docs \
-    && rm -rf .espressif/frameworks/esp-idf/examples \
-    && rm -rf .espressif/frameworks/esp-idf/tools/esp_app_trace \
-    && rm -rf .espressif/frameworks/esp-idf/tools/test_idf_size
+    --extra-crates "cargo-espflash ldproxy" \
+    --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
+    --esp-idf-version "release/v4.4" \
+    --minified-esp-idf "YES" \
+    --build-target "esp32c3"
 
 # Clone esp32-wokwi-gitpod-websocket-server
 RUN git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
