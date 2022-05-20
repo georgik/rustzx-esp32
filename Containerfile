@@ -36,7 +36,8 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     --extra-crates "cargo-espflash ldproxy" \
     --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
     --esp-idf-version "release/v4.4" \
-    --minified-esp-idf "YES"
+    --minified-esp-idf "YES" \
+    --build-target "esp32c3"
 
 # Clone esp32-wokwi-gitpod-websocket-server
 RUN git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
