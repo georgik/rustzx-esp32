@@ -9,4 +9,4 @@ if [ "${USER}" == "gitpod" ]; then
     }
 fi
 
-cargo +esp build --target xtensa-esp32c3-espidf --release --features "esp32c3_ili9341"
+cargo build --target xtensa-esp32c3-espidf --release --features "esp32c3_ili9341"
