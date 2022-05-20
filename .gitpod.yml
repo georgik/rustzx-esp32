@@ -6,8 +6,6 @@ tasks:
  - name: Setup environment variables for Rust and ESP-IDF
    command: |
      source /home/gitpod/export-rust.sh
-     export IDF_TOOLS_PATH=/home/gitpod/.espressif
-     source /home/gitpod/.espressif/frameworks/esp-idf-release-v4.4/export.sh
      export CURRENT_PROJECT=/workspace/rustzx-esp32
 
 vscode:
