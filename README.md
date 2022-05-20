@@ -10,6 +10,14 @@ HW: ESP32 with ILI9341
 
 [![Open ESP32 in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/github.com/georgik/rustzx-esp32/)
 
+### Run simulation
+
+```
+./run-wokwi.sh
+```
+
+### Build the artifact
+
 ```
 cargo build --release
 ```
