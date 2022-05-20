@@ -30,5 +30,6 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
     --esp-idf-version "release/v4.4" \
     --minified-esp-idf "YES" \
+    --build-target "esp32" \
     && git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
 
