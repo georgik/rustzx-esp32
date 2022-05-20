@@ -6,7 +6,7 @@ ENV LANG=C.UTF-8
 # Set users
 ARG CONTAINER_USER=gitpod
 ARG CONTAINER_GROUP=gitpod
-ARG TOOLCHAIN_VERSION=1.60.0.1
+ARG TOOLCHAIN_VERSION=1.61.0.0
 
 # Install dependencies
 RUN sudo install-packages git curl gcc ninja-build libudev-dev libpython2.7 \
@@ -19,25 +19,16 @@ WORKDIR /home/${CONTAINER_USER}
 ARG INSTALL_RUST_TOOLCHAIN=install-rust-toolchain.sh
 ENV PATH=${PATH}:/home/${CONTAINER_USER}/.cargo/bin:/home/${CONTAINER_USER}/opt/bin
 
-# Use LLVM installer
-# Official: https://github.com/esp-rs/rust-build/releases/download/v${TOOLCHAIN_VERSION}/${INSTALL_RUST_TOOLCHAIN}
+# Use Rust and LLVM installer
 ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
-    https://raw.githubusercontent.com/esp-rs/rust-build/feature/small-llvm/install-rust-toolchain.sh \
+    https://github.com/esp-rs/rust-build/releases/download/v${TOOLCHAIN_VERSION}/${INSTALL_RUST_TOOLCHAIN} \
     /home/${CONTAINER_USER}/${INSTALL_RUST_TOOLCHAIN}
 
 RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     && ./${INSTALL_RUST_TOOLCHAIN} \
-    --extra-crates "cargo-espflash ldproxy espmonitor" \
+    --extra-crates "cargo-espflash ldproxy" \
     --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
-    && mkdir -p .espressif/frameworks/ \
-    && git clone --branch "release/v4.4" -q --depth 1 --shallow-submodules \
-    --recursive https://github.com/espressif/esp-idf.git \
-    .espressif/frameworks/esp-idf-v4.4 \
-    && python3 .espressif/frameworks/esp-idf-v4.4/tools/idf_tools.py install cmake \
-    && .espressif/frameworks/esp-idf-v4.4/install.sh esp32c3 \
-    && rm -rf .espressif/dist \
-    && rm -rf .espressif/frameworks/esp-idf-v4.4/docs \
-    && rm -rf .espressif/frameworks/esp-idf-v4.4/examples \
-    && rm -rf .espressif/frameworks/esp-idf-v4.4/tools/esp_app_trace \
-    && rm -rf .espressif/frameworks/esp-idf-v4.4/tools/test_idf_size \
+    --esp-idf-version "release/v4.4" \
+    --minified-esp-idf "YES" \
+    --build-target "esp32c3" \
     && git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git

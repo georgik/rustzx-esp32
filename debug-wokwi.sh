@@ -8,7 +8,7 @@ if [ "${USER}" == "gitpod" ]; then
     which idf.py >/dev/null || {
         source /home/gitpod/export-rust.sh > /dev/null 2>&1
         export IDF_TOOLS_PATH=/home/gitpod/.espressif
-        source /home/gitpod/.espressif/frameworks/esp-idf-v4.4/export.sh > /dev/null 2>&1
+        source /home/gitpod/.espressif/frameworks/esp-idf-release-v4.4/export.sh
     }
 else
     export CURRENT_PROJECT=~/workspace/
@@ -34,7 +34,7 @@ else
     export ESP_APP_OFFSET="0x10000"
 fi
 
-cargo +esp espflash save-image app.bin --target "${ESP_ARCH}" --features "esp32c3_ili9341"
+cargo espflash save-image app.bin --target "${ESP_ARCH}" --features "esp32c3_ili9341"
 
 find target/${ESP_ARCH}/debug -name bootloader.bin -exec cp {} . \;
 find target/${ESP_ARCH}/debug -name partition-table.bin -exec cp {} . \;
