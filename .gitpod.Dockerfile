@@ -33,4 +33,4 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     --build-target "esp32"
 # Install web-flash and wokwi-server
 RUN cargo install web-flash --git https://github.com/bjoernQ/esp-web-flash-server \
-    && cargo install wokwi-server --git https://github.com/SergioGasquez/wokwi-server
+    && cargo install wokwi-server --git https://github.com/MabezDev/wokwi-server
