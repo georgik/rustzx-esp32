@@ -36,7 +36,8 @@
   ],
   "forwardPorts": [
     9012,
-    9333
+    9333,
+    8000
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/esp/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/home/esp/workspace/"

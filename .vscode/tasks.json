@@ -16,9 +16,33 @@
       }
     },
     {
-      "label": "Build & Run Wokwi",
+      "label": "Build & Upload",
       "type": "shell",
-      "command": "./run-wokwi.sh",
+      "command": "./upload.sh",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Build [Release] & Run Wokwi",
+      "type": "shell",
+      "command": "cargo +esp run --release",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Build [Debug] & Run Wokwi",
+      "type": "shell",
+      "command": "cargo +esp run",
       "options": {
         "cwd": "${workspaceFolder}"
       },
