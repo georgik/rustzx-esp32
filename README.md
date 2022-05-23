@@ -60,6 +60,11 @@ Open in VS Code with Dev Container support.
 > public, [see instructions](https://docs.github.com/en/codespaces/developing-in-codespaces/forwarding-ports-in-your-codespace#sharing-a-port).
 
 - Terminal approach:
+  - Using custom `runner` in `.cargo/config.toml`:
+    ```
+    cargo +esp run [--release]
+    ```
+  - Using `flash.sh` script:
 
     ```
     ./flash.sh [debug | release]
