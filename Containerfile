@@ -45,6 +45,5 @@ RUN cargo install web-flash --git https://github.com/bjoernQ/esp-web-flash-serve
 # Activate ESP environment
 RUN echo "source /home/${CONTAINER_USER}/export-rust.sh" >> ~/.bashrc
 
-ENV CURRENT_PROJECT=rustzx-esp32
 CMD [ "/bin/bash" ]
 
