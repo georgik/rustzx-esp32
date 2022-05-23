@@ -24,3 +24,4 @@ ports:
     visibility: public
   - port: 8000
     visibility: public
+    onOpen: open-browser
