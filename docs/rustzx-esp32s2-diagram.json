@@ -1,0 +1,37 @@
+{
+    "version": 1,
+    "author": "Juraj Mich\ufffdlek",
+    "editor": "wokwi",
+    "parts": [
+      {
+        "type": "board-franzininho-wifi",
+        "id": "franzininho",
+        "top": 36,
+        "left": -384.67,
+        "attrs": {}
+      },
+      {
+        "type": "wokwi-ili9341",
+        "id": "lcd1",
+        "top": -230.2,
+        "left": -121.17,
+        "rotate": 90,
+        "attrs": {}
+      }
+    ],
+    "connections": [
+      [ "lcd1:GND", "franzininho:GND.2", "black", [ "v0", "*", "h0" ] ],
+      [ "lcd1:VCC", "franzininho:5V.1", "red", [ "v0", "*", "h0" ] ],
+      [ "lcd1:CS", "franzininho:15", "yellow", [ "v0", "*", "h0" ] ],
+      [ "lcd1:SCK", "franzininho:36", "blue", [ "v0", "*", "h0" ] ],
+      [ "lcd1:MOSI", "franzininho:35", "purple", [ "v0", "*", "h0" ] ],
+      [ "lcd1:RST", "franzininho:4", "pink", [ "v0", "*", "h0" ] ],
+      [ "lcd1:D/C", "franzininho:2", "orange", [ "v0", "*", "h0" ] ],
+      [ "lcd1:LED", "franzininho:6", "green", [ "v0", "*", "h0" ] ],
+      [ "$serialMonitor:RX", "franzininho:43", ""],
+      [ "$serialMonitor:TX", "franzininho:44", ""]
+      
+    ],
+    "serialMonitor": { "display": "terminal" }
+  }
+  

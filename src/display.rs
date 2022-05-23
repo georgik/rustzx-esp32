@@ -109,7 +109,7 @@ macro_rules! create {
             $peripherals.pins.gpio6, // backlight
             $peripherals.pins.gpio2,  // dc
             $peripherals.pins.gpio4,  // rst
-            $peripherals.spi3,
+            $peripherals.spi2,
             $peripherals.pins.gpio36, // sclk
             $peripherals.pins.gpio35, // sdo
             $peripherals.pins.gpio15, // cs
@@ -313,7 +313,7 @@ pub(crate) fn esp32s2_create_display_ili9341(
     backlight: gpio::Gpio6<gpio::Unknown>,
     dc: gpio::Gpio2<gpio::Unknown>,
     rst: gpio::Gpio4<gpio::Unknown>,
-    spi: spi::SPI3,
+    spi: spi::SPI2,
     sclk: gpio::Gpio36<gpio::Unknown>,
     sdo: gpio::Gpio35<gpio::Unknown>,
     cs: gpio::Gpio15<gpio::Unknown>,
@@ -321,7 +321,7 @@ pub(crate) fn esp32s2_create_display_ili9341(
     ili9341::Ili9341<
         SPIInterfaceNoCS<
             spi::Master<
-                spi::SPI3,
+                spi::SPI2,
                 gpio::Gpio36<gpio::Output>,
                 gpio::Gpio35<gpio::Output>,
                 gpio::Gpio10<gpio::Input>,
@@ -338,6 +338,7 @@ pub(crate) fn esp32s2_create_display_ili9341(
         Portrait,
         PortraitFlipped,
         Landscape,
+        LandscapeVericallyFlipped,
         LandscapeFlipped,
     }
 
@@ -345,6 +346,7 @@ pub(crate) fn esp32s2_create_display_ili9341(
         fn mode(&self) -> u8 {
             match self {
                 Self::Portrait => 0,
+                Self::LandscapeVericallyFlipped => 0x20,
                 Self::Landscape => 0x20 | 0x40,
                 Self::PortraitFlipped => 0x80 | 0x40,
                 Self::LandscapeFlipped => 0x80 | 0x20,
@@ -352,7 +354,7 @@ pub(crate) fn esp32s2_create_display_ili9341(
         }
 
         fn is_landscape(&self) -> bool {
-            matches!(self, Self::Landscape | Self::LandscapeFlipped)
+            matches!(self, Self::Landscape | Self::LandscapeFlipped | Self::LandscapeVericallyFlipped)
         }
     }
 
@@ -366,7 +368,7 @@ pub(crate) fn esp32s2_create_display_ili9341(
     backlight.set_high()?;
 
     let di = SPIInterfaceNoCS::new(
-        spi::Master::<spi::SPI3, _, _, _, _>::new(
+        spi::Master::<spi::SPI2, _, _, _, _>::new(
             spi,
             spi::Pins {
                 sclk: sclk.into_output()?,
@@ -385,7 +387,7 @@ pub(crate) fn esp32s2_create_display_ili9341(
         di,
         reset,
         &mut delay::Ets,
-        KalugaOrientation::Landscape,
+        KalugaOrientation::LandscapeVericallyFlipped,
         ili9341::DisplaySize240x320,
     ).map_err(|e| anyhow!("Failed to init display"))
 }
