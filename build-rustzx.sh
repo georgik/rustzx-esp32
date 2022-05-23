@@ -1,8 +1,13 @@
 #!/bin/bash
 
 # Gitpod and VsCode Codespaces tasks do not source the user environment
-if [ "${USER}" == "gitpod" || "${CODESPACE_NAME}" != ""]; then
+if [ "${USER}" == "gitpod" ]; then
     export CURRENT_PROJECT=/workspace/rustzx-esp32
+    which idf.py >/dev/null || {
+        source ~/export-rust.sh > /dev/null 2>&1
+    }
+elif [ "${CODESPACE_NAME}" != "" ]; then
+    export CURRENT_PROJECT=/workspaces/rustzx-esp32
     which idf.py >/dev/null || {
         source ~/export-rust.sh > /dev/null 2>&1
     }
