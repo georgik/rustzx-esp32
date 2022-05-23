@@ -4,9 +4,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build Project",
+      "label": "Build",
       "type": "shell",
-      "command": "./build-rustzx.sh",
+      "command": "./build-rustzx.sh ${input:buildMode}",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -18,7 +18,7 @@
     {
       "label": "Build & Upload",
       "type": "shell",
-      "command": "./upload.sh",
+      "command": "./upload.sh ${input:buildMode}",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -28,9 +28,9 @@
       }
     },
     {
-      "label": "Build [Release] & Run Wokwi",
+      "label": "Build & Run Wokwi",
       "type": "shell",
-      "command": "cargo +esp run --release",
+      "command": "./run-wokwi.sh ${input:buildMode}",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -39,17 +39,17 @@
         "isDefault": true
       }
     },
+  ],
+  "inputs": [
     {
-      "label": "Build [Debug] & Run Wokwi",
-      "type": "shell",
-      "command": "cargo +esp run",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      }
-    },
+      "type": "pickString",
+      "id": "buildMode",
+      "description": "Select the build mode:",
+      "options": [
+        "release",
+        "debug"
+      ],
+      "default": "release"
+    }
   ]
 }
