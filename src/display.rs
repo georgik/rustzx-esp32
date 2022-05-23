@@ -29,6 +29,7 @@ compile_error!(
 #[cfg(not(any(
     feature = "kaluga_ili9341",
     feature = "esp32_ili9341",
+    feature = "esp32s2_ili9341",
     feature = "esp32c3_ili9341",
     feature = "kaluga_st7789",
     feature = "ttgo",
@@ -101,6 +102,17 @@ macro_rules! create {
             $peripherals.pins.gpio15,
             $peripherals.pins.gpio9,
             $peripherals.pins.gpio11,
+        );
+
+        #[cfg(feature = "esp32s2_ili9341")]
+        let result = display::esp32s2_create_display_ili9341(
+            $peripherals.pins.gpio6, // backlight
+            $peripherals.pins.gpio2,  // dc
+            $peripherals.pins.gpio4,  // rst
+            $peripherals.spi2,
+            $peripherals.pins.gpio36, // sclk
+            $peripherals.pins.gpio35, // sdo
+            $peripherals.pins.gpio15, // cs
         );
 
         #[cfg(feature = "esp32_ili9341")]
@@ -292,6 +304,90 @@ pub(crate) fn esp32_create_display_ili9341(
         reset,
         &mut delay::Ets,
         KalugaOrientation::Landscape,
+        ili9341::DisplaySize240x320,
+    ).map_err(|e| anyhow!("Failed to init display"))
+}
+
+#[cfg(feature = "esp32s2_ili9341")]
+pub(crate) fn esp32s2_create_display_ili9341(
+    backlight: gpio::Gpio6<gpio::Unknown>,
+    dc: gpio::Gpio2<gpio::Unknown>,
+    rst: gpio::Gpio4<gpio::Unknown>,
+    spi: spi::SPI2,
+    sclk: gpio::Gpio36<gpio::Unknown>,
+    sdo: gpio::Gpio35<gpio::Unknown>,
+    cs: gpio::Gpio15<gpio::Unknown>,
+) -> Result<
+    ili9341::Ili9341<
+        SPIInterfaceNoCS<
+            spi::Master<
+                spi::SPI2,
+                gpio::Gpio36<gpio::Output>,
+                gpio::Gpio35<gpio::Output>,
+                gpio::Gpio10<gpio::Input>,
+                gpio::Gpio15<gpio::Unknown>,
+            >,
+            gpio::Gpio2<gpio::Output>,
+        >,
+        gpio::Gpio4<gpio::Output>,
+    >,
+> {
+    // Kaluga needs customized screen orientation commands
+    // (not a surprise; quite a few ILI9341 boards need these as evidences in the TFT_eSPI & lvgl ESP32 C drivers)
+    pub enum KalugaOrientation {
+        Portrait,
+        PortraitFlipped,
+        Landscape,
+        LandscapeVericallyFlipped,
+        LandscapeFlipped,
+    }
+
+    impl ili9341::Mode for KalugaOrientation {
+        fn mode(&self) -> u8 {
+            match self {
+                Self::Portrait => 0,
+                Self::LandscapeVericallyFlipped => 0x20,
+                Self::Landscape => 0x20 | 0x40,
+                Self::PortraitFlipped => 0x80 | 0x40,
+                Self::LandscapeFlipped => 0x80 | 0x20,
+            }
+        }
+
+        fn is_landscape(&self) -> bool {
+            matches!(self, Self::Landscape | Self::LandscapeFlipped | Self::LandscapeVericallyFlipped)
+        }
+    }
+
+    info!("About to initialize the ESP32S2 ILI9341 SPI LED driver");
+
+    let config = <spi::config::Config as Default>::default()
+        .baudrate(80.MHz().into());
+        //.bit_order(spi::config::BitOrder::MSBFirst);
+
+    let mut backlight = backlight.into_output()?;
+    backlight.set_high()?;
+
+    let di = SPIInterfaceNoCS::new(
+        spi::Master::<spi::SPI2, _, _, _, _>::new(
+            spi,
+            spi::Pins {
+                sclk: sclk.into_output()?,
+                sdo: sdo.into_output()?,
+                sdi: Option::<gpio::Gpio10<gpio::Input>>::None,
+                cs: Some(cs),
+            },
+            config,
+        )?,
+        dc.into_output()?,
+    );
+
+    let reset = rst.into_output()?;
+
+    ili9341::Ili9341::new(
+        di,
+        reset,
+        &mut delay::Ets,
+        KalugaOrientation::LandscapeVericallyFlipped,
         ili9341::DisplaySize240x320,
     ).map_err(|e| anyhow!("Failed to init display"))
 }
@@ -629,6 +725,7 @@ pub(crate) fn esp32s2s3_usb_otg_create_display(
 #[cfg(any(
     feature = "ttgo",
     feature = "esp32_ili9341",
+    feature = "esp32s2_ili9341",
     feature = "esp32s2_usb_otg",
     feature = "esp32s3_usb_otg",
     feature = "esp32c3_ili9341",

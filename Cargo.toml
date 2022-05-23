@@ -19,10 +19,13 @@ opt-level = "z"
 #opt-level = "s"
 
 [features]
-default = ["kaluga_ili9341"]
+default = ["esp32s2_ili9341"]
 
 # Enable this feature in case you have a ESP32 ILI9341 board
 esp32_ili9341 = []
+
+# Enable this feature in case you have a ESP32S2 ILI9341 board
+esp32s2_ili9341 = []
 
 # Enable this feature in case you have a ESP32C3 ILI9341 board
 esp32c3_ili9341 = []
