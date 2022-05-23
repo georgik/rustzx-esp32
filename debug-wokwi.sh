@@ -27,7 +27,7 @@ if [ "${ESP_BOARD}" == "esp32c3" ]; then
     export ESP_PARTITION_TABLE_OFFSET="0x8000"
     export ESP_APP_OFFSET="0x10000"
 elif [ "${ESP_BOARD}" == "esp32s2" ]; then
-    export WOKWI_PROJECT_ID="330910629554553426"
+    export WOKWI_PROJECT_ID="330831847505265234"
     export ESP_ARCH="xtensa-esp32s2-espidf"
     export ESP_BOOTLOADER_OFFSET="0x0000"
     export ESP_PARTITION_TABLE_OFFSET="0x8000"
@@ -40,9 +40,12 @@ else
     export ESP_APP_OFFSET="0x10000"
 fi
 
+echo "Building with command:"
+echo "cargo +esp espflash save-image app.bin --target \"${ESP_ARCH}\" --features \"esp32s2_ili9341\""
 cargo +esp espflash save-image app.bin --target "${ESP_ARCH}" --features "esp32s2_ili9341"
 
-find target/${ESP_ARCH}/debug -name bootloader.bin -exec cp {} . \;
-find target/${ESP_ARCH}/debug -name partition-table.bin -exec cp {} . \;
+echo "Locating files for simulator"
+find target/${ESP_ARCH}/debug -name bootloader.bin -print -exec cp {} . \;
+find target/${ESP_ARCH}/debug -name partition-table.bin -print -exec cp {} . \;
 
 python3  ~/esp32-wokwi-gitpod-websocket-server/server.py
