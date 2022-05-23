@@ -16,7 +16,7 @@
       }
     },
     {
-      "label": "Build & Upload",
+      "label": "Build & Flash",
       "type": "shell",
       "command": "./upload.sh ${input:buildMode}",
       "options": {
