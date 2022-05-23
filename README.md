@@ -88,8 +88,8 @@ With PowerShell:
 ```
 ### With devcontainers
     - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
-    select `Build & Upload`.
-    - From UI: Press `Build & Upload` on the left side of the Status Bar.
+    select `Build & Flash`.
+    - From UI: Press `Build & Flash` on the left side of the Status Bar.
 
 ## Build and run Wokwi simulation
 
