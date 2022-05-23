@@ -54,6 +54,11 @@ Open in VS Code with Dev Container support.
     - From UI: Press `Build` on the left side of the Status Bar.
 
 ## Build and flash
+
+> **Note**
+> When using GitHub Codespaces, we need to make the ports
+> public, [see instructions](https://docs.github.com/en/codespaces/developing-in-codespaces/forwarding-ports-in-your-codespace#sharing-a-port).
+
 - Terminal approach:
 
     ```
