@@ -22,11 +22,11 @@
     },
     "rust-analyzer.checkOnSave.command": "clippy",
     "[rust]": {
-      "editor.defaultFormatter": "matklad.rust-analyzer"
+      "editor.defaultFormatter": "rust-lang.rust-analyzer"
     }
   },
   "extensions": [
-    "matklad.rust-analyzer",
+    "rust-lang.rust-analyzer",
     "tamasfe.even-better-toml",
     "serayuzgur.crates",
     "mutantdino.resourcemonitor",
