@@ -23,7 +23,7 @@ RUN adduser --disabled-password --gecos "" ${CONTAINER_USER}
 USER ${CONTAINER_USER}
 WORKDIR /home/${CONTAINER_USER}
 
-# Install toolchain with extra crates
+# Install Rust toolchain, extra crates and esp-idf
 ENV PATH=${PATH}:/home/${CONTAINER_USER}/.cargo/bin:/home/${CONTAINER_USER}/opt/bin
 
 ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
@@ -38,14 +38,12 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     --minified-esp-idf "YES" \
     --build-target "esp32"
 
-# Clone esp32-wokwi-gitpod-websocket-server
-RUN git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
+# Install web-flash and wokwi-server
+RUN cargo install web-flash --git https://github.com/bjoernQ/esp-web-flash-server \
+    && cargo install wokwi-server --git https://github.com/MabezDev/wokwi-server
 
 # Activate ESP environment
-ENV IDF_TOOLS_PATH=/home/${CONTAINER_USER}/.espressif
-RUN echo "source /home/${CONTAINER_USER}/.espressif/frameworks/esp-idf/export.sh > /dev/null 2>&1" >> ~/.bashrc
-RUN echo "source /home/${CONTAINER_USER}/export-rust.sh > /dev/null 2>&1" >> ~/.bashrc
+RUN echo "source /home/${CONTAINER_USER}/export-rust.sh" >> ~/.bashrc
 
-ENV CURRENT_PROJECT=rustzx-esp32
 CMD [ "/bin/bash" ]
 

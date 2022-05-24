@@ -37,8 +37,11 @@ Open in VS Code with Dev Container support.
 - Terminal approach:
 
     ```
-    ./build-rustzx.sh
+    ./build-rustzx.sh  [debug | release]
     ```
+    > If no argument is passed, `release` will be used as default
+
+
 - [Devcontainers] UI approach:
 
     The default build task is already set to build the project, and it can be used
@@ -47,12 +50,33 @@ Open in VS Code with Dev Container support.
     - `Terminal`-> `Run Build Task` in the menu.
     - With `Ctrl-Shift-B` or `Cmd-Shift-B`.
     - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
-    select `Build Project`.
-    - From UI: Press `Build Project` on the left side of the Status Bar.
+    select `Build`.
+    - From UI: Press `Build` on the left side of the Status Bar.
 
 ## Build and flash
 
-> Flashing is not available when using Devcontainers
+> **Note**
+> When using GitHub Codespaces, we need to make the ports
+> public, [see instructions](https://docs.github.com/en/codespaces/developing-in-codespaces/forwarding-ports-in-your-codespace#sharing-a-port).
+
+- Terminal approach:
+  - Using custom `runner` in `.cargo/config.toml`:
+    ```
+    cargo +esp run [--release]
+    ```
+  - Using `flash.sh` script:
+
+    ```
+    ./flash.sh [debug | release]
+    ```
+    > If no argument is passed, `release` will be used as default
+
+- [Devcontainers] UI approach:
+    - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
+    select `Build & Flash`.
+    - From UI: Press `Build & Flash` on the left side of the Status Bar.
+- Other:
+
 
 Build for ESP32 Using cargo-espflash for ESP32-S3 USB OTG:
 
@@ -72,14 +96,20 @@ With PowerShell:
 ```
 .\Build-RustZX.ps1 -Target xtensa-esp32s2-espidf -Board kaluga_ili9341 -Port COM23
 ```
+### With devcontainers
+    - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
+    select `Build & Flash`.
+    - From UI: Press `Build & Flash` on the left side of the Status Bar.
 
 ## Build and run Wokwi simulation
 
 - Terminal approach:
 
     ```
-    ./run-wokwi.sh
+    ./run-wokwi.sh [debug | release]
     ```
+    > If no argument is passed, `release` will be used as default
+
 - [Devcontainers] UI approach:
 
     The default test task is already set to build the project, and it can be used
@@ -102,13 +132,13 @@ Wokwi offers debugging with GDB.
 - [Devcontainers] UI approach:
 
     Debug using with VsCode or Gitpod is also possible:
-    1. Run the Wokwi Simulation
+    1. Run the Wokwi Simulation in `debug` profile
         > Note that the simulation will pause if the browser tab is on the background
     2. Go to `Run and Debug` section of the IDE (`Ctrl-Shift-D or Cmd-Shift-D`)
-    3. Choose the proper session:
-        - `VsCode: Wokwi Debug`
-        - `Gitpod: Wokwi Debug`
-    4. Start Debugging (`F5`)
+    3. Start Debugging (`F5`)
+    4. Choose the proper user:
+        - `esp` when using VsCode or GitHub Codespaces
+        - `gitpod` when using Gitpod
 
 ## HW Setup
 

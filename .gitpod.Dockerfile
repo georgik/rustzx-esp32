@@ -23,13 +23,14 @@ ENV PATH=${PATH}:/home/${CONTAINER_USER}/.cargo/bin:/home/${CONTAINER_USER}/opt/
 ADD --chown=${CONTAINER_USER}:${CONTAINER_GROUP} \
     https://github.com/esp-rs/rust-build/releases/download/v${TOOLCHAIN_VERSION}/${INSTALL_RUST_TOOLCHAIN} \
     /home/${CONTAINER_USER}/${INSTALL_RUST_TOOLCHAIN}
-
+# Install Rust toolchain, extra crates and esp-idf
 RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     && ./${INSTALL_RUST_TOOLCHAIN} \
     --extra-crates "cargo-espflash ldproxy" \
     --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
     --esp-idf-version "release/v4.4" \
     --minified-esp-idf "YES" \
-    --build-target "esp32" \
-    && git clone https://github.com/georgik/esp32-wokwi-gitpod-websocket-server.git
-
+    --build-target "esp32"
+# Install web-flash and wokwi-server
+RUN cargo install web-flash --git https://github.com/bjoernQ/esp-web-flash-server \
+    && cargo install wokwi-server --git https://github.com/MabezDev/wokwi-server
