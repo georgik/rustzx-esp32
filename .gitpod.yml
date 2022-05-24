@@ -6,7 +6,6 @@ tasks:
  - name: Setup environment variables for Rust and ESP-IDF
    command: |
      source /home/gitpod/export-rust.sh
-     export CURRENT_PROJECT=/workspace/rustzx-esp32
 
 vscode:
   extensions:
@@ -22,3 +21,6 @@ ports:
     visibility: public
   - port: 9333
     visibility: public
+  - port: 8000
+    visibility: public
+    onOpen: open-browser

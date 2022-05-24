@@ -22,11 +22,11 @@
     },
     "rust-analyzer.checkOnSave.command": "clippy",
     "[rust]": {
-      "editor.defaultFormatter": "matklad.rust-analyzer"
+      "editor.defaultFormatter": "rust-lang.rust-analyzer"
     }
   },
   "extensions": [
-    "matklad.rust-analyzer",
+    "rust-lang.rust-analyzer",
     "tamasfe.even-better-toml",
     "serayuzgur.crates",
     "mutantdino.resourcemonitor",
@@ -36,7 +36,8 @@
   ],
   "forwardPorts": [
     9012,
-    9333
+    9333,
+    8000
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/esp/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/home/esp/workspace/"
