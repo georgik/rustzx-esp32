@@ -129,6 +129,7 @@ Wokwi offers debugging with GDB.
     ```
     $HOME/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb target/xtensa-esp32-espidf/debug/rustzx-esp32 -ex "target remote localhost:9333"
     ```
+    > [Wokwi Blog: List of common GDB commands for debugging.](https://blog.wokwi.com/gdb-avr-arduino-cheatsheet/?utm_source=urish&utm_medium=blog)
 - [Devcontainers] UI approach:
 
     Debug using with VsCode or Gitpod is also possible:
