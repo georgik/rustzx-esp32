@@ -96,10 +96,12 @@ With PowerShell:
 ```
 .\Build-RustZX.ps1 -Target xtensa-esp32s2-espidf -Board kaluga_ili9341 -Port COM23
 ```
+
 ### With devcontainers
-    - From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
+
+- From the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (`Ctrl-Shift-P` or `Cmd-Shift-P`) run the `Tasks: Run Task` command and
     select `Build & Flash`.
-    - From UI: Press `Build & Flash` on the left side of the Status Bar.
+- From UI: Press `Build & Flash` on the left side of the Status Bar.
 
 ## Build and run Wokwi simulation
 
