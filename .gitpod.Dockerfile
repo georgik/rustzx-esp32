@@ -7,6 +7,8 @@ ENV LANG=C.UTF-8
 ARG CONTAINER_USER=gitpod
 ARG CONTAINER_GROUP=gitpod
 ARG TOOLCHAIN_VERSION=1.61.0.0
+ARG ESP_IDF_VERSION=master
+ARG BUILD_TARGET=esp32
 
 # Install dependencies
 RUN sudo install-packages git curl gcc ninja-build libudev-dev libpython2.7 \
@@ -28,9 +30,9 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     && ./${INSTALL_RUST_TOOLCHAIN} \
     --extra-crates "cargo-espflash ldproxy" \
     --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
-    --esp-idf-version "release/v4.4" \
+    --esp-idf-version "${ESP_IDF_VERSION}" \
     --minified-esp-idf "YES" \
-    --build-target "esp32"
+    --build-target "${BUILD_TARGET}"
 # Install web-flash and wokwi-server
 RUN cargo install web-flash --git https://github.com/bjoernQ/esp-web-flash-server \
     && cargo install wokwi-server --git https://github.com/MabezDev/wokwi-server

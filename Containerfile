@@ -8,8 +8,8 @@ ENV LANG=C.UTF-8
 ARG CONTAINER_USER=esp
 ARG CONTAINER_GROUP=esp
 ARG TOOLCHAIN_VERSION=1.61.0.0
-ARG ESP_IDF_VERSION=release/v4.4
-ARG ESP_BOARD=esp32
+ARG ESP_IDF_VERSION=master
+ARG BUILD_TARGET=esp32
 ARG INSTALL_RUST_TOOLCHAIN=install-rust-toolchain.sh
 
 # Install dependencies
@@ -34,9 +34,9 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
     && ./${INSTALL_RUST_TOOLCHAIN} \
     --extra-crates "ldproxy cargo-espflash" \
     --clear-cache "YES" --export-file /home/${CONTAINER_USER}/export-rust.sh \
-    --esp-idf-version "release/v4.4" \
+    --esp-idf-version "${ESP_IDF_VERSION}" \
     --minified-esp-idf "YES" \
-    --build-target "esp32"
+    --build-target "${BUILD_TARGET}"
 
 # Install web-flash and wokwi-server
 RUN cargo install web-flash --git https://github.com/bjoernQ/esp-web-flash-server \
