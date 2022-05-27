@@ -49,9 +49,9 @@ esp32s3_usb_otg = []
 anyhow = {version = "1", features = ["backtrace"]}
 log = "0.4"
 esp-idf-sys = { version = "0.31.0", features = ["binstart"] }
-esp-idf-svc = "0.39.1"
-esp-idf-hal = "0.35.1"
-embedded-svc = "0.19"
+esp-idf-svc = "0.41.3"
+esp-idf-hal = "0.37.4"
+embedded-svc = "0.21.2"
 embedded-hal = "0.2"
 embedded-graphics = "0.7"
 display-interface = "0.4"
@@ -63,5 +63,5 @@ rustzx-utils = { version = "0.15", features = ["std"] }
 rustzx-core = { version = "0.15", features = ["embedded-roms"] }
 
 [build-dependencies]
-embuild = "0.28.5"
+embuild = "0.29.1"
 anyhow = "1.0.50"
