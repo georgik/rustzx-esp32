@@ -47,6 +47,7 @@ esp32s3_usb_otg = []
 
 [dependencies]
 anyhow = {version = "1", features = ["backtrace"]}
+toml-cfg = "0.1"
 log = "0.4"
 esp-idf-sys = { version = "0.31.0", features = ["binstart"] }
 esp-idf-svc = "0.41.3"
