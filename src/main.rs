@@ -45,7 +45,7 @@ where
 
     let settings = RustzxSettings {
         machine: ZXMachine::Sinclair48K,
-        emulation_mode: EmulationMode::FrameCount(60),
+        emulation_mode: EmulationMode::FrameCount(1),
         tape_fastload_enabled: true,
         kempston_enabled: false,
         mouse_enabled: false,
