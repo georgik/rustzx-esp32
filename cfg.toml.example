@@ -1,0 +1,3 @@
+[rustzx-esp32]
+wifi_ssid = "Wokwi-GUEST"
+wifi_psk = ""
