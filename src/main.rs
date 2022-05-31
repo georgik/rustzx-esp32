@@ -13,7 +13,7 @@ use embedded_graphics::prelude::*;
 
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
-use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, zx::keys::ZXKey};
+use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, zx::keys::ZXKey, zx::keys::CompoundKey};
 mod display;
 mod host;
 
@@ -106,32 +106,34 @@ fn wifi(
 }
 
 
+pub enum Event {
+    ZXKey(ZXKey, bool),
+    ZXKeyWithModifier(ZXKey, ZXKey, bool),
+    CompoundKey(CompoundKey, bool),
+    // Kempston(KempstonKey, bool),
+    // Sinclair(SinclairJoyNum, SinclairKey, bool),
+    // MouseMove { x: i8, y: i8 },
+    // MouseButton(KempstonMouseButton, bool),
+    // MouseWheel(KempstonMouseWheelDirection),
+    // SwitchFrameTrace,
+    // ChangeJoyKeyboardLayer(bool),
+    // ChangeSpeed(EmulationMode),
+    // InsertTape,
+    // StopTape,
+    // QuickSave,
+    // QuickLoad,
+    // OpenFile(PathBuf),
+    // Exit,
+}
+
 /// returns ZX Spectum key form scancode of None if not found
-fn ascii_code_to_zxkey(ascii_code: u8) -> Option<ZXKey> {
-    let zxkey = match ascii_code {
+fn ascii_code_to_zxkey(ascii_code: u8, pressed: bool) -> Option<Event> {
+    let zxkey_event = match ascii_code {
         // Control keys
         0x10 => Some(ZXKey::Enter),
         0x13 => Some(ZXKey::Enter),
         // Temporary Enter
         0x40 => Some(ZXKey::Enter),
-
-        // Symbols
-        0x20 => Some(ZXKey::Space), // Space
-        0x21 => Some(ZXKey::N1),    // !
-        0x22 => Some(ZXKey::P),     // "
-        0x23 => Some(ZXKey::N3),    // #
-        0x24 => Some(ZXKey::N4),    // $
-        0x25 => Some(ZXKey::N5),    // %
-        0x26 => Some(ZXKey::N6),    // &
-        0x27 => Some(ZXKey::N7),    // '
-        0x28 => Some(ZXKey::N8),    // (
-        0x29 => Some(ZXKey::N9),    // )
-        0x2A => Some(ZXKey::B),     // *
-        0x2B => Some(ZXKey::K),     // +
-        0x2C => Some(ZXKey::N),     // ,
-        0x2D => Some(ZXKey::J),     // -
-        0x2E => Some(ZXKey::M),     // .
-        0x2F => Some(ZXKey::V),     // /
 
         // Numbers 0-9
         0x30 => Some(ZXKey::N0),
@@ -145,35 +147,7 @@ fn ascii_code_to_zxkey(ascii_code: u8) -> Option<ZXKey> {
         0x38 => Some(ZXKey::N8),
         0x39 => Some(ZXKey::N9),
 
-        // Upper-case letters A-Z
-        0x41 => Some(ZXKey::A),
-        0x42 => Some(ZXKey::B),
-        0x43 => Some(ZXKey::C),
-        0x44 => Some(ZXKey::D),
-        0x45 => Some(ZXKey::E),
-        0x46 => Some(ZXKey::F),
-        0x47 => Some(ZXKey::G),
-        0x48 => Some(ZXKey::H),
-        0x49 => Some(ZXKey::I),
-        0x4A => Some(ZXKey::J),
-        0x4B => Some(ZXKey::K),
-        0x4C => Some(ZXKey::L),
-        0x4D => Some(ZXKey::M),
-        0x4E => Some(ZXKey::N),
-        0x4F => Some(ZXKey::O),
-        0x50 => Some(ZXKey::P),
-        0x51 => Some(ZXKey::Q),
-        0x52 => Some(ZXKey::R),
-        0x53 => Some(ZXKey::S),
-        0x54 => Some(ZXKey::T),
-        0x55 => Some(ZXKey::U),
-        0x56 => Some(ZXKey::V),
-        0x57 => Some(ZXKey::W),
-        0x58 => Some(ZXKey::X),
-        0x59 => Some(ZXKey::Y),
-        0x5A => Some(ZXKey::Z),
-
-        // Lowe-case letters - a-z
+        // Lower-case letters - a-z
         0x61 => Some(ZXKey::A),
         0x62 => Some(ZXKey::B),
         0x63 => Some(ZXKey::C),
@@ -201,12 +175,66 @@ fn ascii_code_to_zxkey(ascii_code: u8) -> Option<ZXKey> {
         0x79 => Some(ZXKey::Y),
         0x7A => Some(ZXKey::Z),
 
-        _ => Some(ZXKey::Space),
+        _ => None,
     };
 
-    zxkey
+    zxkey_event.map(|k| Event::ZXKey(k, pressed))
 }
 
+
+/// returns ZX Spectum key form scancode of None if not found
+fn ascii_code_to_modifier(ascii_code: u8, pressed: bool) -> Option<Event> {
+    let zxkey_event = match ascii_code {
+        // Symbols
+        0x21 => Some((ZXKey::SymShift, ZXKey::N1)),    // !
+        0x22 => Some((ZXKey::SymShift, ZXKey::P)),     // "
+        0x23 => Some((ZXKey::SymShift, ZXKey::N3)),    // #
+        0x24 => Some((ZXKey::SymShift, ZXKey::N4)),    // $
+        0x25 => Some((ZXKey::SymShift, ZXKey::N5)),    // %
+        0x26 => Some((ZXKey::SymShift, ZXKey::N6)),    // &
+        0x27 => Some((ZXKey::SymShift, ZXKey::N7)),    // '
+        0x28 => Some((ZXKey::SymShift, ZXKey::N8)),    // (
+        0x29 => Some((ZXKey::SymShift, ZXKey::N9)),    // )
+        0x2A => Some((ZXKey::SymShift, ZXKey::B)),     // *
+        0x2B => Some((ZXKey::SymShift, ZXKey::K)),     // +
+        0x2C => Some((ZXKey::SymShift, ZXKey::N)),     // ,
+        0x2D => Some((ZXKey::SymShift, ZXKey::J)),     // -
+        0x2E => Some((ZXKey::SymShift, ZXKey::M)),     // .
+        0x2F => Some((ZXKey::SymShift, ZXKey::V)),     // /
+
+        // Upper-case letters A-Z
+        0x41 => Some((ZXKey::Shift, ZXKey::A)),
+        0x42 => Some((ZXKey::Shift, ZXKey::B)),
+        0x43 => Some((ZXKey::Shift, ZXKey::C)),
+        0x44 => Some((ZXKey::Shift, ZXKey::D)),
+        0x45 => Some((ZXKey::Shift, ZXKey::E)),
+        0x46 => Some((ZXKey::Shift, ZXKey::F)),
+        0x47 => Some((ZXKey::Shift, ZXKey::G)),
+        0x48 => Some((ZXKey::Shift, ZXKey::H)),
+        0x49 => Some((ZXKey::Shift, ZXKey::I)),
+        0x4A => Some((ZXKey::Shift, ZXKey::J)),
+        0x4B => Some((ZXKey::Shift, ZXKey::K)),
+        0x4C => Some((ZXKey::Shift, ZXKey::L)),
+        0x4D => Some((ZXKey::Shift, ZXKey::M)),
+        0x4E => Some((ZXKey::Shift, ZXKey::N)),
+        0x4F => Some((ZXKey::Shift, ZXKey::O)),
+        0x50 => Some((ZXKey::Shift, ZXKey::P)),
+        0x51 => Some((ZXKey::Shift, ZXKey::Q)),
+        0x52 => Some((ZXKey::Shift, ZXKey::R)),
+        0x53 => Some((ZXKey::Shift, ZXKey::S)),
+        0x54 => Some((ZXKey::Shift, ZXKey::T)),
+        0x55 => Some((ZXKey::Shift, ZXKey::U)),
+        0x56 => Some((ZXKey::Shift, ZXKey::V)),
+        0x57 => Some((ZXKey::Shift, ZXKey::W)),
+        0x58 => Some((ZXKey::Shift, ZXKey::X)),
+        0x59 => Some((ZXKey::Shift, ZXKey::Y)),
+        0x5A => Some((ZXKey::Shift, ZXKey::Z)),
+
+        _ => None,
+    };
+
+    zxkey_event.map(|(k, k2)| Event::ZXKeyWithModifier(k, k2, pressed))
+}
 
 
 
@@ -269,36 +297,37 @@ where
                   let key = handle_client(stream);
                   
                     println!("Key: {} - {}", key, true);
-                    let mapped_key = ascii_code_to_zxkey(key).unwrap();
+                    let mapped_key_down = ascii_code_to_zxkey(key, true)
+                    .or_else(|| ascii_code_to_modifier(key, true)).unwrap();
+
+                    let mapped_key_up = ascii_code_to_zxkey(key, false)
+                    .or_else(|| ascii_code_to_modifier(key, false)).unwrap();
                     
-                    if key >= 0x21 && key <= 0x2F {
-                      emulator.send_key(ZXKey::SymShift, true);
+                    match mapped_key_down {
+                        Event::ZXKey(k,p) => {
+                            emulator.send_key(k, p);        
+                        },
+                        Event::ZXKeyWithModifier(k, k2, p) => {
+                            emulator.send_key(k, p);
+                            emulator.send_key(k2, p);
+                        }
+                        _ => {}
                     }
-
-                    if key >= 0x41 && key <= 0x5A {
-                      emulator.send_key(ZXKey::Shift, true);
-                    }
-
-                    emulator.send_key(mapped_key, true);
 
                     emulator.emulate_frames(MAX_FRAME_DURATION);
                     emulator.screen_buffer()
                       .blit(&mut display, color_conv);
 
-
-                    println!("Key: {} - {}", key, false);
-                    let mapped_key = ascii_code_to_zxkey(key).unwrap();
-                    
-                    if key >= 0x21 && key <= 0x2F {
-                      emulator.send_key(ZXKey::SymShift, false);
+                    match mapped_key_up {
+                        Event::ZXKey(k,p) => {
+                            emulator.send_key(k, p);        
+                        },
+                        Event::ZXKeyWithModifier(k, k2, p) => {
+                            emulator.send_key(k, p);
+                            emulator.send_key(k2, p);
+                        }
+                        _ => {}
                     }
-
-                    if key >= 0x41 && key <= 0x5A {
-                      emulator.send_key(ZXKey::Shift, false);
-                    }
-
-                    emulator.send_key(mapped_key, false);
-
                 }
 
               Err(e) => {}
