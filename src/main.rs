@@ -111,10 +111,27 @@ fn ascii_code_to_zxkey(ascii_code: u8) -> Option<ZXKey> {
     let zxkey = match ascii_code {
         // Control keys
         0x10 => Some(ZXKey::Enter),
+        0x13 => Some(ZXKey::Enter),
+        // Temporary Enter
+        0x40 => Some(ZXKey::Enter),
 
         // Symbols
         0x20 => Some(ZXKey::Space), // Space
+        0x21 => Some(ZXKey::N1),    // !
         0x22 => Some(ZXKey::P),     // "
+        0x23 => Some(ZXKey::N3),    // #
+        0x24 => Some(ZXKey::N4),    // $
+        0x25 => Some(ZXKey::N5),    // %
+        0x26 => Some(ZXKey::N6),    // &
+        0x27 => Some(ZXKey::N7),    // '
+        0x28 => Some(ZXKey::N8),    // (
+        0x29 => Some(ZXKey::N9),    // )
+        0x2A => Some(ZXKey::B),     // *
+        0x2B => Some(ZXKey::K),     // +
+        0x2C => Some(ZXKey::N),     // ,
+        0x2D => Some(ZXKey::J),     // -
+        0x2E => Some(ZXKey::M),     // .
+        0x2F => Some(ZXKey::V),     // /
 
         // Numbers 0-9
         0x30 => Some(ZXKey::N0),
@@ -184,11 +201,14 @@ fn ascii_code_to_zxkey(ascii_code: u8) -> Option<ZXKey> {
         0x79 => Some(ZXKey::Y),
         0x7A => Some(ZXKey::Z),
 
-        _ => None,
+        _ => Some(ZXKey::Space),
     };
 
     zxkey
 }
+
+
+
 
 fn emulate_zx<D>(mut display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Result<()>
 where
@@ -247,32 +267,37 @@ where
           match stream {
               Ok(stream) => {
                   let key = handle_client(stream);
-                  println!("Key: {}", key);
-                  let mapped_key = ascii_code_to_zxkey(key).unwrap();
                   
-                  if key == 0x22 {
-                    emulator.send_key(ZXKey::SymShift, true);
-                  }
+                    println!("Key: {} - {}", key, true);
+                    let mapped_key = ascii_code_to_zxkey(key).unwrap();
+                    
+                    if key >= 0x21 && key <= 0x2F {
+                      emulator.send_key(ZXKey::SymShift, true);
+                    }
 
-                  if key >= 0x41 && key <= 0x5A {
-                    emulator.send_key(ZXKey::Shift, true);
-                  }
+                    if key >= 0x41 && key <= 0x5A {
+                      emulator.send_key(ZXKey::Shift, true);
+                    }
 
-                  emulator.send_key(mapped_key, true);
+                    emulator.send_key(mapped_key, true);
 
-                  emulator.emulate_frames(MAX_FRAME_DURATION);
-                  emulator.screen_buffer()
-                    .blit(&mut display, color_conv);
+                    emulator.emulate_frames(MAX_FRAME_DURATION);
+                    emulator.screen_buffer()
+                      .blit(&mut display, color_conv);
 
-                  emulator.send_key(mapped_key, false);
 
-                  if key == 0x22 {
-                    emulator.send_key(ZXKey::SymShift, false);
-                  }
+                    println!("Key: {} - {}", key, false);
+                    let mapped_key = ascii_code_to_zxkey(key).unwrap();
+                    
+                    if key >= 0x21 && key <= 0x2F {
+                      emulator.send_key(ZXKey::SymShift, false);
+                    }
 
-                  if key >= 0x41 && key <= 0x5A {
-                    emulator.send_key(ZXKey::Shift, false);
-                  }
+                    if key >= 0x41 && key <= 0x5A {
+                      emulator.send_key(ZXKey::Shift, false);
+                    }
+
+                    emulator.send_key(mapped_key, false);
 
                 }
 
