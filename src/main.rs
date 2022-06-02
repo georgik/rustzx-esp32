@@ -23,7 +23,7 @@ use esp_idf_svc::wifi::*;
 use esp_idf_svc::netif::*;
 use esp_idf_svc::nvs::*;
 use esp_idf_svc::sysloop::*;
-use std::net::{TcpListener, TcpStream};
+use std::net::{TcpListener, TcpStream, Shutdown};
 use std::io::Read;
 use std::io::Write;
 use std::result::Result::Ok;
@@ -53,17 +53,38 @@ fn main() -> Result<()> {
     emulate_zx(display::create!(peripherals)?, display::color_conv)
 }
 
-fn handle_client( mut stream: TcpStream) -> u8 {
-    println!("Connected");
+use std::sync::mpsc::{channel, Sender, Receiver}; 
 
-    let mut rx_bytes = [0u8; 1];
-    // Read from the current data in the TcpStream
-    stream.read(&mut rx_bytes).unwrap();
-    stream.write(&rx_bytes).unwrap();
-
-    rx_bytes[0]
-    // 0
+fn handle_client(mut stream: TcpStream, tx:Sender<u8>) {
+    let mut data = [0 as u8; 256]; // using 50 byte buffer
+    while match stream.read(&mut data) {
+        Ok(size) => {
+            // echo everything!
+            stream.write(&data[0..size]).unwrap();
+            for n in 0..size {
+                tx.send(data[n]).unwrap();
+            }
+            true
+        },
+        Err(_) => {
+            println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
+            stream.shutdown(Shutdown::Both).unwrap();
+            false
+        }
+    } {}
 }
+
+// fn handle_client( mut stream: TcpStream) -> u8 {
+//     println!("Connected");
+
+//     let mut rx_bytes = [0u8; 1];
+//     // Read from the current data in the TcpStream
+//     stream.read(&mut rx_bytes).unwrap();
+//     stream.write(&rx_bytes).unwrap();
+
+//     rx_bytes[0]
+//     // 0
+// }
 
 #[allow(dead_code)]
 fn wifi(
@@ -277,6 +298,27 @@ where
 
     let listener = TcpListener::bind("0.0.0.0:80").unwrap();
     listener.set_nonblocking(true).expect("Cannot set non-blocking");
+    let (tx, rx):(Sender<u8>, Receiver<u8>) = channel();
+    let tx_owned = tx.to_owned();
+    thread::spawn(move|| {
+        // Receive new connection
+        for stream in listener.incoming() {
+            match stream {
+                Ok(stream) => {
+                    let tx_owned = tx_owned.clone();
+                    thread::spawn(move|| {
+                        // connection succeeded
+                        handle_client(stream, tx_owned)
+                    });
+                }
+    
+                Err(e) => {
+                }
+            }
+        }
+    });
+
+
 
     loop {
         const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
@@ -291,64 +333,53 @@ where
             .screen_buffer()
             .blit(&mut display, color_conv);
 
-      for stream in listener.incoming() {
-          match stream {
-              Ok(stream) => {
-                  let key = handle_client(stream);
-                  
-                    println!("Key: {} - {}", key, true);
-                    let mapped_key_down = ascii_code_to_zxkey(key, true)
-                    .or_else(|| ascii_code_to_modifier(key, true)).unwrap();
 
-                    let mapped_key_up = ascii_code_to_zxkey(key, false)
-                    .or_else(|| ascii_code_to_modifier(key, false)).unwrap();
-                    
-                    match mapped_key_down {
-                        Event::ZXKey(k,p) => {
-                            emulator.send_key(k, p);        
-                        },
-                        Event::ZXKeyWithModifier(k, k2, p) => {
-                            emulator.send_key(k, p);
-                            emulator.send_key(k2, p);
-                        }
-                        _ => {}
+        match rx.try_recv() {
+            Ok(key) => {
+  
+                println!("Key: {} - {}", key, true);
+                let mapped_key_down = ascii_code_to_zxkey(key, true)
+                .or_else(|| ascii_code_to_modifier(key, true)).unwrap();
+
+                let mapped_key_up = ascii_code_to_zxkey(key, false)
+                .or_else(|| ascii_code_to_modifier(key, false)).unwrap();
+                            
+                match mapped_key_down {
+                    Event::ZXKey(k,p) => {
+                        emulator.send_key(k, p);        
+                    },
+                    Event::ZXKeyWithModifier(k, k2, p) => {
+                        emulator.send_key(k, p);
+                        emulator.send_key(k2, p);
                     }
-
-                    emulator.emulate_frames(MAX_FRAME_DURATION);
-                    emulator.screen_buffer()
-                      .blit(&mut display, color_conv);
-
-                    match mapped_key_up {
-                        Event::ZXKey(k,p) => {
-                            emulator.send_key(k, p);        
-                        },
-                        Event::ZXKeyWithModifier(k, k2, p) => {
-                            emulator.send_key(k, p);
-                            emulator.send_key(k2, p);
-                        }
-                        _ => {}
-                    }
+                    _ => {}
                 }
 
-              Err(e) => {}
-          }
-          emulator.emulate_frames(MAX_FRAME_DURATION);
-          emulator.screen_buffer()
-          .blit(&mut display, color_conv);
-      }
+                emulator.emulate_frames(MAX_FRAME_DURATION);
+                emulator.screen_buffer()
+                    .blit(&mut display, color_conv);
+
+                match mapped_key_up {
+                    Event::ZXKey(k,p) => {
+                        emulator.send_key(k, p);        
+                    },
+                    Event::ZXKeyWithModifier(k, k2, p) => {
+                        emulator.send_key(k, p);
+                        emulator.send_key(k2, p);
+                    }
+                    _ => {}
+                }
+            },
+            _ => {
+                emulator.emulate_frames(MAX_FRAME_DURATION);
+                emulator.screen_buffer()
+                .blit(&mut display, color_conv);        
+            }
+        }
 
 
-        // for stream in listener.incoming() {
-        // match stream {
-        //     Ok(stream) => {
-        //         let key_value = handle_client(stream);
-        //         if key_value != 0 {
 
-        //         }
-        //     }
-        //     _ => { println!("nop");}
-        // }
-      // }
+
         // Yield
         //thread::sleep(Duration::from_secs(0));
     }
