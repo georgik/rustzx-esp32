@@ -129,6 +129,7 @@ fn wifi(
 
 
 pub enum Event {
+    NoEvent,
     ZXKey(ZXKey, bool),
     ZXKeyWithModifier(ZXKey, ZXKey, bool),
     CompoundKey(CompoundKey, bool),
@@ -152,10 +153,10 @@ pub enum Event {
 fn ascii_code_to_zxkey(ascii_code: u8, pressed: bool) -> Option<Event> {
     let zxkey_event = match ascii_code {
         // Control keys
-        0x10 => Some(ZXKey::Enter),
-        0x13 => Some(ZXKey::Enter),
+        0x0A => Some(ZXKey::Enter),
+        // 0x13 => Some(ZXKey::Enter),
         // Temporary Enter
-        0x40 => Some(ZXKey::Enter),
+        // 0x40 => Some(ZXKey::Enter),
 
         0x20 => Some(ZXKey::Space),
 
@@ -202,7 +203,7 @@ fn ascii_code_to_zxkey(ascii_code: u8, pressed: bool) -> Option<Event> {
         _ => None,
     };
 
-    zxkey_event.map(|k| Event::ZXKey(k, pressed))
+    return zxkey_event.map(|k| Event::ZXKey(k, pressed))    
 }
 
 
@@ -225,6 +226,14 @@ fn ascii_code_to_modifier(ascii_code: u8, pressed: bool) -> Option<Event> {
         0x2D => Some((ZXKey::SymShift, ZXKey::J)),     // -
         0x2E => Some((ZXKey::SymShift, ZXKey::M)),     // .
         0x2F => Some((ZXKey::SymShift, ZXKey::V)),     // /
+
+        0x3A => Some((ZXKey::SymShift, ZXKey::Z)),     // :
+        0x3B => Some((ZXKey::SymShift, ZXKey::O)),     // ;
+        0x3C => Some((ZXKey::SymShift, ZXKey::R)),     // <
+        0x3D => Some((ZXKey::SymShift, ZXKey::L)),     // =
+        0x3E => Some((ZXKey::SymShift, ZXKey::T)),     // >
+        0x3F => Some((ZXKey::SymShift, ZXKey::C)),     // ?
+        0x40 => Some((ZXKey::SymShift, ZXKey::N2)),    // @
 
         // Upper-case letters A-Z
         0x41 => Some((ZXKey::Shift, ZXKey::A)),
@@ -321,7 +330,8 @@ where
         }
     });
 
-
+    let mut key_emulation_delay = 0;
+    let mut last_key:u8 = 0;
 
     loop {
         const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
@@ -330,32 +340,70 @@ where
         emulator.screen_buffer()
         .blit(&mut display, color_conv);  
 
+        if key_emulation_delay > 0 {
+            key_emulation_delay -= 1;
+        }
 
         match rx.try_recv() {
             Ok(key) => {
-  
-                println!("Key: {} - {}", key, true);
-                let mapped_key_down = ascii_code_to_zxkey(key, true)
-                .or_else(|| ascii_code_to_modifier(key, true)).unwrap();
+                if key_emulation_delay > 0 {
+                    // It's not possible to process same keys which were entered shortly after each other
+                    for frame in 0..key_emulation_delay {
+                        println!("Keys received too fast. Running extra emulation frame: {}", frame);
+                        emulator.emulate_frames(MAX_FRAME_DURATION);
+                    }                    
+                    emulator.screen_buffer()
+                    .blit(&mut display, color_conv);              
+                }
 
-                let mapped_key_up = ascii_code_to_zxkey(key, false)
-                .or_else(|| ascii_code_to_modifier(key, false)).unwrap();
-                            
+                if key == last_key {
+                    // Same key requires bigger delay
+                    key_emulation_delay = 6;
+                } else {
+                    key_emulation_delay = 4;
+                }
+
+                last_key = key;
+
+                println!("Key: {} - {}", key, true);
+                let mapped_key_down_option = ascii_code_to_zxkey(key, true)
+                .or_else(|| ascii_code_to_modifier(key, true));
+
+                let mapped_key_down = match mapped_key_down_option {
+                    Some(x) => { x },
+                    _ => { Event::NoEvent }
+                };
+
+                let mapped_key_up_option = ascii_code_to_zxkey(key, false)
+                .or_else(|| ascii_code_to_modifier(key, false));
+
+                let mapped_key_up = match mapped_key_up_option {
+                    Some(x) => { x },
+                    _ => { Event::NoEvent }
+                };
+
+                println!("-> key down");
                 match mapped_key_down {
                     Event::ZXKey(k,p) => {
+                        println!("-> ZXKey");
                         emulator.send_key(k, p);        
                     },
                     Event::ZXKeyWithModifier(k, k2, p) => {
+                        println!("-> ZXKeyWithModifier");
                         emulator.send_key(k, p);
                         emulator.send_key(k2, p);
                     }
-                    _ => {}
+                    _ => {
+                        println!("Unknown key.");
+                    }
                 }
 
+                println!("-> emulating frame");
                 emulator.emulate_frames(MAX_FRAME_DURATION);
                 emulator.screen_buffer()
                     .blit(&mut display, color_conv);
 
+                println!("-> key up");
                 match mapped_key_up {
                     Event::ZXKey(k,p) => {
                         emulator.send_key(k, p);        
@@ -367,9 +415,6 @@ where
                     _ => {}
                 }
 
-                emulator.emulate_frames(MAX_FRAME_DURATION);
-                emulator.screen_buffer()
-                .blit(&mut display, color_conv);  
             },
             _ => {
             }
