@@ -62,6 +62,7 @@ fn handle_client(mut stream: TcpStream, tx:Sender<u8>) {
             // echo everything!
             stream.write(&data[0..size]).unwrap();
             for n in 0..size {
+                println!("Sending to queue: {}", data[n]);
                 tx.send(data[n]).unwrap();
             }
             true
@@ -155,6 +156,8 @@ fn ascii_code_to_zxkey(ascii_code: u8, pressed: bool) -> Option<Event> {
         0x13 => Some(ZXKey::Enter),
         // Temporary Enter
         0x40 => Some(ZXKey::Enter),
+
+        0x20 => Some(ZXKey::Space),
 
         // Numbers 0-9
         0x30 => Some(ZXKey::N0),
@@ -323,15 +326,9 @@ where
     loop {
         const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
 
-        let duration = emulator
-            .emulate_frames(MAX_FRAME_DURATION);
-
-        // info!("Rendering 60 frames took {}ms", duration.as_millis().unwrap());
-
-        // TODO: Screen should be constantly updated from within the emulation cycle, using multithreading
-        emulator
-            .screen_buffer()
-            .blit(&mut display, color_conv);
+        emulator.emulate_frames(MAX_FRAME_DURATION);
+        emulator.screen_buffer()
+        .blit(&mut display, color_conv);  
 
 
         match rx.try_recv() {
@@ -369,17 +366,15 @@ where
                     }
                     _ => {}
                 }
-            },
-            _ => {
+
                 emulator.emulate_frames(MAX_FRAME_DURATION);
                 emulator.screen_buffer()
-                .blit(&mut display, color_conv);        
+                .blit(&mut display, color_conv);  
+            },
+            _ => {
             }
         }
-
-
-
-
+   
         // Yield
         //thread::sleep(Duration::from_secs(0));
     }
