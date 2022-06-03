@@ -49,9 +49,11 @@ esp32s3_usb_otg = []
 anyhow = {version = "1", features = ["backtrace"]}
 toml-cfg = "0.1"
 log = "0.4"
+esp-hal-common = { package = "esp-hal-common", git = "https://github.com/esp-rs/esp-hal.git" }
 esp-idf-sys = { version = "0.31.0", features = ["binstart"] }
 esp-idf-svc = "0.41.3"
 esp-idf-hal = "0.37.4"
+esp32-hal = { package = "esp32-hal", git = "https://github.com/esp-rs/esp-hal.git" }
 embedded-svc = "0.21.2"
 embedded-hal = "0.2"
 embedded-graphics = "0.7"
@@ -60,6 +62,7 @@ display-interface-spi = "0.4"
 st7789 = "0.6"
 ili9341 = { version = "0.5", git = "https://github.com/yuri91/ili9341-rs" }
 ssd1306 = "0.7"
+pc-keyboard = "0.5.1"
 rustzx-utils = { version = "0.15", features = ["std"] }
 rustzx-core = { version = "0.15", features = ["embedded-roms"] }
 
