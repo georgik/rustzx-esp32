@@ -53,7 +53,7 @@ fn main() -> Result<()> {
     emulate_zx(display::create!(peripherals)?, display::color_conv)
 }
 
-use std::sync::mpsc::{channel, Sender, Receiver}; 
+use std::sync::mpsc::{channel, Sender, Receiver};
 
 fn handle_client(mut stream: TcpStream, tx:Sender<u8>) {
     let mut data = [0 as u8; 256]; // using 50 byte buffer
@@ -203,7 +203,7 @@ fn ascii_code_to_zxkey(ascii_code: u8, pressed: bool) -> Option<Event> {
         _ => None,
     };
 
-    return zxkey_event.map(|k| Event::ZXKey(k, pressed))    
+    return zxkey_event.map(|k| Event::ZXKey(k, pressed))
 }
 
 
@@ -323,7 +323,6 @@ where
                         handle_client(stream, tx_owned)
                     });
                 }
-    
                 Err(e) => {
                 }
             }
@@ -338,7 +337,7 @@ where
 
         emulator.emulate_frames(MAX_FRAME_DURATION);
         emulator.screen_buffer()
-        .blit(&mut display, color_conv);  
+        .blit(&mut display, color_conv);
 
         if key_emulation_delay > 0 {
             key_emulation_delay -= 1;
@@ -351,9 +350,9 @@ where
                     for frame in 0..key_emulation_delay {
                         println!("Keys received too fast. Running extra emulation frame: {}", frame);
                         emulator.emulate_frames(MAX_FRAME_DURATION);
-                    }                    
+                    }
                     emulator.screen_buffer()
-                    .blit(&mut display, color_conv);              
+                    .blit(&mut display, color_conv);
                 }
 
                 if key == last_key {
@@ -386,7 +385,7 @@ where
                 match mapped_key_down {
                     Event::ZXKey(k,p) => {
                         println!("-> ZXKey");
-                        emulator.send_key(k, p);        
+                        emulator.send_key(k, p);
                     },
                     Event::ZXKeyWithModifier(k, k2, p) => {
                         println!("-> ZXKeyWithModifier");
@@ -406,7 +405,7 @@ where
                 println!("-> key up");
                 match mapped_key_up {
                     Event::ZXKey(k,p) => {
-                        emulator.send_key(k, p);        
+                        emulator.send_key(k, p);
                     },
                     Event::ZXKeyWithModifier(k, k2, p) => {
                         emulator.send_key(k, p);
@@ -419,8 +418,5 @@ where
             _ => {
             }
         }
-   
-        // Yield
-        //thread::sleep(Duration::from_secs(0));
     }
 }
