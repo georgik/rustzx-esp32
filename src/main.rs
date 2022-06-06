@@ -13,7 +13,10 @@ use embedded_graphics::prelude::*;
 
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
-use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, zx::keys::ZXKey, zx::keys::CompoundKey};
+use rustzx_core::{
+    zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, zx::keys::ZXKey, zx::keys::CompoundKey,
+    host::BufferCursor, host::Tape
+};
 mod display;
 mod host;
 
@@ -27,6 +30,15 @@ use std::net::{TcpListener, TcpStream, Shutdown};
 use std::io::Read;
 use std::io::Write;
 use std::result::Result::Ok;
+
+use std::{
+  io::Cursor,
+  path::{Path, PathBuf},
+};
+
+use rustzx_utils::{
+  io::{DynamicAsset},
+};
 
 /// This configuration is picked up at compile time by `build.rs` from the
 /// file `cfg.toml`.
@@ -127,6 +139,37 @@ fn wifi(
     Ok(wifi)
 }
 
+
+fn load_asset_data(name: impl AsRef<Path>) -> Vec<u8> {
+  let content = include_bytes!("data/embedded.tap");
+  content.to_vec()
+  // let path = self.assets_folder().join(name);
+  // let content = std::fs::read(&path).expect("Failed to load asset");
+
+  // if path
+  //     .extension()
+  //     .map(|e| e.to_str().unwrap() == "gz")
+  //     .unwrap_or_default()
+  // {
+  //     GzipAsset::new(Cursor::new(content))
+  //         .expect("Failed to decompress gz")
+  //         .into_vec()
+  // } else {
+  //     content
+  // }
+}
+
+
+fn load_asset(name: impl AsRef<Path>) -> DynamicAsset {
+  BufferCursor::new(load_asset_data(name)).into()
+}
+
+// pub fn load_tap(&mut self, name: impl AsRef<Path>) {
+//   let asset = self.load_asset(name);
+//   self.emulator
+//       .load_tape(Tape::Tap(asset))
+//       .expect("Failed to load test TAP");
+// }
 
 pub enum Event {
     NoEvent,
@@ -406,11 +449,16 @@ where
                 println!("-> key up");
                 match mapped_key_up {
                     Event::ZXKey(k,p) => {
-                        emulator.send_key(k, p);        
+                        emulator.send_key(k, p); 
                     },
                     Event::ZXKeyWithModifier(k, k2, p) => {
                         emulator.send_key(k, p);
                         emulator.send_key(k2, p);
+                        let asset = load_asset("embedded.tap");
+                        emulator
+                            .load_tape(Tape::Tap(asset))
+                            .expect("Failed to load test TAP");
+
                     }
                     _ => {}
                 }
