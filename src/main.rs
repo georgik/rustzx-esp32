@@ -269,8 +269,6 @@ fn ascii_code_to_modifier(ascii_code: u8, pressed: bool) -> Option<Event> {
     zxkey_event.map(|(k, k2)| Event::ZXKeyWithModifier(k, k2, pressed))
 }
 
-
-
 fn emulate_zx<D>(mut display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Result<()>
 where
     D: DrawTarget + Dimensions + Send + 'static,
@@ -334,6 +332,16 @@ where
 
     loop {
         const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
+
+
+        // let mut stats = [0; 1024];
+        // unsafe {
+        //     // esp_idf_sys::vTaskGetRunTimeStats(stats.as_mut_ptr());
+        //     esp_idf_sys::vTaskList(stats.as_mut_ptr());
+        //     let message = std::ffi::CStr::from_ptr(stats.as_mut_ptr()).to_str().unwrap().replace("\r","");
+        //     println!("{}", message);
+        // }
+
 
         emulator.emulate_frames(MAX_FRAME_DURATION);
         emulator.screen_buffer()
