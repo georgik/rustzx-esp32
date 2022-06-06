@@ -37,7 +37,7 @@ use std::{
 };
 
 use rustzx_utils::{
-  io::{DynamicAsset},
+  io::{DynamicAsset, FileAsset},
 };
 
 /// This configuration is picked up at compile time by `build.rs` from the
@@ -456,7 +456,7 @@ where
                         emulator.send_key(k2, p);
                         let asset = load_asset("embedded.tap");
                         emulator
-                            .load_tape(Tape::Tap(asset))
+                            .load_tape(Tape::Tap(FileAsset::from(asset).into()))
                             .expect("Failed to load test TAP");
 
                     }
