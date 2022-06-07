@@ -28,6 +28,10 @@ use std::io::Read;
 use std::io::Write;
 use std::result::Result::Ok;
 
+// Fonts: https://docs.rs/embedded-graphics/0.7.1/embedded_graphics/mono_font/index.html
+use embedded_graphics::mono_font::{ascii::FONT_8X13, MonoTextStyle};
+use embedded_graphics::text::*;
+
 /// This configuration is picked up at compile time by `build.rs` from the
 /// file `cfg.toml`.
 #[toml_cfg::toml_config]
@@ -305,6 +309,13 @@ where
         sys_loop_stack.clone(),
         default_nvs.clone(),
     )?;
+
+    Text::new(
+        "Tcp keyboard socket: :80",
+        Point::new(10, 210),
+        MonoTextStyle::new(&FONT_8X13, color_conv(ZXColor::White, ZXBrightness::Normal)),
+    )
+    .draw(&mut display).unwrap();
 
     let listener = TcpListener::bind("0.0.0.0:80").unwrap();
     listener.set_nonblocking(true).expect("Cannot set non-blocking");
