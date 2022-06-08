@@ -1,6 +1,6 @@
 //#![feature(backtrace)]
 
-use std::{thread, time::*};
+use std::{time::*};
 
 use anyhow::*;
 use log::*;
@@ -13,20 +13,18 @@ use embedded_graphics::prelude::*;
 
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
-use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, zx::keys::ZXKey, zx::keys::CompoundKey};
+use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings};
 mod display;
 mod host;
 
 
 
 mod zx_event;
-use crate::zx_event::{Event};
 
 mod ascii_zxkey;
-use crate::ascii_zxkey::{ascii_code_to_zxkey, ascii_code_to_modifier};
 
 mod tcpstream_keyboard;
-use crate::tcpstream_keyboard::{bind_keyboard, spawn_listener};
+use crate::tcpstream_keyboard::{TcpStreamKeyboard};
 
 fn main() -> Result<()> {
     esp_idf_sys::link_patches();
@@ -68,9 +66,12 @@ where
 
     info!("Entering emulator loop");
 
+    let keyboard = TcpStreamKeyboard {
+
+    };
     #[cfg(feature = "tcpstream_keyboard")]
-    let rx = bind_keyboard();
-    spawn_listener();
+    let rx = keyboard.bind_keyboard();
+    keyboard.spawn_listener();
 
     let mut key_emulation_delay = 0;
     let mut last_key:u8 = 0;

@@ -13,13 +13,90 @@ use std::net::{TcpListener, TcpStream, Shutdown};
 use std::io::Read;
 use std::io::Write;
 use anyhow::*;
-use log::*;
 
-use esp_idf_hal::prelude::*;
+use std::sync::mpsc::{channel, Sender, Receiver};
 
-static mut tx:Option<Sender<u8>> = None;
-static mut rx:Option<Receiver<u8>> = None;
-static mut listener:Option<TcpListener> = None;
+
+pub struct TcpStreamKeyboard {
+    tx:Sender<u8>,
+    rx:Receiver<u8>,
+    listener:TcpListener
+}
+
+pub trait Keyboard {
+    fn bind_keyboard(&self) -> Receiver<u8>;
+    fn spawn_listener(&self);
+    fn handle_client(&self, stream: TcpStream);
+}
+
+impl Keyboard for TcpStreamKeyboard {
+
+    fn bind_keyboard(&self) -> Receiver<u8> {
+        // wifi part
+        #[allow(unused)]
+        let netif_stack = Arc::new(EspNetifStack::new().unwrap());
+        #[allow(unused)]
+        let sys_loop_stack = Arc::new(EspSysLoopStack::new().unwrap());
+        #[allow(unused)]
+        let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
+        let _wifi = wifi(
+            netif_stack.clone(),
+            sys_loop_stack.clone(),
+            default_nvs.clone(),
+        ).unwrap();
+
+        self.listener = TcpListener::bind("0.0.0.0:80").unwrap();
+        self.listener.set_nonblocking(true).expect("Cannot set non-blocking");
+        (self.tx, self.rx) = channel();
+        self.rx
+    }
+
+    fn spawn_listener(&self) {
+        // let tx_owned = self.tx.to_owned();
+        thread::spawn(move|| {
+            // Receive new connection
+            for stream in self.listener.incoming() {
+                match stream {
+                    Ok(stream) => {
+                        // let tx_owned = tx_owned.clone();
+                        thread::spawn(move|| {
+                            // connection succeeded
+                            self.handle_client(stream)
+                        });
+                    }
+                    Err(e) => {
+                    }
+                }
+            }
+        });
+
+    }
+
+
+    fn handle_client(&self, stream: TcpStream) {
+        let mut data = [0 as u8; 256]; // using 50 byte buffer
+        while match stream.read(&mut data) {
+            Ok(size) => {
+                // echo everything!
+                stream.write(&data[0..size]).unwrap();
+                for n in 0..size {
+                    println!("Sending to queue: {}", data[n]);
+                    self.tx.send(data[n]).unwrap();
+                }
+                true
+            },
+            Err(_) => {
+                println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
+                stream.shutdown(Shutdown::Both).unwrap();
+                false
+            }
+        } {}
+    }
+
+
+}
+
+
 
 /// This configuration is picked up at compile time by `build.rs` from the
 /// file `cfg.toml`.
@@ -31,27 +108,6 @@ pub struct Config {
     wifi_psk: &'static str,
 }
 
-use std::sync::mpsc::{channel, Sender, Receiver};
-
-fn handle_client(mut stream: TcpStream, tx_owned:Sender<u8>) {
-    let mut data = [0 as u8; 256]; // using 50 byte buffer
-    while match stream.read(&mut data) {
-        Ok(size) => {
-            // echo everything!
-            stream.write(&data[0..size]).unwrap();
-            for n in 0..size {
-                println!("Sending to queue: {}", data[n]);
-                tx_owned.send(data[n]).unwrap();
-            }
-            true
-        },
-        Err(_) => {
-            println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
-            stream.shutdown(Shutdown::Both).unwrap();
-            false
-        }
-    } {}
-}
 
 
 #[allow(dead_code)]
@@ -92,49 +148,6 @@ fn wifi(
     }
 
     Ok(wifi)
-}
-
-pub fn bind_keyboard() -> Option<Receiver<u8>> {
-    // wifi part
-    #[allow(unused)]
-    let netif_stack = Arc::new(EspNetifStack::new().unwrap());
-    #[allow(unused)]
-    let sys_loop_stack = Arc::new(EspSysLoopStack::new().unwrap());
-    #[allow(unused)]
-    let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
-    let _wifi = wifi(
-        netif_stack.clone(),
-        sys_loop_stack.clone(),
-        default_nvs.clone(),
-    ).unwrap();
-
-    listener = Some(TcpListener::bind("0.0.0.0:80").unwrap());
-    listener.unwrap().set_nonblocking(true).expect("Cannot set non-blocking");
-    let (tx_local, rx_local) = channel();
-    tx = Some(tx_local);
-    rx = Some(rx_local);
-    rx
-}
-
-pub fn spawn_listener() {
-    let tx_owned = tx.to_owned();
-    thread::spawn(move|| {
-        // Receive new connection
-        for stream in listener.unwrap().incoming() {
-            match stream {
-                Ok(stream) => {
-                    let tx_owned = tx_owned.unwrap().clone();
-                    thread::spawn(move|| {
-                        // connection succeeded
-                        handle_client(stream, tx_owned)
-                    });
-                }
-                Err(e) => {
-                }
-            }
-        }
-    });
-
 }
 
 
