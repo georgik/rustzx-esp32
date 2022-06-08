@@ -304,18 +304,37 @@ where
     let sys_loop_stack = Arc::new(EspSysLoopStack::new()?);
     #[allow(unused)]
     let default_nvs = Arc::new(EspDefaultNvs::new()?);
-    let _wifi = wifi(
+    let wifi_interface = wifi(
         netif_stack.clone(),
         sys_loop_stack.clone(),
         default_nvs.clone(),
     )?;
 
-    Text::new(
-        "Tcp keyboard socket: :80",
-        Point::new(10, 210),
-        MonoTextStyle::new(&FONT_8X13, color_conv(ZXColor::White, ZXBrightness::Normal)),
-    )
-    .draw(&mut display).unwrap();
+    let mut stage = 0;
+    if let Status(
+        ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(config))),
+        _,
+    ) = wifi_interface.get_status()
+    {
+        match stage {
+            0 => {
+                let message = format!("Socket keyboard: {}:80", config.ip);
+                println!("{}", message);
+                Text::new(
+                    message.as_str(),
+                    Point::new(10, 210),
+                    MonoTextStyle::new(&FONT_8X13, color_conv(ZXColor::White, ZXBrightness::Normal)),
+                )
+                .draw(&mut display).unwrap();
+
+            }
+            _ => {
+                println!("WiFi unknown");
+            }
+        }
+    }
+
+
 
     let listener = TcpListener::bind("0.0.0.0:80").unwrap();
     listener.set_nonblocking(true).expect("Cannot set non-blocking");
