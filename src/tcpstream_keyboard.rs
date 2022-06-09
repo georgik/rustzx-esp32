@@ -31,7 +31,9 @@ pub trait Keyboard {
 
 impl Keyboard for TcpStreamKeyboard {
 
-    fn bind_keyboard(&self) -> Receiver<u8> {
+    // fn bind_keyboard(&self) -> Receiver<u8> {
+    fn bind_keyboard(&self) -> Self {
+
         // wifi part
         #[allow(unused)]
         let netif_stack = Arc::new(EspNetifStack::new().unwrap());
@@ -48,7 +50,7 @@ impl Keyboard for TcpStreamKeyboard {
         self.listener = TcpListener::bind("0.0.0.0:80").unwrap();
         self.listener.set_nonblocking(true).expect("Cannot set non-blocking");
         (self.tx, self.rx) = channel();
-        self.rx
+        self
     }
 
     fn spawn_listener(&self) {

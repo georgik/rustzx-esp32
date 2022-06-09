@@ -66,11 +66,9 @@ where
 
     info!("Entering emulator loop");
 
-    let keyboard = TcpStreamKeyboard {
-
-    };
+    let keyboard = TcpStreamKeyboard::bind_keyboard();
     #[cfg(feature = "tcpstream_keyboard")]
-    let rx = keyboard.bind_keyboard();
+    let rx = keyboard.rx();
     keyboard.spawn_listener();
 
     let mut key_emulation_delay = 0;
