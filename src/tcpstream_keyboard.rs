@@ -26,7 +26,7 @@ pub struct TcpStreamKeyboard {
 pub trait Keyboard {
     fn bind_keyboard(&self) -> Receiver<u8>;
     fn spawn_listener(&self);
-    fn handle_client(&self, stream: TcpStream);
+    // fn handle_client(&self, stream: TcpStream);
 }
 
 impl Keyboard for TcpStreamKeyboard {
@@ -52,16 +52,17 @@ impl Keyboard for TcpStreamKeyboard {
     }
 
     fn spawn_listener(&self) {
-        // let tx_owned = self.tx.to_owned();
+        let tx_owned = self.tx.to_owned();
+        let listener_owned = self.listener;
         thread::spawn(move|| {
             // Receive new connection
-            for stream in self.listener.incoming() {
+            for stream in listener_owned.incoming() {
                 match stream {
                     Ok(stream) => {
-                        // let tx_owned = tx_owned.clone();
+                        let tx_owned = tx_owned.clone();
                         thread::spawn(move|| {
                             // connection succeeded
-                            self.handle_client(stream)
+                            handle_client(stream, tx_owned)
                         });
                     }
                     Err(e) => {
@@ -73,27 +74,28 @@ impl Keyboard for TcpStreamKeyboard {
     }
 
 
-    fn handle_client(&self, stream: TcpStream) {
-        let mut data = [0 as u8; 256]; // using 50 byte buffer
-        while match stream.read(&mut data) {
-            Ok(size) => {
-                // echo everything!
-                stream.write(&data[0..size]).unwrap();
-                for n in 0..size {
-                    println!("Sending to queue: {}", data[n]);
-                    self.tx.send(data[n]).unwrap();
-                }
-                true
-            },
-            Err(_) => {
-                println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
-                stream.shutdown(Shutdown::Both).unwrap();
-                false
-            }
-        } {}
-    }
 
 
+}
+
+fn handle_client(stream: TcpStream, tx: Sender<u8>) {
+  let mut data = [0 as u8; 256]; // using 50 byte buffer
+  while match stream.read(&mut data) {
+      Ok(size) => {
+          // echo everything!
+          stream.write(&data[0..size]).unwrap();
+          for n in 0..size {
+              println!("Sending to queue: {}", data[n]);
+              tx.send(data[n]).unwrap();
+          }
+          true
+      },
+      Err(_) => {
+          println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
+          stream.shutdown(Shutdown::Both).unwrap();
+          false
+      }
+  } {}
 }
 
 
