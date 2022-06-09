@@ -24,7 +24,7 @@ pub struct TcpStreamKeyboard {
 }
 
 pub trait Keyboard {
-    fn bind_keyboard(&self) -> Receiver<u8>;
+    // fn bind_keyboard(&self) -> Self;
     fn spawn_listener(&self);
     // fn handle_client(&self, stream: TcpStream);
 }
@@ -32,30 +32,10 @@ pub trait Keyboard {
 impl Keyboard for TcpStreamKeyboard {
 
     // fn bind_keyboard(&self) -> Receiver<u8> {
-    fn bind_keyboard(&self) -> Self {
-
-        // wifi part
-        #[allow(unused)]
-        let netif_stack = Arc::new(EspNetifStack::new().unwrap());
-        #[allow(unused)]
-        let sys_loop_stack = Arc::new(EspSysLoopStack::new().unwrap());
-        #[allow(unused)]
-        let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
-        let _wifi = wifi(
-            netif_stack.clone(),
-            sys_loop_stack.clone(),
-            default_nvs.clone(),
-        ).unwrap();
-
-        self.listener = TcpListener::bind("0.0.0.0:80").unwrap();
-        self.listener.set_nonblocking(true).expect("Cannot set non-blocking");
-        (self.tx, self.rx) = channel();
-        self
-    }
 
     fn spawn_listener(&self) {
         let tx_owned = self.tx.to_owned();
-        let listener_owned = self.listener;
+        let listener_owned = self.listener.try_clone().unwrap();
         thread::spawn(move|| {
             // Receive new connection
             for stream in listener_owned.incoming() {
@@ -75,12 +55,36 @@ impl Keyboard for TcpStreamKeyboard {
 
     }
 
-
-
-
 }
 
-fn handle_client(stream: TcpStream, tx: Sender<u8>) {
+
+pub fn bind_keyboard() -> TcpStreamKeyboard {
+
+    // wifi part
+    #[allow(unused)]
+    let netif_stack = Arc::new(EspNetifStack::new().unwrap());
+    #[allow(unused)]
+    let sys_loop_stack = Arc::new(EspSysLoopStack::new().unwrap());
+    #[allow(unused)]
+    let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
+    let _wifi = wifi(
+        netif_stack.clone(),
+        sys_loop_stack.clone(),
+        default_nvs.clone(),
+    ).unwrap();
+
+    let listener_local = TcpListener::bind("0.0.0.0:80").unwrap();
+    listener_local.set_nonblocking(true).expect("Cannot set non-blocking");
+    let (tx_local, rx_local) = channel();
+    TcpStreamKeyboard {
+        tx: tx_local,
+        rx: rx_local,
+        listener: listener_local
+    }
+}
+
+
+fn handle_client(mut stream: TcpStream, tx: Sender<u8>) {
   let mut data = [0 as u8; 256]; // using 50 byte buffer
   while match stream.read(&mut data) {
       Ok(size) => {

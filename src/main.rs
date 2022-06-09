@@ -24,7 +24,7 @@ mod zx_event;
 mod ascii_zxkey;
 
 mod tcpstream_keyboard;
-use crate::tcpstream_keyboard::{TcpStreamKeyboard};
+use crate::tcpstream_keyboard::{bind_keyboard, Keyboard};
 
 fn main() -> Result<()> {
     esp_idf_sys::link_patches();
@@ -66,7 +66,7 @@ where
 
     info!("Entering emulator loop");
 
-    let keyboard = TcpStreamKeyboard::bind_keyboard();
+    let keyboard = bind_keyboard();
     #[cfg(feature = "tcpstream_keyboard")]
     let rx = keyboard.rx();
     keyboard.spawn_listener();
