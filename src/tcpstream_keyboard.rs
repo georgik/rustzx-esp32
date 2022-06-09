@@ -35,7 +35,9 @@ impl Keyboard for TcpStreamKeyboard {
 
     fn spawn_listener(&self) {
         let tx_owned = self.tx.to_owned();
+        println!("Cloning listener");
         let listener_owned = self.listener.try_clone().unwrap();
+        println!("Moving to thread");
         thread::spawn(move|| {
             // Receive new connection
             for stream in listener_owned.incoming() {
@@ -43,7 +45,7 @@ impl Keyboard for TcpStreamKeyboard {
                     Ok(stream) => {
                         let tx_owned = tx_owned.clone();
                         thread::spawn(move|| {
-                            // connection succeeded
+                            println!("Keyabord connection from client succeeded");
                             handle_client(stream, tx_owned)
                         });
                     }
@@ -73,8 +75,10 @@ pub fn bind_keyboard() -> TcpStreamKeyboard {
         default_nvs.clone(),
     ).unwrap();
 
+    println!("Binding to 0.0.0.0:80");
     let listener_local = TcpListener::bind("0.0.0.0:80").unwrap();
     listener_local.set_nonblocking(true).expect("Cannot set non-blocking");
+    println!("Creating communication channel");
     let (tx_local, rx_local) = channel();
     TcpStreamKeyboard {
         tx: tx_local,
@@ -145,12 +149,12 @@ fn wifi(
     info!("got status)");
     if let Status(
         ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(
-            _ip_settings,
+            ip_settings,
         ))),
         _,
     ) = status
     {
-        println!("Wifi connected");
+        println!("Wifi connected. IP address: {}", ip_settings.ip);
     } else {
         bail!("Unexpected Wifi status: {:?}", status);
     }

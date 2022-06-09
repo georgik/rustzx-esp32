@@ -64,15 +64,18 @@ where
     let mut emulator: Emulator<host::Esp32Host> =
         Emulator::new(settings, host::Esp32HostContext {}).unwrap();
 
-    info!("Entering emulator loop");
 
+    info!("Binding keyboard");
     let keyboard = bind_keyboard();
     #[cfg(feature = "tcpstream_keyboard")]
     let rx = keyboard.rx();
+    info!("Spawning keyboard listener");
     keyboard.spawn_listener();
 
     let mut key_emulation_delay = 0;
     let mut last_key:u8 = 0;
+
+    info!("Entering emulator loop");
 
     loop {
         const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
