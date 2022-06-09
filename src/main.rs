@@ -66,11 +66,10 @@ where
 
 
     info!("Binding keyboard");
-    let keyboard = bind_keyboard();
     #[cfg(feature = "tcpstream_keyboard")]
-    let rx = keyboard.rx();
-    info!("Spawning keyboard listener");
-    keyboard.spawn_listener();
+    let rx = bind_keyboard(80);
+    // let rx = keyboard.rx();
+    // keyboard.spawn_listener();
 
     let mut key_emulation_delay = 0;
     let mut last_key:u8 = 0;

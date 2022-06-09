@@ -60,7 +60,7 @@ impl Keyboard for TcpStreamKeyboard {
 }
 
 
-pub fn bind_keyboard() -> TcpStreamKeyboard {
+pub fn bind_keyboard(port: u32) -> Receiver<u8> {
 
     // wifi part
     #[allow(unused)]
@@ -74,17 +74,31 @@ pub fn bind_keyboard() -> TcpStreamKeyboard {
         sys_loop_stack.clone(),
         default_nvs.clone(),
     ).unwrap();
+    let (tx, rx) = channel();
 
-    println!("Binding to 0.0.0.0:80");
-    let listener_local = TcpListener::bind("0.0.0.0:80").unwrap();
-    listener_local.set_nonblocking(true).expect("Cannot set non-blocking");
-    println!("Creating communication channel");
-    let (tx_local, rx_local) = channel();
-    TcpStreamKeyboard {
-        tx: tx_local,
-        rx: rx_local,
-        listener: listener_local
-    }
+    thread::spawn(move|| {
+        let bind_string = format!("0.0.0.0:{}", port);
+        println!("Binding to {}", bind_string);
+        let listener = TcpListener::bind(bind_string).unwrap();
+        listener.set_nonblocking(true).expect("Cannot set non-blocking");
+        println!("Creating communication channel");
+
+        for stream in listener.incoming() {
+            match stream {
+                Ok(stream) => {
+                    let tx_owned = tx.clone();
+                    thread::spawn(move|| {
+                        println!("Keyabord connection from client succeeded");
+                        handle_client(stream, tx_owned)
+                    });
+                }
+                Err(e) => {
+                }
+            }
+        }
+
+    });
+    rx
 }
 
 
