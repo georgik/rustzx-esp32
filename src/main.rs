@@ -17,13 +17,18 @@ use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSetting
 mod display;
 mod host;
 
-
+use std::result::Result::Ok;
 
 mod zx_event;
+// #[cfg(feature = "tcpstream_keyboard")]
+use zx_event::Event;
 
 mod ascii_zxkey;
+// #[cfg(feature = "tcpstream_keyboard")]
+use ascii_zxkey::{ascii_code_to_modifier, ascii_code_to_zxkey};
 
 mod tcpstream_keyboard;
+// #[cfg(feature = "tcpstream_keyboard")]
 use crate::tcpstream_keyboard::{bind_keyboard, Keyboard};
 
 fn main() -> Result<()> {
@@ -66,7 +71,8 @@ where
 
 
     info!("Binding keyboard");
-    #[cfg(feature = "tcpstream_keyboard")]
+    // #[cfg(feature = "tcpstream_keyboard")]
+
     let rx = bind_keyboard(80);
     // let rx = keyboard.rx();
     // keyboard.spawn_listener();
@@ -97,13 +103,13 @@ where
             key_emulation_delay -= 1;
         }
 
-        #[cfg(feature = "tcpstream_keyboard")]
+        // #[cfg(feature = "tcpstream_keyboard")]
         match rx.try_recv() {
             Ok(key) => {
                 if key_emulation_delay > 0 {
                     // It's not possible to process same keys which were entered shortly after each other
                     for frame in 0..key_emulation_delay {
-                        println!("Keys received too fast. Running extra emulation frame: {}", frame);
+                        debug!("Keys received too fast. Running extra emulation frame: {}", frame);
                         emulator.emulate_frames(MAX_FRAME_DURATION);
                     }
                     emulator.screen_buffer()
@@ -119,7 +125,7 @@ where
 
                 last_key = key;
 
-                println!("Key: {} - {}", key, true);
+                info!("Key: {} - {}", key, true);
                 let mapped_key_down_option = ascii_code_to_zxkey(key, true)
                 .or_else(|| ascii_code_to_modifier(key, true));
 
@@ -136,28 +142,28 @@ where
                     _ => { Event::NoEvent }
                 };
 
-                println!("-> key down");
+                debug!("-> key down");
                 match mapped_key_down {
                     Event::ZXKey(k,p) => {
-                        println!("-> ZXKey");
+                        debug!("-> ZXKey");
                         emulator.send_key(k, p);
                     },
                     Event::ZXKeyWithModifier(k, k2, p) => {
-                        println!("-> ZXKeyWithModifier");
+                        debug!("-> ZXKeyWithModifier");
                         emulator.send_key(k, p);
                         emulator.send_key(k2, p);
                     }
                     _ => {
-                        println!("Unknown key.");
+                        debug!("Unknown key.");
                     }
                 }
 
-                println!("-> emulating frame");
+                debug!("-> emulating frame");
                 emulator.emulate_frames(MAX_FRAME_DURATION);
                 emulator.screen_buffer()
                     .blit(&mut display, color_conv);
 
-                println!("-> key up");
+                debug!("-> key up");
                 match mapped_key_up {
                     Event::ZXKey(k,p) => {
                         emulator.send_key(k, p);

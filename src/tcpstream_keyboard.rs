@@ -35,9 +35,9 @@ impl Keyboard for TcpStreamKeyboard {
 
     fn spawn_listener(&self) {
         let tx_owned = self.tx.to_owned();
-        println!("Cloning listener");
+        debug!("Cloning listener");
         let listener_owned = self.listener.try_clone().unwrap();
-        println!("Moving to thread");
+        debug!("Moving to thread");
         thread::spawn(move|| {
             // Receive new connection
             for stream in listener_owned.incoming() {
@@ -45,7 +45,7 @@ impl Keyboard for TcpStreamKeyboard {
                     Ok(stream) => {
                         let tx_owned = tx_owned.clone();
                         thread::spawn(move|| {
-                            println!("Keyabord connection from client succeeded");
+                            info!("Keyabord connection from client succeeded");
                             handle_client(stream, tx_owned)
                         });
                     }
@@ -78,17 +78,17 @@ pub fn bind_keyboard(port: u32) -> Receiver<u8> {
 
     thread::spawn(move|| {
         let bind_string = format!("0.0.0.0:{}", port);
-        println!("Binding to {}", bind_string);
+        info!("Binding to {}", bind_string);
         let listener = TcpListener::bind(bind_string).unwrap();
         listener.set_nonblocking(true).expect("Cannot set non-blocking");
-        println!("Creating communication channel");
+        info!("Creating communication channel");
 
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
                     let tx_owned = tx.clone();
                     thread::spawn(move|| {
-                        println!("Keyabord connection from client succeeded");
+                        info!("Keyabord connection from client succeeded");
                         handle_client(stream, tx_owned)
                     });
                 }
@@ -109,13 +109,13 @@ fn handle_client(mut stream: TcpStream, tx: Sender<u8>) {
           // echo everything!
           stream.write(&data[0..size]).unwrap();
           for n in 0..size {
-              println!("Sending to queue: {}", data[n]);
+              info!("Sending to queue: {}", data[n]);
               tx.send(data[n]).unwrap();
           }
           true
       },
       Err(_) => {
-          println!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
+          error!("An error occurred, terminating connection with {}", stream.peer_addr().unwrap());
           stream.shutdown(Shutdown::Both).unwrap();
           false
       }
@@ -152,7 +152,7 @@ fn wifi(
         ..Default::default()
     }))?;
 
-    println!("Wifi configuration set, about to get status");
+    info!("Wifi configuration set, about to get status");
 
     wifi.wait_status_with_timeout(Duration::from_secs(20), |status| !status.is_transitional())
         .map_err(|e| anyhow::anyhow!("Unexpected Wifi status: {:?}", e))?;
@@ -168,7 +168,7 @@ fn wifi(
         _,
     ) = status
     {
-        println!("Wifi connected. IP address: {}", ip_settings.ip);
+        info!("Wifi connected. IP address: {}", ip_settings.ip);
     } else {
         bail!("Unexpected Wifi status: {:?}", status);
     }
