@@ -1,4 +1,4 @@
-use std::{thread, time::*};
+use std::{thread};
 
 use std::result::Result::Ok;
 
@@ -6,10 +6,8 @@ use log::*;
 use std::net::{TcpListener, TcpStream, Shutdown};
 use std::io::Read;
 use std::io::Write;
-use anyhow::*;
 
 use std::sync::mpsc::{channel, Sender, Receiver};
-
 
 pub struct TcpStreamKeyboard {
     tx:Sender<u8>,
@@ -43,7 +41,7 @@ impl Keyboard for TcpStreamKeyboard {
                             handle_client(stream, tx_owned)
                         });
                     }
-                    Err(e) => {
+                    Err(_e) => {
                     }
                 }
             }
@@ -75,7 +73,7 @@ pub fn bind_keyboard(port: u32) -> Receiver<u8> {
                         handle_client(stream, tx_owned)
                     });
                 }
-                Err(e) => {
+                Err(_e) => {
                 }
             }
         }

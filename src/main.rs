@@ -38,7 +38,7 @@ use ascii_zxkey::{ascii_code_to_modifier, ascii_code_to_zxkey};
 
 mod tcpstream_keyboard;
 // #[cfg(feature = "tcpstream_keyboard")]
-use crate::tcpstream_keyboard::{bind_keyboard, Keyboard};
+use crate::tcpstream_keyboard::{bind_keyboard};
 
 fn main() -> Result<()> {
     esp_idf_sys::link_patches();
@@ -158,7 +158,7 @@ where
     #[cfg(feature = "tcpstream_keyboard")]
     let rx = bind_keyboard(23);
 
-    let mut stage = 0;
+    let stage = 0;
     if let Status(
         ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(config))),
         _,

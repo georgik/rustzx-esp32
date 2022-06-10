@@ -1,10 +1,10 @@
-use rustzx_core::{zx::keys::ZXKey, zx::keys::CompoundKey};
+use rustzx_core::{zx::keys::ZXKey};
 
 pub enum Event {
     NoEvent,
     ZXKey(ZXKey, bool),
     ZXKeyWithModifier(ZXKey, ZXKey, bool),
-    CompoundKey(CompoundKey, bool),
+    // CompoundKey(CompoundKey, bool),
     // Kempston(KempstonKey, bool),
     // Sinclair(SinclairJoyNum, SinclairKey, bool),
     // MouseMove { x: i8, y: i8 },
