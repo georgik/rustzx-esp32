@@ -8,6 +8,12 @@ use log::*;
 use esp_idf_hal::prelude::*;
 
 use esp_idf_sys;
+use std::sync::Arc;
+use embedded_svc::wifi::*;
+use esp_idf_svc::wifi::*;
+use esp_idf_svc::netif::*;
+use esp_idf_svc::nvs::*;
+use esp_idf_svc::sysloop::*;
 
 use embedded_graphics::prelude::*;
 
@@ -47,6 +53,60 @@ fn main() -> Result<()> {
 }
 
 
+/// This configuration is picked up at compile time by `build.rs` from the
+/// file `cfg.toml`.
+#[toml_cfg::toml_config]
+pub struct Config {
+    #[default("Wokwi-GUEST")]
+    wifi_ssid: &'static str,
+    #[default("")]
+    wifi_psk: &'static str,
+}
+
+
+
+#[allow(dead_code)]
+fn wifi(
+    netif_stack: Arc<EspNetifStack>,
+    sys_loop_stack: Arc<EspSysLoopStack>,
+    default_nvs: Arc<EspDefaultNvs>,
+) -> anyhow::Result<Box<EspWifi>> {
+    let app_config = CONFIG;
+    let mut wifi = Box::new(EspWifi::new(netif_stack, sys_loop_stack, default_nvs)?);
+
+    wifi.set_configuration(&Configuration::Client(ClientConfiguration {
+        ssid: app_config.wifi_ssid.into(),
+        password: app_config.wifi_psk.into(),
+        auth_method: AuthMethod::None,
+        ..Default::default()
+    }))?;
+
+    info!("Wifi configuration set, about to get status");
+
+    wifi.wait_status_with_timeout(Duration::from_secs(20), |status| !status.is_transitional())
+        .map_err(|e| anyhow::anyhow!("Unexpected Wifi status: {:?}", e))?;
+
+    info!("to get status");
+    let status = wifi.get_status();
+
+    info!("got status)");
+    if let Status(
+        ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(
+            ip_settings,
+        ))),
+        _,
+    ) = status
+    {
+        info!("Wifi connected. IP address: {}", ip_settings.ip);
+    } else {
+        bail!("Unexpected Wifi status: {:?}", status);
+    }
+
+    Ok(wifi)
+}
+
+
+
 fn emulate_zx<D>(mut display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Result<()>
 where
     D: DrawTarget + Dimensions + Send + 'static,
@@ -69,12 +129,31 @@ where
     let mut emulator: Emulator<host::Esp32Host> =
         Emulator::new(settings, host::Esp32HostContext {}).unwrap();
 
+    info!("Initialize emulator");
+    const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
+    emulator.emulate_frames(MAX_FRAME_DURATION);
+    emulator.screen_buffer()
+    .blit(&mut display, color_conv);
+
+    info!("Initializing WiFi");
+    // wifi part
+    #[allow(unused)]
+    let netif_stack = Arc::new(EspNetifStack::new().unwrap());
+    #[allow(unused)]
+    let sys_loop_stack = Arc::new(EspSysLoopStack::new().unwrap());
+    #[allow(unused)]
+    let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
+    #[cfg(feature = "tcpstream_keyboard")]
+    let _wifi = wifi(
+        netif_stack.clone(),
+        sys_loop_stack.clone(),
+        default_nvs.clone(),
+    ).unwrap();
 
     info!("Binding keyboard");
-    // #[cfg(feature = "tcpstream_keyboard")]
 
-    let rx = bind_keyboard(80);
-    // let rx = keyboard.rx();
+    #[cfg(feature = "tcpstream_keyboard")]
+    let rx = bind_keyboard(23);
     // keyboard.spawn_listener();
 
     let mut key_emulation_delay = 0;
@@ -83,7 +162,6 @@ where
     info!("Entering emulator loop");
 
     loop {
-        const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
 
 
         // let mut stats = [0; 1024];
@@ -103,7 +181,7 @@ where
             key_emulation_delay -= 1;
         }
 
-        // #[cfg(feature = "tcpstream_keyboard")]
+        #[cfg(feature = "tcpstream_keyboard")]
         match rx.try_recv() {
             Ok(key) => {
                 if key_emulation_delay > 0 {

@@ -45,14 +45,18 @@ esp32s2_usb_otg = []
 # Enable this feature in case you have an ESP32S3-USB-OTG board
 esp32s3_usb_otg = []
 
+# Enable this feature when you need to interact with emulator core using TCP socket e.g. via Netcat
+tcpstream_keyboard = []
+
 [dependencies]
 anyhow = {version = "1", features = ["backtrace"]}
-toml-cfg = "0.1"
 log = "0.4"
+toml-cfg = "0.1"
 esp-idf-sys = { version = "0.31.0", features = ["binstart"] }
-esp-idf-svc = "0.41.3"
-esp-idf-hal = "0.37.4"
-embedded-svc = "0.21.2"
+# Freezing esp-idf-svc, hal and embedded-svc, because of: https://github.com/esp-rs/esp-idf-hal/issues/79
+esp-idf-svc = "0.39.1"
+esp-idf-hal = "0.35.1"
+embedded-svc = "0.19"
 embedded-hal = "0.2"
 embedded-graphics = "0.7"
 display-interface = "0.4"

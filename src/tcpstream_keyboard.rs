@@ -2,12 +2,6 @@ use std::{thread, time::*};
 
 use std::result::Result::Ok;
 
-use std::sync::Arc;
-use embedded_svc::wifi::*;
-use esp_idf_svc::wifi::*;
-use esp_idf_svc::netif::*;
-use esp_idf_svc::nvs::*;
-use esp_idf_svc::sysloop::*;
 use log::*;
 use std::net::{TcpListener, TcpStream, Shutdown};
 use std::io::Read;
@@ -62,18 +56,7 @@ impl Keyboard for TcpStreamKeyboard {
 
 pub fn bind_keyboard(port: u32) -> Receiver<u8> {
 
-    // wifi part
-    #[allow(unused)]
-    let netif_stack = Arc::new(EspNetifStack::new().unwrap());
-    #[allow(unused)]
-    let sys_loop_stack = Arc::new(EspSysLoopStack::new().unwrap());
-    #[allow(unused)]
-    let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
-    let _wifi = wifi(
-        netif_stack.clone(),
-        sys_loop_stack.clone(),
-        default_nvs.clone(),
-    ).unwrap();
+
     let (tx, rx) = channel();
 
     thread::spawn(move|| {
@@ -123,57 +106,5 @@ fn handle_client(mut stream: TcpStream, tx: Sender<u8>) {
 }
 
 
-
-/// This configuration is picked up at compile time by `build.rs` from the
-/// file `cfg.toml`.
-#[toml_cfg::toml_config]
-pub struct Config {
-    #[default("Wokwi-GUEST")]
-    wifi_ssid: &'static str,
-    #[default("")]
-    wifi_psk: &'static str,
-}
-
-
-
-#[allow(dead_code)]
-fn wifi(
-    netif_stack: Arc<EspNetifStack>,
-    sys_loop_stack: Arc<EspSysLoopStack>,
-    default_nvs: Arc<EspDefaultNvs>,
-) -> anyhow::Result<Box<EspWifi>> {
-    let app_config = CONFIG;
-    let mut wifi = Box::new(EspWifi::new(netif_stack, sys_loop_stack, default_nvs)?);
-
-    wifi.set_configuration(&Configuration::Client(ClientConfiguration {
-        ssid: app_config.wifi_ssid.into(),
-        password: app_config.wifi_psk.into(),
-        auth_method: AuthMethod::None,
-        ..Default::default()
-    }))?;
-
-    info!("Wifi configuration set, about to get status");
-
-    wifi.wait_status_with_timeout(Duration::from_secs(20), |status| !status.is_transitional())
-        .map_err(|e| anyhow::anyhow!("Unexpected Wifi status: {:?}", e))?;
-
-    info!("to get status");
-    let status = wifi.get_status();
-
-    info!("got status)");
-    if let Status(
-        ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(
-            ip_settings,
-        ))),
-        _,
-    ) = status
-    {
-        info!("Wifi connected. IP address: {}", ip_settings.ip);
-    } else {
-        bail!("Unexpected Wifi status: {:?}", status);
-    }
-
-    Ok(wifi)
-}
 
 
