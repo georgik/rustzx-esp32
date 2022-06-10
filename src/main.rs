@@ -24,6 +24,9 @@ mod display;
 mod host;
 
 use std::result::Result::Ok;
+// Fonts: https://docs.rs/embedded-graphics/0.7.1/embedded_graphics/mono_font/index.html
+use embedded_graphics::mono_font::{ascii::FONT_8X13, MonoTextStyle};
+use embedded_graphics::text::*;
 
 mod zx_event;
 // #[cfg(feature = "tcpstream_keyboard")]
@@ -144,7 +147,7 @@ where
     #[allow(unused)]
     let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
     #[cfg(feature = "tcpstream_keyboard")]
-    let _wifi = wifi(
+    let wifi_interface = wifi(
         netif_stack.clone(),
         sys_loop_stack.clone(),
         default_nvs.clone(),
@@ -154,7 +157,30 @@ where
 
     #[cfg(feature = "tcpstream_keyboard")]
     let rx = bind_keyboard(23);
-    // keyboard.spawn_listener();
+
+    let mut stage = 0;
+    if let Status(
+        ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(config))),
+        _,
+    ) = wifi_interface.get_status()
+    {
+        match stage {
+            0 => {
+                let message = format!("Keyboard: {}:23", config.ip);
+                println!("{}", message);
+                Text::new(
+                    message.as_str(),
+                    Point::new(10, 210),
+                    MonoTextStyle::new(&FONT_8X13, color_conv(ZXColor::White, ZXBrightness::Normal)),
+                )
+                .draw(&mut display).unwrap();
+
+            }
+            _ => {
+                println!("WiFi unknown");
+            }
+        }
+    }
 
     let mut key_emulation_delay = 0;
     let mut last_key:u8 = 0;
