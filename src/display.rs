@@ -625,9 +625,13 @@ pub(crate) fn esp32s2s3_usb_otg_create_display(
 
     let mut display = st7789::ST7789::new(di, reset, 240, 240);
 
-    display.init(&mut delay::Ets);
+    display.init(&mut delay::Ets)
+      .map_err(|err| error!("{:?}", err))
+      .err();
     display
-        .set_orientation(st7789::Orientation::Landscape);
+        .set_orientation(st7789::Orientation::Landscape)
+        .map_err(|err| error!("{:?}", err))
+        .ok();
 
     Ok(display)
 }

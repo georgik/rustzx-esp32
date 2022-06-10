@@ -116,7 +116,9 @@ where
     D::Error: core::fmt::Debug,
 {
     display
-        .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal));
+        .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal))
+        .map_err(|err| error!("{:?}", err))
+        .ok();
 
     info!("Creating emulator");
 
@@ -129,14 +131,10 @@ where
         load_default_rom: true,
     };
 
-    let mut emulator: Emulator<host::Esp32Host> =
-        Emulator::new(settings, host::Esp32HostContext {}).unwrap();
-
     info!("Initialize emulator");
     const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
-    emulator.emulate_frames(MAX_FRAME_DURATION);
-    emulator.screen_buffer()
-    .blit(&mut display, color_conv);
+    let mut emulator: Emulator<host::Esp32Host> =
+        Emulator::new(settings, host::Esp32HostContext {}).unwrap();
 
     info!("Initializing WiFi");
     // wifi part
@@ -199,10 +197,17 @@ where
         // }
 
 
-        emulator.emulate_frames(MAX_FRAME_DURATION);
-        emulator.screen_buffer()
-        .blit(&mut display, color_conv);
-
+        match emulator.emulate_frames(MAX_FRAME_DURATION) {
+            Ok(_) => {
+                emulator.screen_buffer()
+                    .blit(&mut display, color_conv)
+                    .map_err(|err| error!("{:?}", err))
+                    .ok();
+            }
+            _ => {
+              error!("Emulation of frame failed");
+            }
+        }
         if key_emulation_delay > 0 {
             key_emulation_delay -= 1;
         }
@@ -214,10 +219,14 @@ where
                     // It's not possible to process same keys which were entered shortly after each other
                     for frame in 0..key_emulation_delay {
                         debug!("Keys received too fast. Running extra emulation frame: {}", frame);
-                        emulator.emulate_frames(MAX_FRAME_DURATION);
+                        emulator.emulate_frames(MAX_FRAME_DURATION).map_err(|err| error!("{:?}", err))
+                        .map_err(|err| error!("{:?}", err))
+                            .ok();
                     }
                     emulator.screen_buffer()
-                    .blit(&mut display, color_conv);
+                    .blit(&mut display, color_conv)
+                    .map_err(|err| error!("{:?}", err))
+                        .ok();
                 }
 
                 if key == last_key {
@@ -263,9 +272,17 @@ where
                 }
 
                 debug!("-> emulating frame");
-                emulator.emulate_frames(MAX_FRAME_DURATION);
-                emulator.screen_buffer()
-                    .blit(&mut display, color_conv);
+                match emulator.emulate_frames(MAX_FRAME_DURATION) {
+                    Ok(_) => {
+                        emulator.screen_buffer()
+                            .blit(&mut display, color_conv)
+                            .map_err(|err| error!("{:?}", err))
+                            .ok();
+                    }
+                    _ => {
+                      error!("Emulation of frame failed");
+                    }
+                }
 
                 debug!("-> key up");
                 match mapped_key_up {
