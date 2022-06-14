@@ -25,19 +25,24 @@ mod host;
 
 use std::result::Result::Ok;
 // Fonts: https://docs.rs/embedded-graphics/0.7.1/embedded_graphics/mono_font/index.html
+#[cfg(feature = "tcpstream_keyboard")]
 use embedded_graphics::mono_font::{ascii::FONT_8X13, MonoTextStyle};
+#[cfg(feature = "tcpstream_keyboard")]
 use embedded_graphics::text::*;
 
+#[cfg(feature = "tcpstream_keyboard")]
 mod zx_event;
-// #[cfg(feature = "tcpstream_keyboard")]
+#[cfg(feature = "tcpstream_keyboard")]
 use zx_event::Event;
 
+#[cfg(feature = "tcpstream_keyboard")]
 mod ascii_zxkey;
-// #[cfg(feature = "tcpstream_keyboard")]
+#[cfg(feature = "tcpstream_keyboard")]
 use ascii_zxkey::{ascii_code_to_modifier, ascii_code_to_zxkey};
 
+#[cfg(feature = "tcpstream_keyboard")]
 mod tcpstream_keyboard;
-// #[cfg(feature = "tcpstream_keyboard")]
+#[cfg(feature = "tcpstream_keyboard")]
 use crate::tcpstream_keyboard::{bind_keyboard};
 
 fn main() -> Result<()> {
@@ -144,7 +149,7 @@ where
     let sys_loop_stack = Arc::new(EspSysLoopStack::new().unwrap());
     #[allow(unused)]
     let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
-    #[cfg(feature = "tcpstream_keyboard")]
+    #[cfg(feature = "wifi")]
     let wifi_interface = wifi(
         netif_stack.clone(),
         sys_loop_stack.clone(),
@@ -154,9 +159,11 @@ where
     info!("Binding keyboard");
 
     #[cfg(feature = "tcpstream_keyboard")]
-    let rx = bind_keyboard(23);
+    let rx = bind_keyboard(80);
 
+    #[cfg(feature = "tcpstream_keyboard")]
     let stage = 0;
+    #[cfg(feature = "tcpstream_keyboard")]
     if let Status(
         ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(config))),
         _,
@@ -164,7 +171,7 @@ where
     {
         match stage {
             0 => {
-                let message = format!("Keyboard: {}:23", config.ip);
+                let message = format!("Keyboard: {}:80", config.ip);
                 println!("{}", message);
                 Text::new(
                     message.as_str(),
@@ -180,7 +187,9 @@ where
         }
     }
 
+    #[cfg(feature = "tcpstream_keyboard")]
     let mut key_emulation_delay = 0;
+    #[cfg(feature = "tcpstream_keyboard")]
     let mut last_key:u8 = 0;
 
     info!("Entering emulator loop");
@@ -208,6 +217,8 @@ where
               error!("Emulation of frame failed");
             }
         }
+
+        #[cfg(feature = "tcpstream_keyboard")]
         if key_emulation_delay > 0 {
             key_emulation_delay -= 1;
         }

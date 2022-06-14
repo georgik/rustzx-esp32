@@ -20,6 +20,7 @@ opt-level = "z"
 
 [features]
 default = [ "esp32_ili9341" ]
+# default = [ "esp32_ili9341", "tcpstream_keyboard" ]
 
 # Enable this feature in case you have a ESP32 ILI9341 board
 esp32_ili9341 = []
@@ -45,8 +46,11 @@ esp32s2_usb_otg = []
 # Enable this feature in case you have an ESP32S3-USB-OTG board
 esp32s3_usb_otg = []
 
+# Enable network communication. Configure values in cfg.toml
+wifi = []
+
 # Enable this feature when you need to interact with emulator core using TCP socket e.g. via Netcat
-tcpstream_keyboard = []
+tcpstream_keyboard = [ "wifi" ]
 
 [dependencies]
 anyhow = {version = "1", features = ["backtrace"]}

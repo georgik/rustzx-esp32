@@ -142,6 +142,19 @@ macro_rules! create {
 
 pub(crate) use create;
 
+// Kaluga needs customized screen orientation commands
+// (not a surprise; quite a few ILI9341 boards need these as evidences in the TFT_eSPI & lvgl ESP32 C drivers)
+// Display orientation: https://cdn-shop.adafruit.com/datasheets/ILI9341.pdf
+// Page 209
+#[allow(dead_code)]
+pub enum DisplayOrientation {
+    Portrait,
+    PortraitFlipped,
+    Landscape,
+    LandscapeVericallyFlipped,
+    LandscapeFlipped,
+}
+
 #[cfg(feature = "ttgo")]
 pub(crate) fn ttgo_create_display(
     backlight: gpio::Gpio4<gpio::Unknown>,
@@ -238,17 +251,7 @@ pub(crate) fn esp32_create_display_ili9341(
         gpio::Gpio4<gpio::Output>,
     >,
 > {
-    // Kaluga needs customized screen orientation commands
-    // (not a surprise; quite a few ILI9341 boards need these as evidences in the TFT_eSPI & lvgl ESP32 C drivers)
-    pub enum KalugaOrientation {
-        Portrait,
-        PortraitFlipped,
-        Landscape,
-        LandscapeVericallyFlipped,
-        LandscapeFlipped,
-    }
-
-    impl ili9341::Mode for KalugaOrientation {
+    impl ili9341::Mode for DisplayOrientation {
         fn mode(&self) -> u8 {
             match self {
                 Self::Portrait => 0,
@@ -293,9 +296,9 @@ pub(crate) fn esp32_create_display_ili9341(
         di,
         reset,
         &mut delay::Ets,
-        KalugaOrientation::Landscape,
+        DisplayOrientation::Landscape,
         ili9341::DisplaySize240x320,
-    ).map_err(|e| anyhow!("Failed to init display"))
+    ).map_err(|_e| anyhow!("Failed to init display"))
 }
 
 
@@ -323,19 +326,8 @@ pub(crate) fn esp32c3_create_display_ili9341(
         gpio::Gpio10<gpio::Output>,
     >,
 > {
-    // Kaluga needs customized screen orientation commands
-    // (not a surprise; quite a few ILI9341 boards need these as evidences in the TFT_eSPI & lvgl ESP32 C drivers)
-    // Display orientation: https://cdn-shop.adafruit.com/datasheets/ILI9341.pdf
-    // Page 209
-    pub enum KalugaOrientation {
-        Portrait,
-        PortraitFlipped,
-        Landscape,
-        LandscapeVericallyFlipped,
-        LandscapeFlipped,
-    }
 
-    impl ili9341::Mode for KalugaOrientation {
+    impl ili9341::Mode for DisplayOrientation {
         fn mode(&self) -> u8 {
             match self {
                 Self::Portrait => 0,
@@ -380,7 +372,7 @@ pub(crate) fn esp32c3_create_display_ili9341(
         di,
         reset,
         &mut delay::Ets,
-        KalugaOrientation::LandscapeVericallyFlipped,
+        DisplayOrientation::LandscapeVericallyFlipped,
         ili9341::DisplaySize240x320,
     ).map_err(|e| anyhow!("Failed to init display"))
 }
@@ -410,16 +402,8 @@ pub(crate) fn kaluga_create_display_ili9341(
         gpio::Gpio16<gpio::Output>,
     >,
 > {
-    // Kaluga needs customized screen orientation commands
-    // (not a surprise; quite a few ILI9341 boards need these as evidences in the TFT_eSPI & lvgl ESP32 C drivers)
-    pub enum KalugaOrientation {
-        Portrait,
-        PortraitFlipped,
-        Landscape,
-        LandscapeFlipped,
-    }
 
-    impl ili9341::Mode for KalugaOrientation {
+    impl ili9341::Mode for DisplayOrientation {
         fn mode(&self) -> u8 {
             match self {
                 Self::Portrait => 0,
@@ -463,7 +447,7 @@ pub(crate) fn kaluga_create_display_ili9341(
         di,
         reset,
         &mut delay::Ets,
-        KalugaOrientation::Landscape,
+        DisplayOrientation::Landscape,
         ili9341::DisplaySize240x320,
     ).map_err(|e| anyhow!("Failed to init display"))
 }
