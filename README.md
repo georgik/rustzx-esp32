@@ -159,7 +159,7 @@ Wokwi offers debugging with GDB.
 | MISO    | not connected       | -           |
 
 
-Wokwi related project: https://wokwi.com/projects/331440829570744915 - [diagram.json](docs/diagram.json)
+Wokwi related project: https://wokwi.com/projects/331440829570744915 - [rustzx-esp32-diagram.json](docs/rustzx-esp32-diagram.json)
 
 ## References
 
