@@ -161,6 +161,29 @@ Wokwi offers debugging with GDB.
 
 Wokwi related project: https://wokwi.com/projects/331440829570744915 - [rustzx-esp32-diagram.json](docs/rustzx-esp32-diagram.json)
 
+## Features
+
+Special features that can be enabled for the emulator
+
+### TCP Socket Keyboard over WiFi
+
+The feature allows connecting TCP over Wifi.
+
+1. Configure WiFi access in `cfg.toml`
+```
+[rustzx-esp32]
+wifi_ssid = "Wokwi-GUEST"
+wifi_psk = ""
+```
+2. Build with enabled feature
+```
+cargo +esp build --release --features "tcpstream_keyboard"
+```
+3. Connect to port 80 and send sample content
+```
+nc IP_ADDR:80 < data/sample.bas
+```
+
 ## References
 
 - Rust code for ESP32 based on https://github.com/ivmarkov/rust-esp32-std-demo
