@@ -141,7 +141,7 @@ where
     let mut emulator: Emulator<host::Esp32Host> =
         Emulator::new(settings, host::Esp32HostContext {}).unwrap();
 
-    info!("Initializing WiFi");
+    info!("Creatig WiFi structures");
     // wifi part
     #[allow(unused)]
     let netif_stack = Arc::new(EspNetifStack::new().unwrap());
@@ -149,6 +149,7 @@ where
     let sys_loop_stack = Arc::new(EspSysLoopStack::new().unwrap());
     #[allow(unused)]
     let default_nvs = Arc::new(EspDefaultNvs::new().unwrap());
+    info!("Initializing WiFi");
     #[cfg(feature = "wifi")]
     let wifi_interface = wifi(
         netif_stack.clone(),

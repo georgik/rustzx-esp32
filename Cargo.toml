@@ -21,6 +21,9 @@ opt-level = "z"
 [features]
 default = [ "esp32_ili9341" ]
 # default = [ "esp32_ili9341", "tcpstream_keyboard" ]
+# default = [ "esp32s2_usb_otg" ]
+# default = [ "esp32s2_usb_otg", "tcpstream_keyboard" ]
+# default = [ "kaluga_ili9341", "tcpstream_keyboard" ]
 
 # Enable this feature in case you have a ESP32 ILI9341 board
 esp32_ili9341 = []
@@ -56,11 +59,11 @@ tcpstream_keyboard = [ "wifi" ]
 anyhow = {version = "1", features = ["backtrace"]}
 log = "0.4"
 toml-cfg = "0.1"
-esp-idf-sys = { version = "0.31.0", features = ["binstart"] }
-# Freezing esp-idf-svc, hal and embedded-svc, because of: https://github.com/esp-rs/esp-idf-hal/issues/79
-esp-idf-svc = "0.39.1"
-esp-idf-hal = "0.35.1"
-embedded-svc = "0.19"
+esp-idf-sys = { version = "0.31.6", features = ["binstart"] }
+esp-idf-svc = "0.41.4"
+# Freezing esp-idf-hal because of: https://github.com/esp-rs/esp-idf-hal/issues/79
+esp-idf-hal = { git = "https://github.com/Dominaezzz/esp-idf-hal/", branch = "fix_spi" }
+embedded-svc = "0.21.3"
 embedded-hal = "0.2"
 embedded-graphics = "0.7"
 display-interface = "0.4"
