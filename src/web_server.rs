@@ -9,6 +9,7 @@ use embedded_svc::httpd::*;
 use rust_embed::RustEmbed;
 #[derive(RustEmbed)]
 #[folder = "data/public/"]
+#[prefix = "public/"]
 struct Asset;
 
 #[allow(unused_variables)]
@@ -17,7 +18,7 @@ pub fn web_server(mutex: Arc<(Mutex<Option<u32>>, Condvar)>) -> Result<idf::Serv
         .at("/")
         .get(|_| {
             Response::new(200)
-            .body(Body::from("std::str::from_utf8(Asset::get(\"prefix/index.html\").unwrap().data.as_ref()).unwrap()"))
+            .body(Body::from(std::str::from_utf8(Asset::get("public/index.html").unwrap().data.as_ref()).unwrap()))
             .into()
         })?
         .at("/foo")
