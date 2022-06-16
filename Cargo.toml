@@ -19,8 +19,8 @@ opt-level = "z"
 #opt-level = "s"
 
 [features]
-default = [ "esp32_ili9341" ]
-# default = [ "esp32_ili9341", "tcpstream_keyboard" ]
+# default = [ "esp32_ili9341" ]
+default = [ "esp32_ili9341", "tcpstream_keyboard", "web_server" ]
 # default = [ "esp32s2_usb_otg" ]
 # default = [ "esp32s2_usb_otg", "tcpstream_keyboard" ]
 # default = [ "kaluga_ili9341", "tcpstream_keyboard" ]
@@ -49,6 +49,9 @@ esp32s2_usb_otg = []
 # Enable this feature in case you have an ESP32S3-USB-OTG board
 esp32s3_usb_otg = []
 
+# Enable to expose web-interface for the emulator over netwoek
+web_server = [ "wifi" ]
+
 # Enable network communication. Configure values in cfg.toml
 wifi = []
 
@@ -56,7 +59,7 @@ wifi = []
 tcpstream_keyboard = [ "wifi" ]
 
 [dependencies]
-anyhow = {version = "1", features = ["backtrace"]}
+anyhow = {version = "1", features = ["backtrace"] }
 log = "0.4"
 toml-cfg = "0.1"
 esp-idf-sys = { version = "0.31.6", features = ["binstart"] }
@@ -71,6 +74,7 @@ display-interface-spi = "0.4"
 st7789 = "0.6"
 ili9341 = { version = "0.5", git = "https://github.com/yuri91/ili9341-rs" }
 ssd1306 = "0.7"
+rust-embed = "6.4.0"
 rustzx-utils = { version = "0.15", features = ["std"] }
 rustzx-core = { version = "0.15", features = ["embedded-roms"] }
 

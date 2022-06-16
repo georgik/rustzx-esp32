@@ -45,6 +45,13 @@ mod tcpstream_keyboard;
 #[cfg(feature = "tcpstream_keyboard")]
 use crate::tcpstream_keyboard::{bind_keyboard};
 
+// use rust_embed::RustEmbed;
+#[cfg(feature = "web_server")]
+mod web_server;
+#[cfg(feature = "web_server")]
+use crate::web_server::{ web_server };
+use std::sync::{Condvar, Mutex};
+
 fn main() -> Result<()> {
     esp_idf_sys::link_patches();
 
@@ -65,6 +72,10 @@ fn main() -> Result<()> {
 /// file `cfg.toml`.
 #[toml_cfg::toml_config]
 pub struct Config {
+    #[default(81)]
+    tcpstream_keyboard_port:u32,
+    #[default(80)]
+    web_server_port:u32,
     #[default("Wokwi-GUEST")]
     wifi_ssid: &'static str,
     #[default("")]
@@ -159,8 +170,9 @@ where
 
     info!("Binding keyboard");
 
+    let app_config = CONFIG;
     #[cfg(feature = "tcpstream_keyboard")]
-    let rx = bind_keyboard(80);
+    let rx = bind_keyboard(app_config.tcpstream_keyboard_port);
 
     #[cfg(feature = "tcpstream_keyboard")]
     let stage = 0;
@@ -172,7 +184,7 @@ where
     {
         match stage {
             0 => {
-                let message = format!("Keyboard: {}:80", config.ip);
+                let message = format!("Keyboard: {}:{}", config.ip, app_config.tcpstream_keyboard_port);
                 println!("{}", message);
                 Text::new(
                     message.as_str(),
@@ -187,6 +199,11 @@ where
             }
         }
     }
+
+    info!("Starting web server");
+    #[cfg(feature = "web_server")]
+    let mutex = Arc::new((Mutex::new(None), Condvar::new()));
+    let _httpd = web_server(mutex.clone())?;
 
     #[cfg(feature = "tcpstream_keyboard")]
     let mut key_emulation_delay = 0;

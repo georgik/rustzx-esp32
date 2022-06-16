@@ -1,3 +1,5 @@
 [rustzx-esp32]
+tcpstream_keyboard_port = 81
+web_server_port = 80
 wifi_ssid = "Wokwi-GUEST"
 wifi_psk = ""
