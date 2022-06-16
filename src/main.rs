@@ -203,6 +203,7 @@ where
     info!("Starting web server");
     #[cfg(feature = "web_server")]
     let mutex = Arc::new((Mutex::new(None), Condvar::new()));
+    // let buffer = emulator.screen_buffer().to_png(color_conv);
     let _httpd = web_server(mutex.clone())?;
 
     #[cfg(feature = "tcpstream_keyboard")]

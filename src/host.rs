@@ -40,6 +40,11 @@ pub(crate) struct EmbeddedGraphicsFrameBuffer {
     changed: RefCell<Vec<bool>>,
 }
 
+
+// fn color_reduction<D: DrawTarget>(color:  fn(ZXColor, ZXBrightness) -> D::Color) -> u8 {
+//     color.r()
+// }
+
 impl EmbeddedGraphicsFrameBuffer {
     pub(crate) fn blit<D: DrawTarget>(
         &self,
@@ -84,6 +89,30 @@ impl EmbeddedGraphicsFrameBuffer {
 
         Ok(())
     }
+
+
+    pub(crate) fn to_png<D: DrawTarget>(&self, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Vec<u8> {
+        let mut out = vec![];
+
+        {
+            let mut encoder = png::Encoder::new(&mut out, 256, 192);
+            encoder.set_depth(png::BitDepth::Four);
+            encoder.set_color(png::ColorType::Indexed);
+            // encoder.set_palette(make_png_palette());
+            let mut writer = encoder.write_header().expect("Failed to write PNG header");
+            // let color_buffer:Vec<u8> = self.buffer.iter()
+            //     .map(|zh_color| color_conv(*zh_color, ZXBrightness::Normal))
+            //     .map(|rgb_color| color_reduction(*rgb_color))
+            //     .collect();
+            // let mapped_buffer:&[u8] = &color_buffer[..]; // c: &[u8]
+            // writer
+            //     .write_image_data(mapped_buffer)
+            //     .expect("Failed to write PNG data");
+        }
+
+        out
+    }
+
 }
 
 impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
