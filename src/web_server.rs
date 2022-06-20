@@ -15,9 +15,10 @@ struct Asset;
 use embedded_graphics::prelude::*;
 // use crate::display::color_conv;
 
+use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings};
 
 #[allow(unused_variables)]
-pub fn web_server(mutex: Arc<(Mutex<Option<u32>>, Condvar)>) -> Result<idf::Server> {
+pub(crate) fn web_server(mutex: Arc<(Mutex<Option<u32>>, Condvar)>, emulator: &Emulator<crate::host::Esp32Host> ) -> Result<idf::Server> {
     let server = idf::ServerRegistry::new()
         .at("/")
         .get(|_| {
@@ -29,7 +30,7 @@ pub fn web_server(mutex: Arc<(Mutex<Option<u32>>, Condvar)>) -> Result<idf::Serv
         .get(|_| {
             Response::new(200)
             .header("Content-Type", "image/png")
-            .body(Body::from(""))
+            .body(Body::from(emulator.screen_buffer().to_png()))
             .into()
         })?
         .at("/bar")

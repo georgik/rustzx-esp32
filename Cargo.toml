@@ -60,6 +60,7 @@ tcpstream_keyboard = [ "wifi" ]
 
 [dependencies]
 anyhow = {version = "1", features = ["backtrace"] }
+crossbeam-channel = "0.5"
 log = "0.4"
 toml-cfg = "0.1"
 esp-idf-sys = { version = "0.31.6", features = ["binstart"] }

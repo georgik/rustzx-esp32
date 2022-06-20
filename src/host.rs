@@ -91,7 +91,7 @@ impl EmbeddedGraphicsFrameBuffer {
     }
 
 
-    pub(crate) fn to_png<D: DrawTarget>(&self, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Vec<u8> {
+    pub(crate) fn to_png(&self) -> Vec<u8> {
         let mut out = vec![];
 
         {

@@ -46,11 +46,13 @@ mod tcpstream_keyboard;
 use crate::tcpstream_keyboard::{bind_keyboard};
 
 // use rust_embed::RustEmbed;
-#[cfg(feature = "web_server")]
-mod web_server;
-#[cfg(feature = "web_server")]
-use crate::web_server::{ web_server };
+// #[cfg(feature = "web_server")]
+// mod web_server;
+// #[cfg(feature = "web_server")]
+// use crate::web_server::{ web_server };
 use std::sync::{Condvar, Mutex};
+
+use std::thread;
 
 fn main() -> Result<()> {
     esp_idf_sys::link_patches();
@@ -200,11 +202,68 @@ where
         }
     }
 
+use esp_idf_svc::httpd as idf;
+    use std::{sync::Arc};
+use embedded_svc::httpd::registry::*;
+use embedded_svc::httpd::*;
+use crate::host::EmbeddedGraphicsFrameBuffer;
+use rustzx_core::zx::video::colors::ZXBrightness;
+use rustzx_core::zx::video::colors::ZXColor;
+use rust_embed::RustEmbed;
+#[derive(RustEmbed)]
+#[folder = "data/public/"]
+#[prefix = "public/"]
+struct Asset;
+use embedded_graphics::prelude::*;
+use crossbeam_channel::{unbounded, RecvError};
+
     info!("Starting web server");
     #[cfg(feature = "web_server")]
-    let mutex = Arc::new((Mutex::new(None), Condvar::new()));
+    // let mutex = Arc::new((Mutex::new(None), Condvar::new()));
     // let buffer = emulator.screen_buffer().to_png(color_conv);
-    let _httpd = web_server(mutex.clone())?;
+    // let _httpd = web_server(mutex.clone(), &emulator)?;
+    
+    let (sender, receiver) = crossbeam_channel::unbounded();
+
+    let server = idf::ServerRegistry::new()
+        .at("/")
+        .get(|_| {
+            Response::new(200)
+            .body(Body::from(std::str::from_utf8(Asset::get("public/index.html").unwrap().data.as_ref()).unwrap()))
+            .into()
+        })?
+        .at("/screenshot.png")
+        .get(move|_| {
+            // let eml = &*emulator_in.lock().unwrap();
+            Response::new(200)
+            .header("Content-Type", "image/png")
+            .body({
+                sender.send(1);
+                // match sender.try_recv() {
+                //     Ok(message) => {
+                //         return Body::from("2");
+                //     }
+                //     _ => {
+
+                //     }
+                // }
+
+                Body::from("")
+            })
+            // .body(Body::from(emulator_in.screen_buffer().to_png()))
+            .into()
+        })?
+        .at("/bar")
+        .get(|_| {
+            Response::new(403)
+                .status_message("No permissions")
+                .body("You have no permissions to access this page".into())
+                .into()
+        })?
+        .at("/panic")
+        .get(|_| panic!("User requested a panic!"))?;
+
+    let _server_reference = server.start(&Default::default());
 
     #[cfg(feature = "tcpstream_keyboard")]
     let mut key_emulation_delay = 0;
@@ -234,6 +293,16 @@ where
             }
             _ => {
               error!("Emulation of frame failed");
+            }
+        }
+
+        match receiver.try_recv() {
+            Ok(message) => {
+                println!("Received: {}", message);
+                // receiver.send(2);
+            },
+            _ => {
+
             }
         }
 
@@ -330,5 +399,7 @@ where
             _ => {
             }
         }
+
+        thread::sleep(Duration::from_secs(1));
     }
 }
