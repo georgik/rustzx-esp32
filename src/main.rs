@@ -222,8 +222,9 @@ use crossbeam_channel::{unbounded, RecvError};
     // let mutex = Arc::new((Mutex::new(None), Condvar::new()));
     // let buffer = emulator.screen_buffer().to_png(color_conv);
     // let _httpd = web_server(mutex.clone(), &emulator)?;
-    
-    let (sender, receiver) = crossbeam_channel::unbounded();
+
+    let (sender_child, receiver_parent) = crossbeam_channel::unbounded();
+    let (sender_parent, receiver_child) = (sender_child.clone(), receiver_parent.clone());
 
     let server = idf::ServerRegistry::new()
         .at("/")
@@ -238,17 +239,18 @@ use crossbeam_channel::{unbounded, RecvError};
             Response::new(200)
             .header("Content-Type", "image/png")
             .body({
-                sender.send(1);
-                // match sender.try_recv() {
-                //     Ok(message) => {
-                //         return Body::from("2");
-                //     }
-                //     _ => {
+                let mut body = Body::from("");
+                sender_child.send(1);
+                match receiver_child.try_recv() {
+                    Ok(message) => {
+                        body = Body::from(message);
+                    }
+                    _ => {
 
-                //     }
-                // }
+                    }
+                }
 
-                Body::from("")
+                body
             })
             // .body(Body::from(emulator_in.screen_buffer().to_png()))
             .into()
@@ -296,10 +298,12 @@ use crossbeam_channel::{unbounded, RecvError};
             }
         }
 
-        match receiver.try_recv() {
+        match receiver_parent.try_recv() {
             Ok(message) => {
                 println!("Received: {}", message);
-                // receiver.send(2);
+                let buffer = "1";
+                // let buffer = emulator.screen_buffer().to_png(color_conv);
+                sender_parent.send(1);
             },
             _ => {
 
