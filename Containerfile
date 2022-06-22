@@ -40,7 +40,7 @@ RUN chmod a+x ${INSTALL_RUST_TOOLCHAIN} \
 
 # Install web-flash and wokwi-server
 RUN cargo install web-flash --git https://github.com/bjoernQ/esp-web-flash-server \
-    && cargo install wokwi-server --git https://github.com/MabezDev/wokwi-server
+    && RUSTFLAGS="--cfg tokio_unstable" cargo install wokwi-server --git https://github.com/MabezDev/wokwi-server --locked
 
 # Activate ESP environment
 RUN echo "source /home/${CONTAINER_USER}/export-rust.sh" >> ~/.bashrc
