@@ -21,6 +21,6 @@ impl Stopwatch for InstantStopwatch {
 
     fn measure(&self) -> Duration {
         // self.timestamp.elapsed()
-        Duration::from_millis(10)
+        Duration::from_millis(100)
     }
 }

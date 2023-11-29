@@ -1,9 +1,6 @@
 #![no_std]
 #![no_main]
 
-#[global_allocator]
-static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
-
 use spi_dma_displayinterface::spi_dma_displayinterface;
 
 use embedded_graphics::{
@@ -34,7 +31,7 @@ use hal::{
     IO, interrupt
 };
 
-use spooky_embedded::app::app_loop;
+// use spooky_embedded::app::app_loop;
 
 use spooky_embedded::{
     embedded_display::{LCD_H_RES, LCD_V_RES, LCD_MEMORY_SIZE},
@@ -58,8 +55,27 @@ use embedded_graphics::{
     pixelcolor::Rgb565
 };
 
+use display_interface::WriteOnlyDataCommand;
+use mipidsi::models::Model;
+use embedded_hal::digital::v2::OutputPin;
+
+use core::mem::MaybeUninit;
+
+#[global_allocator]
+static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
+
+fn init_heap() {
+    const HEAP_SIZE: usize = 300 * 1024;
+    static mut HEAP: MaybeUninit<[u8; HEAP_SIZE]> = MaybeUninit::uninit();
+
+    unsafe {
+        ALLOCATOR.init(HEAP.as_mut_ptr() as *mut u8, HEAP_SIZE);
+    }
+}
+
 #[entry]
 fn main() -> ! {
+    init_heap();
     let peripherals = Peripherals::take();
     let system = peripherals.SYSTEM.split();
 
@@ -70,7 +86,7 @@ fn main() -> ! {
 
     let mut delay = Delay::new(&clocks);
 
-    println!("About to initialize the SPI LED driver");
+    info!("About to initialize the SPI LED driver");
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
 
     let lcd_sclk = io.pins.gpio0;
@@ -106,7 +122,7 @@ fn main() -> ! {
         DmaPriority::Priority0,
     ));
 
-    println!("SPI ready");
+    info!("SPI ready");
 
     let di = spi_dma_displayinterface::new_no_cs(LCD_MEMORY_SIZE, spi, lcd_dc);
 
@@ -127,16 +143,16 @@ fn main() -> ! {
         }
     };
 
-    println!("Initializing...");
-        Text::new(
-            "Initializing...",
-            Point::new(80, 110),
-            MonoTextStyle::new(&FONT_8X13, RgbColor::GREEN),
-        )
-        .draw(&mut display)
-        .unwrap();
+    info!("Initializing...");
+    Text::new(
+        "Initializing...",
+        Point::new(80, 110),
+        MonoTextStyle::new(&FONT_8X13, RgbColor::GREEN),
+    )
+    .draw(&mut display)
+    .unwrap();
 
-    println!("Initialized");
+    info!("Initialized");
 
     let i2c = i2c::I2C::new(
         peripherals.I2C0,
@@ -146,21 +162,21 @@ fn main() -> ! {
         &clocks,
     );
 
-    println!("I2C ready");
+    info!("I2C ready");
 
     // let bus = BusManagerSimple::new(i2c);
     let icm = Icm42670::new(i2c, Address::Primary).unwrap();
 
-    let mut rng = Rng::new(peripherals.RNG);
-    let mut seed_buffer = [0u8; 32];
-    rng.read(&mut seed_buffer).unwrap();
+    // let mut rng = Rng::new(peripherals.RNG);
+    // let mut seed_buffer = [0u8; 32];
+    // rng.read(&mut seed_buffer).unwrap();
 
-    let accel_movement_controller = AccelMovementController::new(icm, 0.2);
-    let demo_movement_controller = spooky_core::demo_movement_controller::DemoMovementController::new(seed_buffer);
-    let movement_controller = AccelCompositeController::new(demo_movement_controller, accel_movement_controller);
+    // let accel_movement_controller = AccelMovementController::new(icm, 0.2);
+    // let demo_movement_controller = spooky_core::demo_movement_controller::DemoMovementController::new(seed_buffer);
+    // let movement_controller = AccelCompositeController::new(demo_movement_controller, accel_movement_controller);
 
     // app_loop( &mut display, seed_buffer, movement_controller);
-    emulate_zx(&mut display, color_conv);
+    let _ = app_loop(&mut display, color_conv);
     loop {}
 
 }
@@ -182,15 +198,19 @@ fn color_conv(color: ZXColor, _brightness: ZXBrightness) -> Rgb565 {
 mod host;
 mod stopwatch;
 mod io;
-fn emulate_zx<D>(mut display: D, color_conv: fn(ZXColor, ZXBrightness) -> D::Color) -> Result<(), core::fmt::Error>
+mod spritebuf;
+fn app_loop<DI, M, RST>(
+    display: &mut mipidsi::Display<DI, M, RST>,
+    color_conv: fn(ZXColor, ZXBrightness) -> Rgb565) //-> Result<(), core::fmt::Error>
 where
-    D: DrawTarget + Dimensions + Send + 'static,
-    D::Error: core::fmt::Debug,
+    DI: WriteOnlyDataCommand,
+    M: Model<ColorFormat = Rgb565>,
+    RST: OutputPin,
 {
-    display
-        .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal))
-        .map_err(|err| error!("{:?}", err))
-        .ok();
+    // display
+    //     .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal))
+    //     .map_err(|err| error!("{:?}", err))
+    //     .ok();
 
     info!("Creating emulator");
 
@@ -206,163 +226,165 @@ where
     info!("Initialize emulator");
     const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
 
-    let mut emulator =
-        Emulator::new(settings, host::Esp32HostContext {}).unwrap();
-
-    info!("Binding keyboard");
-
-    #[cfg(feature = "tcpstream_keyboard")]
-    let rx = bind_keyboard(80);
-
-    #[cfg(feature = "tcpstream_keyboard")]
-    let stage = 0;
-    #[cfg(feature = "tcpstream_keyboard")]
-    if let Status(
-        ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(config))),
-        _,
-    ) = wifi_interface.get_status()
-    {
-        match stage {
-            0 => {
-                let message = format!("Keyboard: {}:80", config.ip);
-                println!("{}", message);
-                Text::new(
-                    message.as_str(),
-                    Point::new(10, 210),
-                    MonoTextStyle::new(&FONT_8X13, color_conv(ZXColor::White, ZXBrightness::Normal)),
-                )
-                .draw(&mut display).unwrap();
-
+    let mut emulator: Emulator<host::Esp32Host> =
+        match Emulator::new(settings, host::Esp32HostContext {}) {
+            Ok(emulator) => emulator,
+            Err(err) => {
+                error!("Error creating emulator: {:?}", err);
+                return;
             }
-            _ => {
-                println!("WiFi unknown");
-            }
-        }
-    }
+        };
 
-    #[cfg(feature = "tcpstream_keyboard")]
-    let mut key_emulation_delay = 0;
-    #[cfg(feature = "tcpstream_keyboard")]
-    let mut last_key:u8 = 0;
+
+    // info!("Binding keyboard");
+
+    // #[cfg(feature = "tcpstream_keyboard")]
+    // let rx = bind_keyboard(80);
+
+    // #[cfg(feature = "tcpstream_keyboard")]
+    // let stage = 0;
+    // #[cfg(feature = "tcpstream_keyboard")]
+    // if let Status(
+    //     ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(config))),
+    //     _,
+    // ) = wifi_interface.get_status()
+    // {
+    //     match stage {
+    //         0 => {
+    //             let message = format!("Keyboard: {}:80", config.ip);
+    //             println!("{}", message);
+    //             Text::new(
+    //                 message.as_str(),
+    //                 Point::new(10, 210),
+    //                 MonoTextStyle::new(&FONT_8X13, color_conv(ZXColor::White, ZXBrightness::Normal)),
+    //             )
+    //             .draw(&mut display).unwrap();
+
+    //         }
+    //         _ => {
+    //             println!("WiFi unknown");
+    //         }
+    //     }
+    // }
+
+    // #[cfg(feature = "tcpstream_keyboard")]
+    // let mut key_emulation_delay = 0;
+    // #[cfg(feature = "tcpstream_keyboard")]
+    // let mut last_key:u8 = 0;
 
     info!("Entering emulator loop");
 
     loop {
+        info!("Emulating frame");
 
-
-        // let mut stats = [0; 1024];
-        // unsafe {
-        //     // esp_idf_sys::vTaskGetRunTimeStats(stats.as_mut_ptr());
-        //     esp_idf_sys::vTaskList(stats.as_mut_ptr());
-        //     let message = std::ffi::CStr::from_ptr(stats.as_mut_ptr()).to_str().unwrap().replace("\r","");
-        //     println!("{}", message);
-        // }
-
-
+        // emulator.emulate_frames(MAX_FRAME_DURATION);
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
-                emulator.screen_buffer()
-                    .blit(&mut display, color_conv)
-                    .map_err(|err| error!("{:?}", err))
-                    .ok();
+                info!("Emulation of frame succeeded");
+                let pixel_iterator = emulator.screen_buffer().get_pixel_iter();
+                info!("Drawing frame");
+                let _ = display.set_pixels(0, 0, 256 - 1, 192, pixel_iterator);
+                    // .blit(&mut display, color_conv)
+                    // .map_err(|err| error!("{:?}", err))
+                    // .ok();
             }
             _ => {
               error!("Emulation of frame failed");
             }
         }
 
-        #[cfg(feature = "tcpstream_keyboard")]
-        if key_emulation_delay > 0 {
-            key_emulation_delay -= 1;
-        }
+    //     #[cfg(feature = "tcpstream_keyboard")]
+    //     if key_emulation_delay > 0 {
+    //         key_emulation_delay -= 1;
+    //     }
 
-        #[cfg(feature = "tcpstream_keyboard")]
-        match rx.try_recv() {
-            Ok(key) => {
-                if key_emulation_delay > 0 {
-                    // It's not possible to process same keys which were entered shortly after each other
-                    for frame in 0..key_emulation_delay {
-                        debug!("Keys received too fast. Running extra emulation frame: {}", frame);
-                        emulator.emulate_frames(MAX_FRAME_DURATION).map_err(|err| error!("{:?}", err))
-                        .map_err(|err| error!("{:?}", err))
-                            .ok();
-                    }
-                    emulator.screen_buffer()
-                    .blit(&mut display, color_conv)
-                    .map_err(|err| error!("{:?}", err))
-                        .ok();
-                }
+    //     #[cfg(feature = "tcpstream_keyboard")]
+    //     match rx.try_recv() {
+    //         Ok(key) => {
+    //             if key_emulation_delay > 0 {
+    //                 // It's not possible to process same keys which were entered shortly after each other
+    //                 for frame in 0..key_emulation_delay {
+    //                     debug!("Keys received too fast. Running extra emulation frame: {}", frame);
+    //                     emulator.emulate_frames(MAX_FRAME_DURATION).map_err(|err| error!("{:?}", err))
+    //                     .map_err(|err| error!("{:?}", err))
+    //                         .ok();
+    //                 }
+    //                 emulator.screen_buffer()
+    //                 .blit(&mut display, color_conv)
+    //                 .map_err(|err| error!("{:?}", err))
+    //                     .ok();
+    //             }
 
-                if key == last_key {
-                    // Same key requires bigger delay
-                    key_emulation_delay = 6;
-                } else {
-                    key_emulation_delay = 4;
-                }
+    //             if key == last_key {
+    //                 // Same key requires bigger delay
+    //                 key_emulation_delay = 6;
+    //             } else {
+    //                 key_emulation_delay = 4;
+    //             }
 
-                last_key = key;
+    //             last_key = key;
 
-                info!("Key: {} - {}", key, true);
-                let mapped_key_down_option = ascii_code_to_zxkey(key, true)
-                .or_else(|| ascii_code_to_modifier(key, true));
+    //             info!("Key: {} - {}", key, true);
+    //             let mapped_key_down_option = ascii_code_to_zxkey(key, true)
+    //             .or_else(|| ascii_code_to_modifier(key, true));
 
-                let mapped_key_down = match mapped_key_down_option {
-                    Some(x) => { x },
-                    _ => { Event::NoEvent }
-                };
+    //             let mapped_key_down = match mapped_key_down_option {
+    //                 Some(x) => { x },
+    //                 _ => { Event::NoEvent }
+    //             };
 
-                let mapped_key_up_option = ascii_code_to_zxkey(key, false)
-                .or_else(|| ascii_code_to_modifier(key, false));
+    //             let mapped_key_up_option = ascii_code_to_zxkey(key, false)
+    //             .or_else(|| ascii_code_to_modifier(key, false));
 
-                let mapped_key_up = match mapped_key_up_option {
-                    Some(x) => { x },
-                    _ => { Event::NoEvent }
-                };
+    //             let mapped_key_up = match mapped_key_up_option {
+    //                 Some(x) => { x },
+    //                 _ => { Event::NoEvent }
+    //             };
 
-                debug!("-> key down");
-                match mapped_key_down {
-                    Event::ZXKey(k,p) => {
-                        debug!("-> ZXKey");
-                        emulator.send_key(k, p);
-                    },
-                    Event::ZXKeyWithModifier(k, k2, p) => {
-                        debug!("-> ZXKeyWithModifier");
-                        emulator.send_key(k, p);
-                        emulator.send_key(k2, p);
-                    }
-                    _ => {
-                        debug!("Unknown key.");
-                    }
-                }
+    //             debug!("-> key down");
+    //             match mapped_key_down {
+    //                 Event::ZXKey(k,p) => {
+    //                     debug!("-> ZXKey");
+    //                     emulator.send_key(k, p);
+    //                 },
+    //                 Event::ZXKeyWithModifier(k, k2, p) => {
+    //                     debug!("-> ZXKeyWithModifier");
+    //                     emulator.send_key(k, p);
+    //                     emulator.send_key(k2, p);
+    //                 }
+    //                 _ => {
+    //                     debug!("Unknown key.");
+    //                 }
+    //             }
 
-                debug!("-> emulating frame");
-                match emulator.emulate_frames(MAX_FRAME_DURATION) {
-                    Ok(_) => {
-                        emulator.screen_buffer()
-                            .blit(&mut display, color_conv)
-                            .map_err(|err| error!("{:?}", err))
-                            .ok();
-                    }
-                    _ => {
-                      error!("Emulation of frame failed");
-                    }
-                }
+    //             debug!("-> emulating frame");
+    //             match emulator.emulate_frames(MAX_FRAME_DURATION) {
+    //                 Ok(_) => {
+    //                     emulator.screen_buffer()
+    //                         .blit(&mut display, color_conv)
+    //                         .map_err(|err| error!("{:?}", err))
+    //                         .ok();
+    //                 }
+    //                 _ => {
+    //                   error!("Emulation of frame failed");
+    //                 }
+    //             }
 
-                debug!("-> key up");
-                match mapped_key_up {
-                    Event::ZXKey(k,p) => {
-                        emulator.send_key(k, p);
-                    },
-                    Event::ZXKeyWithModifier(k, k2, p) => {
-                        emulator.send_key(k, p);
-                        emulator.send_key(k2, p);
-                    }
-                    _ => {}
-                }
+    //             debug!("-> key up");
+    //             match mapped_key_up {
+    //                 Event::ZXKey(k,p) => {
+    //                     emulator.send_key(k, p);
+    //                 },
+    //                 Event::ZXKeyWithModifier(k, k2, p) => {
+    //                     emulator.send_key(k, p);
+    //                     emulator.send_key(k2, p);
+    //                 }
+    //                 _ => {}
+    //             }
 
-            },
-            _ => {
-            }
-        }
+    //         },
+    //         _ => {
+    //         }
+    //     }
     }
 }
