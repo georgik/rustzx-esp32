@@ -64,6 +64,9 @@ use embedded_hal::digital::v2::OutputPin;
 use core::mem::MaybeUninit;
 use critical_section::Mutex;
 
+use axp2101::{ I2CPowerManagementInterface, Axp2101 };
+use aw9523::I2CGpioExpanderInterface;
+
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
@@ -93,16 +96,16 @@ fn main() -> ! {
     info!("About to initialize the SPI LED driver");
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
 
-    let lcd_sclk = io.pins.gpio0;
-    let lcd_mosi = io.pins.gpio6;
-    let lcd_miso = io.pins.gpio11; // random unused pin
-    let lcd_cs = io.pins.gpio5;
-    let lcd_dc = io.pins.gpio4.into_push_pull_output();
-    let _lcd_backlight = io.pins.gpio1.into_push_pull_output();
-    let lcd_reset = io.pins.gpio3.into_push_pull_output();
+    let lcd_sclk = io.pins.gpio36;
+    let lcd_mosi = io.pins.gpio37;
+    let lcd_cs = io.pins.gpio3;
+    let lcd_miso = io.pins.gpio17; // random unused pin
+    let lcd_dc = io.pins.gpio35.into_push_pull_output();
+    let lcd_reset = io.pins.gpio15.into_push_pull_output();
 
-    let i2c_sda = io.pins.gpio10;
-    let i2c_scl = io.pins.gpio8;
+    // I2C
+    let sda = io.pins.gpio12;
+    let scl = io.pins.gpio11;
 
     let dma = Gdma::new(peripherals.DMA);
     let dma_channel = dma.channel0;
@@ -110,66 +113,70 @@ fn main() -> ! {
     let mut descriptors = [0u32; 8 * 3];
     let mut rx_descriptors = [0u32; 8 * 3];
 
+    let i2c_bus = i2c::I2C::new(
+        peripherals.I2C0,
+        sda,
+        scl,
+        400u32.kHz(),
+        &clocks,
+    );
+
+    let bus = BusManagerSimple::new(i2c_bus);
+
+    info!("Initializing AXP2101");
+    let axp_interface = I2CPowerManagementInterface::new(bus.acquire_i2c());
+    let mut axp = Axp2101::new(axp_interface);
+    axp.init().unwrap();
+
+    info!("Initializing GPIO Expander");
+    let aw_interface = I2CGpioExpanderInterface::new(bus.acquire_i2c());
+    let mut aw = aw9523::Aw9523::new(aw_interface);
+    aw.init().unwrap();
+
+    // M5Stack CORE 2 - https://docs.m5stack.com/en/core/core2
+    // let mut backlight = io.pins.gpio3.into_push_pull_output();
+    delay.delay_ms(500u32);
+    info!("About to initialize the SPI LED driver");
+
     let spi = Spi::new(
-        peripherals.SPI2,
+        peripherals.SPI3,
         lcd_sclk,
         lcd_mosi,
         lcd_miso,
         lcd_cs,
-        60u32.MHz(),
+        20u32.MHz(),
         SpiMode::Mode0,
         &clocks,
-    ).with_dma(dma_channel.configure(
+    )   .with_dma(dma_channel.configure(
         false,
         &mut descriptors,
         &mut rx_descriptors,
         DmaPriority::Priority0,
     ));
 
-    info!("SPI ready");
+    delay.delay_ms(500u32);
+    // backlight.set_high().unwrap();
 
+    //https://github.com/m5stack/M5CoreS3/blob/main/src/utility/Config.h#L8
     let di = spi_dma_displayinterface::new_no_cs(LCD_MEMORY_SIZE, spi, lcd_dc);
 
-    // ESP32-S3-BOX display initialization workaround: Wait for the display to power up.
-    // If delay is 250ms, picture will be fuzzy.
-    // If there is no delay, display is blank
+    let mut display = mipidsi::Builder::ili9342c_rgb565(di)
+        .with_display_size(320, 240)
+        .with_color_order(mipidsi::ColorOrder::Bgr)
+        .with_invert_colors(mipidsi::ColorInversion::Inverted)
+        .init(&mut delay, Some(lcd_reset))
+        .unwrap();
     delay.delay_ms(500u32);
-
-    let mut display = match mipidsi::Builder::st7789(di)
-    .with_display_size(LCD_H_RES, LCD_V_RES)
-    .with_orientation(mipidsi::Orientation::Landscape(true))
-    .with_color_order(mipidsi::ColorOrder::Rgb)
-        .init(&mut delay, Some(lcd_reset)) {
-        Ok(display) => display,
-        Err(_e) => {
-            // Handle the error and possibly exit the application
-            panic!("Display initialization failed");
-        }
-    };
-
     info!("Initializing...");
     Text::new(
         "Initializing...",
         Point::new(80, 110),
-        MonoTextStyle::new(&FONT_8X13, RgbColor::GREEN),
+        MonoTextStyle::new(&FONT_8X13, RgbColor::WHITE),
     )
     .draw(&mut display)
     .unwrap();
 
     info!("Initialized");
-
-    // let i2c = i2c::I2C::new(
-    //     peripherals.I2C0,
-    //     i2c_sda,
-    //     i2c_scl,
-    //     2u32.kHz(), // Set just to 2 kHz, it seems that there is an interference on Rust board
-    //     &clocks,
-    // );
-
-    // info!("I2C ready");
-
-    // let bus = BusManagerSimple::new(i2c);
-    // let icm = Icm42670::new(i2c, Address::Primary).unwrap();
 
     // let mut rng = Rng::new(peripherals.RNG);
     // let mut seed_buffer = [0u8; 32];
