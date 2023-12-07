@@ -11,12 +11,15 @@ use embedded_graphics::{
 };
 
 use esp_println::println;
+use core::cell::RefCell;
 
 use hal::{
+    assist_debug::DebugAssist,
     clock::{ClockControl, CpuClock},
     dma::DmaPriority,
     gdma::Gdma,
     i2c,
+    interrupt,
     peripherals::{
         Peripherals,
         Interrupt
@@ -28,7 +31,7 @@ use hal::{
     },
     Delay,
     Rng,
-    IO, interrupt
+    IO
 };
 
 // use spooky_embedded::app::app_loop;
@@ -60,6 +63,7 @@ use mipidsi::models::Model;
 use embedded_hal::digital::v2::OutputPin;
 
 use core::mem::MaybeUninit;
+use critical_section::Mutex;
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -73,6 +77,39 @@ fn init_heap() {
     }
 }
 
+// Static variable to hold DebugAssist
+static DA: Mutex<RefCell<Option<DebugAssist<'static>>>> = Mutex::new(RefCell::new(None));
+
+fn install_stack_guard(mut da: DebugAssist<'static>, safe_area_size: u32) {
+    extern "C" {
+        static mut _stack_end: u32;
+        static mut _stack_start: u32;
+    }
+    let stack_low = unsafe { &mut _stack_end as *mut _ as u32 };
+    let stack_high = unsafe { &mut _stack_start as *mut _ as u32 };
+    info!("Safe stack {} bytes", stack_high - stack_low - safe_area_size);
+    da.enable_region0_monitor(stack_low, stack_low + safe_area_size, true, true);
+
+    critical_section::with(|cs| DA.borrow_ref_mut(cs).replace(da));
+    interrupt::enable(Interrupt::ASSIST_DEBUG, interrupt::Priority::Priority1).unwrap();
+}
+
+#[interrupt]
+fn ASSIST_DEBUG() {
+    critical_section::with(|cs| {
+        error!("\n\nPossible Stack Overflow Detected");
+        let mut da = DA.borrow_ref_mut(cs);
+        let da = da.as_mut().unwrap();
+        if da.is_region0_monitor_interrupt_set() {
+            let pc = da.get_region_monitor_pc();
+            info!("PC = 0x{:x}", pc);
+            da.clear_region0_monitor_interrupt();
+            da.disable_region0_monitor();
+            loop {}
+        }
+    });
+}
+
 #[entry]
 fn main() -> ! {
     init_heap();
@@ -83,6 +120,12 @@ fn main() -> ! {
     let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock160MHz).freeze();
 
     esp_println::logger::init_logger_from_env();
+
+    info!("Enabling DebugAssist 4 KB stack guard");
+    // get the debug assist driver
+    let da = DebugAssist::new(peripherals.ASSIST_DEBUG);
+
+    install_stack_guard(da, 4096); // 4 KB safe area
 
     let mut delay = Delay::new(&clocks);
 
