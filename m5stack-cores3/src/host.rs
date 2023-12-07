@@ -141,11 +141,11 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
         _brightness: ZXBrightness, /*TODO*/
     ) {
         if self.buffer_width > 0 {
-            let pixel = &mut self.buffer[y * self.buffer_width + x];
-            if *pixel as u8 != color as u8 {
-                *pixel = color;
+            // let pixel = &mut self.buffer[y * self.buffer_width + x];
+            // if *pixel as u8 != color as u8 {
+                // *pixel = color;
                 // self.changed.borrow_mut()[y] = true;
-            }
+            // }
         }
     }
 }
