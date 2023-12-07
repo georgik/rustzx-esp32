@@ -1,3 +1,6 @@
+
+extern crate alloc;
+use alloc::{vec, vec::Vec};
 use embedded_hal::can::Frame;
 use log::*;
 
@@ -14,7 +17,7 @@ use rustzx_core::zx::video::colors::ZXColor;
 // use spooky_embedded::embedded_display::LCD_H_RES;
 // use spooky_embedded::embedded_display::LCD_PIXELS;
 const LCD_H_RES: usize = 256;
-const LCD_PIXELS: usize = LCD_H_RES*1;
+const LCD_PIXELS: usize = LCD_H_RES*192;
 // use rustzx_utils::io::FileAsset;
 // use rustzx_utils::stopwatch::InstantStopwatch;
 use crate::stopwatch::InstantStopwatch;
@@ -27,6 +30,8 @@ use embedded_graphics::pixelcolor::Rgb565;
 
 use display_interface::WriteOnlyDataCommand;
 use embedded_hal::digital::v2::OutputPin;
+
+
 
 pub(crate) struct Esp32Host
 {
@@ -52,7 +57,7 @@ impl HostContext<Esp32Host> for Esp32HostContext
 }
 
 pub(crate) struct EmbeddedGraphicsFrameBuffer {
-    buffer: [ZXColor; LCD_PIXELS],
+    buffer: Vec<ZXColor>,
     buffer_width: usize,
     // changed: RefCell<Vec<bool>>,
 }
@@ -60,7 +65,7 @@ pub(crate) struct EmbeddedGraphicsFrameBuffer {
 use crate::color_conv;
 impl EmbeddedGraphicsFrameBuffer {
     pub fn get_pixel_iter(&self) -> impl Iterator<Item = Rgb565> + '_ {
-        self.buffer.into_iter().map(|zh_color| color_conv(zh_color, ZXBrightness::Normal))
+        self.buffer.iter().map(|zh_color| color_conv(zh_color, ZXBrightness::Normal))
     }
 }
 
@@ -119,14 +124,13 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
                 info!("Allocating frame buffer width={}, height={}", width, height);
 
                 Self {
-                    buffer: [ZXColor::Red; LCD_PIXELS],
+                    buffer: vec![ZXColor::Red; LCD_PIXELS],
                     buffer_width: LCD_H_RES as usize,
                     // changed: RefCell::new(vec![true; height]),
                 }
             }
-            // FrameBufferSource::Border => todo!("Border frame buffer not implemented"),
             FrameBufferSource::Border => Self {
-                buffer: [ZXColor::White; LCD_PIXELS],
+                buffer: vec![ZXColor::White; LCD_PIXELS],
                 buffer_width: LCD_H_RES as usize,
                 // changed: RefCell::new(Vec::new()),
             },
@@ -141,11 +145,11 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
         _brightness: ZXBrightness, /*TODO*/
     ) {
         if self.buffer_width > 0 {
-            // let pixel = &mut self.buffer[y * self.buffer_width + x];
-            // if *pixel as u8 != color as u8 {
-                // *pixel = color;
+            let pixel = &mut self.buffer[y * self.buffer_width + x];
+            if *pixel as u8 != color as u8 {
+                *pixel = color;
                 // self.changed.borrow_mut()[y] = true;
-            // }
+            }
         }
     }
 }

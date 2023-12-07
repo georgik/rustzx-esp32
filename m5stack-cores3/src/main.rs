@@ -193,7 +193,7 @@ fn main() -> ! {
 }
 
 
-fn color_conv(color: ZXColor, _brightness: ZXBrightness) -> Rgb565 {
+fn color_conv(color: &ZXColor, _brightness: ZXBrightness) -> Rgb565 {
     match color {
         ZXColor::Black => Rgb565::BLACK,
         ZXColor::Blue => Rgb565::BLUE,
@@ -212,7 +212,7 @@ mod io;
 mod spritebuf;
 fn app_loop<DI, M, RST>(
     display: &mut mipidsi::Display<DI, M, RST>,
-    color_conv: fn(ZXColor, ZXBrightness) -> Rgb565) //-> Result<(), core::fmt::Error>
+    color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565) //-> Result<(), core::fmt::Error>
 where
     DI: WriteOnlyDataCommand,
     M: Model<ColorFormat = Rgb565>,
