@@ -89,8 +89,7 @@ fn main() -> ! {
     let peripherals = Peripherals::take();
     let system = peripherals.SYSTEM.split();
 
-    // With DMA we have sufficient throughput, so we can clock down the CPU to 80MHz
-    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock160MHz).freeze();
+    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
 
     esp_println::logger::init_logger_from_env();
 
@@ -147,7 +146,7 @@ fn main() -> ! {
         lcd_mosi,
         lcd_miso,
         lcd_cs,
-        20u32.MHz(),
+        60u32.MHz(),
         SpiMode::Mode0,
         &clocks,
     )   .with_dma(dma_channel.configure(
