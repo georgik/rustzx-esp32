@@ -21,7 +21,7 @@ use hal::{
     interrupt,
     peripherals::{
         Peripherals,
-        Interrupt
+        Interrupt, UART1
     },
     prelude::*,
     spi::{
@@ -30,7 +30,12 @@ use hal::{
     },
     Delay,
     Rng,
-    IO
+    IO,
+    uart::{
+        config::{Config, DataBits, Parity, StopBits},
+        TxRxPins,
+    },
+    Uart
 };
 
 // use spooky_embedded::app::app_loop;
@@ -99,7 +104,7 @@ fn main() -> ! {
     let lcd_sclk = io.pins.gpio36;
     let lcd_mosi = io.pins.gpio37;
     let lcd_cs = io.pins.gpio3;
-    let lcd_miso = io.pins.gpio17; // random unused pin
+    let lcd_miso = io.pins.gpio6;
     let lcd_dc = io.pins.gpio35.into_push_pull_output();
     let lcd_reset = io.pins.gpio15.into_push_pull_output();
 
@@ -187,7 +192,23 @@ fn main() -> ! {
     // let movement_controller = AccelCompositeController::new(demo_movement_controller, accel_movement_controller);
 
     // app_loop( &mut display, seed_buffer, movement_controller);
-    let _ = app_loop(&mut display, color_conv);
+
+    let config = Config {
+        baudrate: 115200,
+        data_bits: DataBits::DataBits8,
+        parity: Parity::ParityNone,
+        stop_bits: StopBits::STOP1,
+    };
+
+
+    let pins = TxRxPins::new_tx_rx(
+        io.pins.gpio17.into_push_pull_output(),
+        io.pins.gpio18.into_floating_input(),
+    );
+
+    let mut serial1 = Uart::new_with_config(peripherals.UART1, config, Some(pins), &clocks);
+
+    let _ = app_loop(&mut display, color_conv, serial1);
     loop {}
 
 }
@@ -206,13 +227,16 @@ fn color_conv(color: &ZXColor, _brightness: ZXBrightness) -> Rgb565 {
     }
 }
 
+use nb::block;
 mod host;
 mod stopwatch;
 mod io;
 mod spritebuf;
 fn app_loop<DI, M, RST>(
     display: &mut mipidsi::Display<DI, M, RST>,
-    color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565) //-> Result<(), core::fmt::Error>
+    color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
+    mut serial: Uart<UART1>,
+) //-> Result<(), core::fmt::Error>
 where
     DI: WriteOnlyDataCommand,
     M: Model<ColorFormat = Rgb565>,
@@ -287,7 +311,12 @@ where
 
     loop {
         info!("Emulating frame");
+        let read = block!(serial.read());
 
+        match read {
+            Ok(read) => println!("Read 0x{:02x}", read),
+            Err(err) => println!("Error {:?}", err),
+        }
         // emulator.emulate_frames(MAX_FRAME_DURATION);
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
