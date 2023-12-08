@@ -1,6 +1,6 @@
 [package]
 name = "rustzx-m5stack-cores3"
-version = "0.3.0"
+version = "2.0.0"
 authors = ["Juraj Michálek <juraj.michalek@gmail.com>"]
 edition = "2021"
 license = "MIT"

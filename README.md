@@ -50,5 +50,5 @@ Screen command won't echo your input. Hit enter to load the tape included in the
 
 ## References
 
-- Rust code for ESP32 based on https://github.com/ivmarkov/rust-esp32-std-demo
 - RustZX wrapper code reused from https://github.com/pacmancoder/rustzx
+- older RustZX-ESP32 based with std on [v1.0.0-archive](https://github.com/georgik/rustzx-esp32/tree/v1.0.0-archive)
