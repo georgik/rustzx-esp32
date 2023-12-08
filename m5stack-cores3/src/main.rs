@@ -352,6 +352,19 @@ where
                         debug!("Unknown key.");
                     }
                 }
+
+                emulator.emulate_frames(MAX_FRAME_DURATION);
+                debug!("-> key up");
+                match mapped_key_up {
+                    Event::ZXKey(k,p) => {
+                        emulator.send_key(k, p);
+                    },
+                    Event::ZXKeyWithModifier(k, k2, p) => {
+                        emulator.send_key(k, p);
+                        emulator.send_key(k2, p);
+                    }
+                    _ => {}
+                }
             },
 
             Err(_err) => {},
