@@ -314,7 +314,7 @@ where
     info!("Entering emulator loop");
 
     loop {
-        info!("Emulating frame");
+        // info!("Emulating frame");
         let read_result = serial.read();
 
         match read_result {
@@ -374,9 +374,9 @@ where
         // emulator.emulate_frames(MAX_FRAME_DURATION);
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
-                info!("Emulation of frame succeeded");
+                // info!("Emulation of frame succeeded");
                 let pixel_iterator = emulator.screen_buffer().get_pixel_iter();
-                info!("Drawing frame");
+                // info!("Drawing frame");
                 let _ = display.set_pixels(0, 0, 256 - 1, 192, pixel_iterator);
                     // .blit(&mut display, color_conv)
                     // .map_err(|err| error!("{:?}", err))

@@ -7,6 +7,7 @@ pub fn ascii_code_to_zxkey(ascii_code: u8, pressed: bool) -> Option<Event> {
     let zxkey_event = match ascii_code {
         // Control keys
         0x0A => Some(ZXKey::Enter),
+        0x0D => Some(ZXKey::Enter),
         // 0x13 => Some(ZXKey::Enter),
         // Temporary Enter
         // 0x40 => Some(ZXKey::Enter),
