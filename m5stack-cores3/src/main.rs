@@ -54,7 +54,7 @@ use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
 use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings};
 
-use log::{info, error};
+use log::{info, error, debug};
 
 use core::time::Duration;
 use embedded_graphics::{
@@ -227,11 +227,15 @@ fn color_conv(color: &ZXColor, _brightness: ZXBrightness) -> Rgb565 {
     }
 }
 
-use nb::block;
 mod host;
 mod stopwatch;
 mod io;
 mod spritebuf;
+mod ascii_zxkey;
+use ascii_zxkey::{ascii_code_to_zxkey, ascii_code_to_modifier};
+mod zx_event;
+use zx_event::Event;
+
 fn app_loop<DI, M, RST>(
     display: &mut mipidsi::Display<DI, M, RST>,
     color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
@@ -311,12 +315,49 @@ where
 
     loop {
         info!("Emulating frame");
-        let read = block!(serial.read());
+        let read_result = serial.read();
 
-        match read {
-            Ok(read) => println!("Read 0x{:02x}", read),
-            Err(err) => println!("Error {:?}", err),
+        match read_result {
+            Ok(key) => {
+                println!("Read 0x{:02x}", key);
+                info!("Key: {} - {}", key, true);
+                let mapped_key_down_option = ascii_code_to_zxkey(key, true)
+                .or_else(|| ascii_code_to_modifier(key, true));
+        
+                let mapped_key_down = match mapped_key_down_option {
+                    Some(x) => { x },
+                    _ => { Event::NoEvent }
+                };
+        
+                let mapped_key_up_option = ascii_code_to_zxkey(key, false)
+                .or_else(|| ascii_code_to_modifier(key, false));
+        
+                let mapped_key_up = match mapped_key_up_option {
+                    Some(x) => { x },
+                    _ => { Event::NoEvent }
+                };
+        
+                debug!("-> key down");
+                match mapped_key_down {
+                    Event::ZXKey(k,p) => {
+                        debug!("-> ZXKey");
+                        emulator.send_key(k, p);
+                    },
+                    Event::ZXKeyWithModifier(k, k2, p) => {
+                        debug!("-> ZXKeyWithModifier");
+                        emulator.send_key(k, p);
+                        emulator.send_key(k2, p);
+                    }
+                    _ => {
+                        debug!("Unknown key.");
+                    }
+                }
+            },
+
+            Err(_err) => {},
         }
+
+
         // emulator.emulate_frames(MAX_FRAME_DURATION);
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
