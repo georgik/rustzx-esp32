@@ -1,0 +1,36 @@
+[package]
+name = "rustzx-m5stack-cores3"
+version = "2.0.0"
+authors = ["Juraj Michálek <juraj.michalek@gmail.com>"]
+edition = "2021"
+license = "MIT"
+
+[target.xtensa-esp32s3-none-elf.dependencies]
+xtensa-atomic-emulation-trap = "0.4.0"
+hal = { package = "esp32s3-hal", version = "0.13.0" , features = ["psram-8m"] }
+esp-backtrace = { version = "0.9.0", features = [
+    "esp32s3",
+    "panic-handler",
+    "print-uart",
+] }
+esp-println = { version = "0.7.0", features = ["esp32s3", "log"] }
+
+[dependencies]
+critical-section = { version = "1.1.2" }
+display-interface = "0.4"
+esp-alloc = "0.3.0"
+embedded-graphics = "0.8.0"
+embedded-hal = "0.2"
+embedded-graphics-framebuf = { version = "0.3.0", git = "https://github.com/georgik/embedded-graphics-framebuf.git", branch = "feature/embedded-graphics-0.8" }
+icm42670 = { git = "https://github.com/jessebraham/icm42670/" }
+log = "0.4"
+mipidsi = "0.7.1"
+#panic-halt = "0.2"
+shared-bus = { version = "0.3.0" }
+spooky-core = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "ad47396", default-features = false, features = ["static_maze"]}
+spooky-embedded = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "ad47396", default-features = false, features = [ "esp32s3", "static_maze", "resolution_320x240" ] }
+spi-dma-displayinterface = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "ad47396", features = ["esp32s3"] }
+rustzx-utils = { version = "0.16.0" }
+rustzx-core = { version = "0.16.0", features = ["embedded-roms"] }
+axp2101 = { git = "https://github.com/georgik/axp2101-rs.git", rev = "60db0e1" }
+aw9523 = { git = "https://github.com/georgik/aw9523-rs.git", rev = "af49728" }

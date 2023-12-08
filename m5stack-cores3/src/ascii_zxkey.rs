@@ -1,12 +1,13 @@
-use rustzx_core::{zx::keys::ZXKey};
+use rustzx_core::zx::keys::ZXKey;
 
-use crate::zx_event::{Event};
+use crate::zx_event::Event;
 
 /// returns ZX Spectum key form scancode of None if not found
 pub fn ascii_code_to_zxkey(ascii_code: u8, pressed: bool) -> Option<Event> {
     let zxkey_event = match ascii_code {
         // Control keys
         0x0A => Some(ZXKey::Enter),
+        0x0D => Some(ZXKey::Enter),
         // 0x13 => Some(ZXKey::Enter),
         // Temporary Enter
         // 0x40 => Some(ZXKey::Enter),
@@ -115,6 +116,9 @@ pub fn ascii_code_to_modifier(ascii_code: u8, pressed: bool) -> Option<Event> {
         0x58 => Some((ZXKey::Shift, ZXKey::X)),
         0x59 => Some((ZXKey::Shift, ZXKey::Y)),
         0x5A => Some((ZXKey::Shift, ZXKey::Z)),
+
+        // Backspace/Delete
+        0x7F => Some((ZXKey::Shift, ZXKey::N0)),
 
         _ => None,
     };

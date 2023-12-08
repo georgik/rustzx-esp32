@@ -2,6 +2,6 @@
 !.vscode/task.json
 !.vscode/launch.json
 /.embuild
-/target
-/Cargo.lock
+target/
+Cargo.lock
 cfg.toml
