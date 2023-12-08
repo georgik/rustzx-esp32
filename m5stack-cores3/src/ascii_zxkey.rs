@@ -117,6 +117,9 @@ pub fn ascii_code_to_modifier(ascii_code: u8, pressed: bool) -> Option<Event> {
         0x59 => Some((ZXKey::Shift, ZXKey::Y)),
         0x5A => Some((ZXKey::Shift, ZXKey::Z)),
 
+        // Backspace/Delete
+        0x7F => Some((ZXKey::Shift, ZXKey::N0)),
+
         _ => None,
     };
 

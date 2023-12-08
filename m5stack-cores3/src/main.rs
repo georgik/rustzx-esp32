@@ -21,7 +21,7 @@ use hal::{
     interrupt,
     peripherals::{
         Peripherals,
-        Interrupt, UART1
+        Interrupt, UART1, UART0
     },
     prelude::*,
     spi::{
@@ -206,9 +206,16 @@ fn main() -> ! {
         io.pins.gpio18.into_floating_input(),
     );
 
-    let mut serial1 = Uart::new_with_config(peripherals.UART1, config, Some(pins), &clocks);
+    let mut serial = Uart::new_with_config(peripherals.UART1, config, Some(pins), &clocks);
 
-    let _ = app_loop(&mut display, color_conv, serial1);
+    // let pins = TxRxPins::new_tx_rx(
+    //     io.pins.gpio44.into_push_pull_output(),
+    //     io.pins.gpio43.into_floating_input(),
+    // );
+
+    // let mut serial = Uart::new_with_config(peripherals.UART0, config, Some(pins), &clocks);
+
+    let _ = app_loop(&mut display, color_conv, serial);
     loop {}
 
 }
