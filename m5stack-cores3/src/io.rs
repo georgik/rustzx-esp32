@@ -12,11 +12,12 @@ pub enum FileAssetError {
 
 pub struct FileAsset {
     data: &'static [u8],
+    position: usize,
 }
 
 impl FileAsset {
     pub fn new(data: &'static [u8]) -> Self {
-        FileAsset { data }
+        FileAsset { data, position: 0 }
     }
 
     // Helper methods to convert FileAssetError to IoError if necessary
@@ -36,6 +37,17 @@ impl SeekableAsset for FileAsset {
 
 impl LoadableAsset for FileAsset {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, IoError> {
-        todo!()
+        let available = self.data.len() - self.position; // Bytes remaining
+        let to_read = available.min(buf.len()); // Number of bytes to read
+
+        if to_read == 0 {
+            return Err(FileAsset::convert_error(FileAssetError::ReadError));
+        }
+
+        buf[..to_read].copy_from_slice(&self.data[self.position..self.position + to_read]);
+        self.position += to_read; // Update the position
+
+        Ok(to_read) // Return the number of bytes read
     }
 }
+

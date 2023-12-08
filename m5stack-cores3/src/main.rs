@@ -243,6 +243,8 @@ use ascii_zxkey::{ascii_code_to_zxkey, ascii_code_to_modifier};
 mod zx_event;
 use zx_event::Event;
 
+use crate::io::FileAsset;
+
 fn app_loop<DI, M, RST>(
     display: &mut mipidsi::Display<DI, M, RST>,
     color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
@@ -261,7 +263,7 @@ where
     info!("Creating emulator");
 
     let settings = RustzxSettings {
-        machine: ZXMachine::Sinclair48K,
+        machine: ZXMachine::Sinclair128K,
         emulation_mode: EmulationMode::FrameCount(1),
         tape_fastload_enabled: true,
         kempston_enabled: false,
@@ -318,6 +320,11 @@ where
     // #[cfg(feature = "tcpstream_keyboard")]
     // let mut last_key:u8 = 0;
 
+    info!("Loading tape");
+    let tape_bytes = include_bytes!("../test.tap");
+    let tape_asset = FileAsset::new(tape_bytes);
+    emulator.load_tape(rustzx_core::host::Tape::Tap(tape_asset));
+
     info!("Entering emulator loop");
 
     loop {
@@ -328,22 +335,23 @@ where
             Ok(key) => {
                 println!("Read 0x{:02x}", key);
                 info!("Key: {} - {}", key, true);
+
                 let mapped_key_down_option = ascii_code_to_zxkey(key, true)
                 .or_else(|| ascii_code_to_modifier(key, true));
-        
+
                 let mapped_key_down = match mapped_key_down_option {
                     Some(x) => { x },
                     _ => { Event::NoEvent }
                 };
-        
+
                 let mapped_key_up_option = ascii_code_to_zxkey(key, false)
                 .or_else(|| ascii_code_to_modifier(key, false));
-        
+
                 let mapped_key_up = match mapped_key_up_option {
                     Some(x) => { x },
                     _ => { Event::NoEvent }
                 };
-        
+
                 debug!("-> key down");
                 match mapped_key_down {
                     Event::ZXKey(k,p) => {
@@ -376,6 +384,9 @@ where
 
             Err(_err) => {},
         }
+//         let tape = include_bytes!("../test.tap");
+// emulator.load_tape(tape);
+
 
 
         // emulator.emulate_frames(MAX_FRAME_DURATION);
