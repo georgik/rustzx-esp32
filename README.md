@@ -14,9 +14,9 @@ Hardware (work-in-progress):
 
 - connect USB-to-Serial converter and M5Stack CoreS3, this will serve as keyboard input
 ```
-TX - GPIO17
-RX - GPIO18
-GND - GND
+RX (Usb-to-Serial) - TX GPIO17 or T at Grove Port C (M5Stack CoreS3)
+TX (Usb-to-Serial) - RX GPIO18 or R at Grove Port C (M5Stack CoreS3)
+GND (Usb-to-Serial) - GND (M5Stack CoreS3)
 ```
 
 ## Software setup

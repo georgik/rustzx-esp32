@@ -105,6 +105,9 @@ fn main() -> ! {
     let lcd_dc = io.pins.gpio35.into_push_pull_output();
     let lcd_reset = io.pins.gpio15.into_push_pull_output();
 
+    let serial_tx = io.pins.gpio17.into_push_pull_output();
+    let serial_rx = io.pins.gpio18.into_floating_input();
+
     // I2C
     let sda = io.pins.gpio12;
     let scl = io.pins.gpio11;
@@ -157,7 +160,6 @@ fn main() -> ! {
     ));
 
     delay.delay_ms(500u32);
-    // backlight.set_high().unwrap();
 
     //https://github.com/m5stack/M5CoreS3/blob/main/src/utility/Config.h#L8
     let di = spi_dma_displayinterface::new_no_cs(LCD_MEMORY_SIZE, spi, lcd_dc);
@@ -197,13 +199,12 @@ fn main() -> ! {
         stop_bits: StopBits::STOP1,
     };
 
-
     let pins = TxRxPins::new_tx_rx(
-        io.pins.gpio17.into_push_pull_output(),
-        io.pins.gpio18.into_floating_input(),
+        serial_tx,
+        serial_rx,
     );
 
-    let mut serial = Uart::new_with_config(peripherals.UART1, config, Some(pins), &clocks);
+    let serial = Uart::new_with_config(peripherals.UART1, config, Some(pins), &clocks);
 
     let _ = app_loop(&mut display, color_conv, serial);
     loop {}
