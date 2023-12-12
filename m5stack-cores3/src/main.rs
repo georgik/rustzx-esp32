@@ -70,6 +70,8 @@ use core::mem::MaybeUninit;
 use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
 
+use pc_keyboard::{layouts, HandleControl, ScancodeSet2, KeyEvent, KeyCode};
+
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
@@ -283,10 +285,55 @@ where
     let _ = emulator.load_tape(rustzx_core::host::Tape::Tap(tape_asset));
 
     info!("Entering emulator loop");
+    let mut kb = pc_keyboard::Keyboard::new(
+        ScancodeSet2::new(),
+        layouts::Us104Key,
+        HandleControl::MapLettersToUnicode,
+    );
 
     loop {
         // info!("Emulating frame");
         let read_result = serial.read();
+        match read_result {
+            Ok(byte) => {
+                match kb.add_byte(byte) {
+                    Ok(Some(event)) => {
+                        info!("Event {:?}", event);
+
+
+                        match event.state {
+                            pc_keyboard::KeyState::Up => {
+                                // match map_keycode(event.code) {
+                                //     Some(keycode_event) => {
+                                //         info!("Sending: Up {}", keycode_event);
+                                //         serial.write(b'1').unwrap();
+                                //         serial.write(keycode_event as u8).unwrap();
+                                //     },
+                                //     None => {}
+                                // }
+                            },
+                            pc_keyboard::KeyState::Down => {
+                                // match map_keycode(event.code) {
+                                //     Some(keycode_event) => {
+                                //         info!("Sending: Down {}", keycode_event);
+                                //         serial.write(b'0').unwrap();
+                                //         serial.write(keycode_event as u8).unwrap();
+                                //     },
+                                //     None => {}
+                                // }
+                            }
+                    ,
+                            pc_keyboard::KeyState::SingleShot => {},
+                        }
+
+                    },
+                    Ok(None) => {},
+                    Err(_) => {},
+
+                }
+            }
+            Err(_) => {},
+        }
 
         match read_result {
             Ok(key_state) => {
