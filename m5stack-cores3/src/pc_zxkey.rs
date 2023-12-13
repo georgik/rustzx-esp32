@@ -72,6 +72,10 @@ pub (crate) fn pc_code_to_modifier(keycode: KeyCode, pressed: bool) -> Option<Ev
         KeyCode::ArrowUp => Some((ZXKey::Shift, ZXKey::N7)),
         KeyCode::ArrowRight => Some((ZXKey::Shift, ZXKey::N8)),
 
+        // ========= Row 2 (the numbers) =========
+        KeyCode::OemMinus => Some((ZXKey::SymShift, ZXKey::J)), // -
+        KeyCode::OemPlus => Some((ZXKey::SymShift, ZXKey::K)), // +
+
         // ========= Row 4 (ASDF) =========
         KeyCode::Oem1 => Some((ZXKey::SymShift, ZXKey::O)), // ;
         // KeyCode::Oem3 => Some((ZXKey::SymShift, ZXKey::Z)), // :
