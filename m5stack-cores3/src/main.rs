@@ -233,6 +233,8 @@ mod io;
 mod spritebuf;
 mod ascii_zxkey;
 use ascii_zxkey::{ascii_code_to_zxkey, ascii_code_to_modifier};
+mod pc_zxkey;
+use pc_zxkey::pc_code_to_zxkey;
 mod zx_event;
 use zx_event::Event;
 
@@ -256,8 +258,8 @@ where
     info!("Creating emulator");
 
     let settings = RustzxSettings {
-        machine: ZXMachine::Sinclair128K,
-        // machine: ZXMachine::Sinclair48K,
+        // machine: ZXMachine::Sinclair128K,
+        machine: ZXMachine::Sinclair48K,
         emulation_mode: EmulationMode::FrameCount(1),
         tape_fastload_enabled: true,
         kempston_enabled: false,
@@ -299,20 +301,42 @@ where
                 match kb.add_byte(byte) {
                     Ok(Some(event)) => {
                         info!("Event {:?}", event);
+                        let key = event.code;
 
 
                         match event.state {
                             pc_keyboard::KeyState::Up => {
-                                // match map_keycode(event.code) {
-                                //     Some(keycode_event) => {
-                                //         info!("Sending: Up {}", keycode_event);
-                                //         serial.write(b'1').unwrap();
-                                //         serial.write(keycode_event as u8).unwrap();
-                                //     },
-                                //     None => {}
-                                // }
+                                let mapped_key_down_option = pc_code_to_zxkey(key, false);
+                                info!("Mapped key up: ");
+                                let mapped_key_down = match mapped_key_down_option {
+                                    Some(x) => { x },
+                                    _ => { Event::NoEvent }
+                                };
+                                match mapped_key_down {
+                                    Event::ZXKey(k,p) => {
+                                        debug!("-> ZXKey");
+                                        emulator.send_key(k, p);
+                                    },
+                                    Event::NoEvent => todo!(),
+                                    Event::ZXKeyWithModifier(_, _, _) => todo!(),
+                                }
                             },
                             pc_keyboard::KeyState::Down => {
+                                let mapped_key_down_option = pc_code_to_zxkey(key, true);
+                                info!("Mapped key down: ");
+                                let mapped_key_down = match mapped_key_down_option {
+                                    Some(x) => { x },
+                                    _ => { Event::NoEvent }
+                                };
+                                match mapped_key_down {
+                                    Event::ZXKey(k,p) => {
+                                        debug!("-> ZXKey");
+                                        emulator.send_key(k, p);
+                                    },
+                                    Event::NoEvent => todo!(),
+                                    Event::ZXKeyWithModifier(_, _, _) => todo!(),
+                                }
+                            //.or_else(|| ascii_code_to_modifier(key, true));
                                 // match map_keycode(event.code) {
                                 //     Some(keycode_event) => {
                                 //         info!("Sending: Down {}", keycode_event);
@@ -335,71 +359,71 @@ where
             Err(_) => {},
         }
 
-        match read_result {
-            Ok(key_state) => {
-                let key_result = serial.read();
-                match key_result {
-                    Ok(key) => {
-                        println!("Read 0x{:02x}", key);
-                        info!("Key: {} - {}", key, true);
+        // match read_result {
+        //     Ok(key_state) => {
+        //         let key_result = serial.read();
+        //         match key_result {
+        //             Ok(key) => {
+        //                 println!("Read 0x{:02x}", key);
+        //                 info!("Key: {} - {}", key, true);
 
-                        if key_state == b'0' {
+        //                 if key_state == b'0' {
 
-                            let mapped_key_down_option = ascii_code_to_zxkey(key, true)
-                            .or_else(|| ascii_code_to_modifier(key, true));
+        //                     let mapped_key_down_option = ascii_code_to_zxkey(key, true)
+        //                     .or_else(|| ascii_code_to_modifier(key, true));
 
-                            let mapped_key_down = match mapped_key_down_option {
-                                Some(x) => { x },
-                                _ => { Event::NoEvent }
-                            };
+        //                     let mapped_key_down = match mapped_key_down_option {
+        //                         Some(x) => { x },
+        //                         _ => { Event::NoEvent }
+        //                     };
 
-                            debug!("-> key down");
-                            match mapped_key_down {
-                                Event::ZXKey(k,p) => {
-                                    debug!("-> ZXKey");
-                                    emulator.send_key(k, p);
-                                },
-                                Event::ZXKeyWithModifier(k, k2, p) => {
-                                    debug!("-> ZXKeyWithModifier");
-                                    emulator.send_key(k, p);
-                                    emulator.send_key(k2, p);
-                                }
-                                _ => {
-                                    debug!("Unknown key.");
-                                }
-                            };
-                        } else if key_state == b'1' {
-                            debug!("-> key up");
-                            let mapped_key_up_option = ascii_code_to_zxkey(key, false)
-                            .or_else(|| ascii_code_to_modifier(key, false));
-                            let mapped_key_up = match mapped_key_up_option {
-                                Some(x) => { x },
-                                _ => { Event::NoEvent }
-                            };
-                            match mapped_key_up {
-                                Event::ZXKey(k,p) => {
-                                    emulator.send_key(k, p);
-                                },
-                                Event::ZXKeyWithModifier(k, k2, p) => {
-                                    emulator.send_key(k, p);
-                                    emulator.send_key(k2, p);
-                                }
-                                _ => {}
-                            };
-                        }
+        //                     debug!("-> key down");
+        //                     match mapped_key_down {
+        //                         Event::ZXKey(k,p) => {
+        //                             debug!("-> ZXKey");
+        //                             emulator.send_key(k, p);
+        //                         },
+        //                         Event::ZXKeyWithModifier(k, k2, p) => {
+        //                             debug!("-> ZXKeyWithModifier");
+        //                             emulator.send_key(k, p);
+        //                             emulator.send_key(k2, p);
+        //                         }
+        //                         _ => {
+        //                             debug!("Unknown key.");
+        //                         }
+        //                     };
+        //                 } else if key_state == b'1' {
+        //                     debug!("-> key up");
+        //                     let mapped_key_up_option = ascii_code_to_zxkey(key, false)
+        //                     .or_else(|| ascii_code_to_modifier(key, false));
+        //                     let mapped_key_up = match mapped_key_up_option {
+        //                         Some(x) => { x },
+        //                         _ => { Event::NoEvent }
+        //                     };
+        //                     match mapped_key_up {
+        //                         Event::ZXKey(k,p) => {
+        //                             emulator.send_key(k, p);
+        //                         },
+        //                         Event::ZXKeyWithModifier(k, k2, p) => {
+        //                             emulator.send_key(k, p);
+        //                             emulator.send_key(k2, p);
+        //                         }
+        //                         _ => {}
+        //                     };
+        //                 }
 
-                        emulator.emulate_frames(MAX_FRAME_DURATION);
-                    },
-                    Err(_) => {}
-                }
+        //                 emulator.emulate_frames(MAX_FRAME_DURATION);
+        //             },
+        //             Err(_) => {}
+        //         }
                 
                 
-            }   
+        //     }   
             
-            Err(_err) => {
-                // info!("No key pressed");
-            }
-        }
+        //     Err(_err) => {
+        //         // info!("No key pressed");
+        //     }
+        // }
 
         // emulator.emulate_frames(MAX_FRAME_DURATION);
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
