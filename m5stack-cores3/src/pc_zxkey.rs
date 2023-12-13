@@ -55,6 +55,8 @@ pub(crate) fn pc_code_to_zxkey(keycode: KeyCode, pressed:bool) -> Option<Event> 
         KeyCode::LControl => Some(ZXKey::SymShift),
         KeyCode::RControl => Some(ZXKey::SymShift),
 
+        KeyCode::Return => Some(ZXKey::Enter),
+
         _ => None,
     };
 
