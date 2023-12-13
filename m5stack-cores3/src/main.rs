@@ -351,15 +351,6 @@ where
                                     }
 
                                 }
-                            //.or_else(|| ascii_code_to_modifier(key, true));
-                                // match map_keycode(event.code) {
-                                //     Some(keycode_event) => {
-                                //         info!("Sending: Down {}", keycode_event);
-                                //         serial.write(b'0').unwrap();
-                                //         serial.write(keycode_event as u8).unwrap();
-                                //     },
-                                //     None => {}
-                                // }
                             }
                     ,
                             pc_keyboard::KeyState::SingleShot => {},
@@ -373,72 +364,6 @@ where
             }
             Err(_) => {},
         }
-
-        // match read_result {
-        //     Ok(key_state) => {
-        //         let key_result = serial.read();
-        //         match key_result {
-        //             Ok(key) => {
-        //                 println!("Read 0x{:02x}", key);
-        //                 info!("Key: {} - {}", key, true);
-
-        //                 if key_state == b'0' {
-
-        //                     let mapped_key_down_option = ascii_code_to_zxkey(key, true)
-        //                     .or_else(|| ascii_code_to_modifier(key, true));
-
-        //                     let mapped_key_down = match mapped_key_down_option {
-        //                         Some(x) => { x },
-        //                         _ => { Event::NoEvent }
-        //                     };
-
-        //                     debug!("-> key down");
-        //                     match mapped_key_down {
-        //                         Event::ZXKey(k,p) => {
-        //                             debug!("-> ZXKey");
-        //                             emulator.send_key(k, p);
-        //                         },
-        //                         Event::ZXKeyWithModifier(k, k2, p) => {
-        //                             debug!("-> ZXKeyWithModifier");
-        //                             emulator.send_key(k, p);
-        //                             emulator.send_key(k2, p);
-        //                         }
-        //                         _ => {
-        //                             debug!("Unknown key.");
-        //                         }
-        //                     };
-        //                 } else if key_state == b'1' {
-        //                     debug!("-> key up");
-        //                     let mapped_key_up_option = ascii_code_to_zxkey(key, false)
-        //                     .or_else(|| ascii_code_to_modifier(key, false));
-        //                     let mapped_key_up = match mapped_key_up_option {
-        //                         Some(x) => { x },
-        //                         _ => { Event::NoEvent }
-        //                     };
-        //                     match mapped_key_up {
-        //                         Event::ZXKey(k,p) => {
-        //                             emulator.send_key(k, p);
-        //                         },
-        //                         Event::ZXKeyWithModifier(k, k2, p) => {
-        //                             emulator.send_key(k, p);
-        //                             emulator.send_key(k2, p);
-        //                         }
-        //                         _ => {}
-        //                     };
-        //                 }
-
-        //                 emulator.emulate_frames(MAX_FRAME_DURATION);
-        //             },
-        //             Err(_) => {}
-        //         }
-                
-                
-        //     }   
-            
-        //     Err(_err) => {
-        //         // info!("No key pressed");
-        //     }
-        // }
 
         // emulator.emulate_frames(MAX_FRAME_DURATION);
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
