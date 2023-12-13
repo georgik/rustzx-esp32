@@ -67,6 +67,15 @@ pub (crate) fn pc_code_to_modifier(keycode: KeyCode, pressed: bool) -> Option<Ev
     let zxkey_event:Option<(ZXKey, ZXKey)> = match keycode {
         KeyCode::Backspace => Some((ZXKey::Shift, ZXKey::N0)),
 
+        // ========= Row 4 (ASDF) =========
+        KeyCode::Oem1 => Some((ZXKey::SymShift, ZXKey::O)), // ;
+        // KeyCode::Oem3 => Some((ZXKey::SymShift, ZXKey::Z)), // :
+        KeyCode::Oem3 => Some((ZXKey::SymShift, ZXKey::N7)), // '
+
+        // ========= Row 5 (ZXCV) =========
+        KeyCode::OemComma => Some((ZXKey::SymShift, ZXKey::N)), // ,
+        KeyCode::OemPeriod => Some((ZXKey::SymShift, ZXKey::M)), // .
+        KeyCode::Oem2 => Some((ZXKey::SymShift, ZXKey::V)), // /
         _ => None,
     };
     zxkey_event.map(|(k, k2)| Event::ZXKeyWithModifier(k, k2, pressed))
