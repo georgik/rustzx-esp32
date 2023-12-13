@@ -61,10 +61,11 @@ pub(crate) fn pc_code_to_zxkey(keycode: KeyCode, pressed:bool) -> Option<Event> 
     return zxkey_event.map(|k| Event::ZXKey(k, pressed))
 }
 
-// pub fn pc_code_to_modifier(ascii_code: u8, pressed: bool) -> Option<Event> {
-//     let zxkey_event:Option<ZXKey> = match keycode {
-//         KeyCode::
+pub (crate) fn pc_code_to_modifier(keycode: KeyCode, pressed: bool) -> Option<Event> {
+    let zxkey_event:Option<(ZXKey, ZXKey)> = match keycode {
+        KeyCode::Backspace => Some((ZXKey::Shift, ZXKey::N0)),
 
-//     };
-//     zxkey_event.map(|(k, k2)| Event::ZXKeyWithModifier(k, k2, pressed))
-// }
+        _ => None,
+    };
+    zxkey_event.map(|(k, k2)| Event::ZXKeyWithModifier(k, k2, pressed))
+}

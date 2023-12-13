@@ -234,7 +234,7 @@ mod spritebuf;
 mod ascii_zxkey;
 use ascii_zxkey::{ascii_code_to_zxkey, ascii_code_to_modifier};
 mod pc_zxkey;
-use pc_zxkey::pc_code_to_zxkey;
+use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
 mod zx_event;
 use zx_event::Event;
 
@@ -306,7 +306,8 @@ where
 
                         match event.state {
                             pc_keyboard::KeyState::Up => {
-                                let mapped_key_down_option = pc_code_to_zxkey(key, false);
+                                let mapped_key_down_option = pc_code_to_zxkey(key, false)
+                                .or_else(|| pc_code_to_modifier(key, false));
                                 info!("Mapped key up: ");
                                 let mapped_key_down = match mapped_key_down_option {
                                     Some(x) => { x },
@@ -317,12 +318,19 @@ where
                                         debug!("-> ZXKey");
                                         emulator.send_key(k, p);
                                     },
-                                    Event::NoEvent => todo!(),
-                                    Event::ZXKeyWithModifier(_, _, _) => todo!(),
+                                    Event::NoEvent => {
+                                        error!("Key not implemented");
+                                    },
+                                    Event::ZXKeyWithModifier(k, k2, p) => {
+                                        debug!("-> ZXKeyWithModifier");
+                                        emulator.send_key(k, p);
+                                        emulator.send_key(k2, p);
+                                    }
                                 }
                             },
                             pc_keyboard::KeyState::Down => {
-                                let mapped_key_down_option = pc_code_to_zxkey(key, true);
+                                let mapped_key_down_option = pc_code_to_zxkey(key, true)
+                                .or_else(|| pc_code_to_modifier(key, true));;
                                 info!("Mapped key down: ");
                                 let mapped_key_down = match mapped_key_down_option {
                                     Some(x) => { x },
@@ -333,8 +341,15 @@ where
                                         debug!("-> ZXKey");
                                         emulator.send_key(k, p);
                                     },
-                                    Event::NoEvent => todo!(),
-                                    Event::ZXKeyWithModifier(_, _, _) => todo!(),
+                                    Event::NoEvent => {
+                                        error!("Key not implemented");
+                                    },
+                                    Event::ZXKeyWithModifier(k, k2, p) => {
+                                        debug!("-> ZXKeyWithModifier");
+                                        emulator.send_key(k, p);
+                                        emulator.send_key(k2, p);
+                                    }
+
                                 }
                             //.or_else(|| ascii_code_to_modifier(key, true));
                                 // match map_keycode(event.code) {
