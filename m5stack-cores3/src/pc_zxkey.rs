@@ -50,6 +50,11 @@ pub(crate) fn pc_code_to_zxkey(keycode: KeyCode, pressed:bool) -> Option<Event> 
         KeyCode::LShift => Some(ZXKey::Shift),
         KeyCode::RShift => Some(ZXKey::Shift),
 
+        KeyCode::LAlt => Some(ZXKey::SymShift),
+        KeyCode::RAlt2 => Some(ZXKey::SymShift),
+        KeyCode::LControl => Some(ZXKey::SymShift),
+        KeyCode::RControl => Some(ZXKey::SymShift),
+
         _ => None,
     };
 
