@@ -1,6 +1,7 @@
 
 extern crate alloc;
 use alloc::{vec, vec::Vec};
+use embedded_graphics::pixelcolor::RgbColor;
 use log::*;
 
 use rustzx_core::host::FrameBuffer;
@@ -32,7 +33,7 @@ impl Host for Esp32Host
     type FrameBuffer = EmbeddedGraphicsFrameBuffer;
     type TapeAsset = FileAsset; // TODO
     type IoExtender = StubIoExtender;
-    type DebugInterface = StubDebugInterface; // TODO
+    // type DebugInterface = StubDebugInterface; // TODO
 }
 
 pub(crate) struct Esp32HostContext;
@@ -45,7 +46,7 @@ impl HostContext<Esp32Host> for Esp32HostContext
 }
 
 pub(crate) struct EmbeddedGraphicsFrameBuffer {
-    buffer: Vec<ZXColor>,
+    buffer: Vec<Rgb565>,
     buffer_width: usize,
     // changed: RefCell<Vec<bool>>,
 }
@@ -53,7 +54,7 @@ pub(crate) struct EmbeddedGraphicsFrameBuffer {
 use crate::color_conv;
 impl EmbeddedGraphicsFrameBuffer {
     pub fn get_pixel_iter(&self) -> impl Iterator<Item = Rgb565> + '_ {
-        self.buffer.iter().map(|zh_color| color_conv(zh_color, ZXBrightness::Normal))
+        self.buffer.iter().copied()
     }
 }
 
@@ -73,13 +74,13 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
                 info!("Allocating frame buffer width={}, height={}", width, height);
 
                 Self {
-                    buffer: vec![ZXColor::Red; LCD_PIXELS],
+                    buffer: vec![Rgb565::RED; LCD_PIXELS],
                     buffer_width: LCD_H_RES as usize,
                 }
             }
             FrameBufferSource::Border => Self {
-                buffer: vec![ZXColor::White; LCD_PIXELS],
-                buffer_width: LCD_H_RES as usize,
+                buffer: vec![Rgb565::WHITE; 1],
+                buffer_width: 1,
             },
         }
     }
@@ -88,26 +89,23 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
         &mut self,
         x: usize,
         y: usize,
-        color: ZXColor,
-        _brightness: ZXBrightness, /*TODO*/
+        zx_color: ZXColor,
+        zx_brightness: ZXBrightness,
     ) {
-        if self.buffer_width > 0 {
-            let pixel = &mut self.buffer[y * self.buffer_width + x];
-            if *pixel as u8 != color as u8 {
-                *pixel = color;
-                // self.changed.borrow_mut()[y] = true;
-            }
-        }
+        self.buffer[y * self.buffer_width + x] = color_conv(&zx_color, zx_brightness);
+        // if *pixel != color {
+        //     *pixel = color;
+        // }
     }
 }
 
 pub struct StubDebugInterface;
-use rustzx_core::host::DebugInterface;
+// use rustzx_core::host::DebugInterface;
 
-impl DebugInterface for StubDebugInterface {
-    fn check_pc_breakpoint(&mut self, _addr: u16) -> bool {
-        // In a stub implementation, you can simply return false
-        // to indicate that no breakpoints are set.
-        false
-    }
-}
+// impl DebugInterface for StubDebugInterface {
+//     fn check_pc_breakpoint(&mut self, _addr: u16) -> bool {
+//         // In a stub implementation, you can simply return false
+//         // to indicate that no breakpoints are set.
+//         false
+//     }
+// }
