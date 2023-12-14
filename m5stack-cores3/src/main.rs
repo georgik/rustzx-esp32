@@ -251,8 +251,8 @@ where
     info!("Creating emulator");
 
     let settings = RustzxSettings {
-        // machine: ZXMachine::Sinclair128K,
-        machine: ZXMachine::Sinclair48K,
+        machine: ZXMachine::Sinclair128K,
+        // machine: ZXMachine::Sinclair48K,
         emulation_mode: EmulationMode::FrameCount(1),
         tape_fastload_enabled: true,
         kempston_enabled: false,
