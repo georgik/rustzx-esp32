@@ -170,7 +170,7 @@ fn main() -> ! {
     delay.delay_ms(500u32);
 
     //https://github.com/m5stack/M5CoreS3/blob/main/src/utility/Config.h#L8
-    let di = spi_dma_displayinterface::new_no_cs(LCD_MEMORY_SIZE, spi, lcd_dc);
+    let di = spi_dma_displayinterface::new_no_cs(2*256*192, spi, lcd_dc);
 
     let mut display = mipidsi::Builder::ili9342c_rgb565(di)
         .with_display_size(320, 240)
@@ -352,7 +352,6 @@ where
             Err(_) => {},
         }
 
-        // emulator.emulate_frames(MAX_FRAME_DURATION);
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
                 // info!("Emulation of frame succeeded");
