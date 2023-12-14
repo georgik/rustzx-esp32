@@ -10,8 +10,6 @@ use embedded_graphics::{
     Drawable,
 };
 
-use esp_println::println;
-
 use hal::{
     clock::{ClockControl, CpuClock},
     dma::DmaPriority,
@@ -40,26 +38,23 @@ use hal::{
 // use spooky_embedded::app::app_loop;
 
 use spooky_embedded::{
-    embedded_display::{LCD_H_RES, LCD_V_RES, LCD_MEMORY_SIZE},
+    embedded_display::LCD_MEMORY_SIZE,
     // controllers::{accel::AccelMovementController, composites::accel_composite::AccelCompositeController}
 };
 
 use esp_backtrace as _;
 
-use icm42670::{Address, Icm42670};
+// use icm42670::{Address, Icm42670};
 use shared_bus::BusManagerSimple;
 
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
-use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings};
+use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, host::Host};
 
 use log::{info, error, debug};
 
 use core::time::Duration;
-use embedded_graphics::{
-    prelude::*,
-    pixelcolor::Rgb565
-};
+use embedded_graphics::pixelcolor::Rgb565;
 
 use display_interface::WriteOnlyDataCommand;
 use mipidsi::models::Model;
@@ -69,6 +64,19 @@ use core::mem::MaybeUninit;
 
 use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
+
+use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
+
+mod host;
+mod stopwatch;
+mod io;
+mod spritebuf;
+mod pc_zxkey;
+use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
+mod zx_event;
+use zx_event::Event;
+
+use crate::io::FileAsset;
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -225,20 +233,31 @@ fn color_conv(color: &ZXColor, _brightness: ZXBrightness) -> Rgb565 {
     }
 }
 
-mod host;
-mod stopwatch;
-mod io;
-mod spritebuf;
-mod ascii_zxkey;
-use ascii_zxkey::{ascii_code_to_zxkey, ascii_code_to_modifier};
-mod zx_event;
-use zx_event::Event;
-
-use crate::io::FileAsset;
+fn handle_key_event<H: Host>(key: pc_keyboard::KeyCode, state: pc_keyboard::KeyState, emulator: &mut Emulator<H>) {
+    let is_pressed = matches!(state, pc_keyboard::KeyState::Down);
+    if let Some(mapped_key) = pc_code_to_zxkey(key, is_pressed).or_else(|| pc_code_to_modifier(key, is_pressed)) {
+        match mapped_key {
+            Event::ZXKey(k, p) => {
+                debug!("-> ZXKey");
+                emulator.send_key(k, p);
+            },
+            Event::NoEvent => {
+                error!("Key not implemented");
+            },
+            Event::ZXKeyWithModifier(k, k2, p) => {
+                debug!("-> ZXKeyWithModifier");
+                emulator.send_key(k, p);
+                emulator.send_key(k2, p);
+            }
+        }
+    } else {
+        info!("Mapped key: NoEvent");
+    }
+}
 
 fn app_loop<DI, M, RST>(
     display: &mut mipidsi::Display<DI, M, RST>,
-    color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
+    _color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
     mut serial: Uart<UART1>,
 ) //-> Result<(), core::fmt::Error>
 where
@@ -255,6 +274,7 @@ where
 
     let settings = RustzxSettings {
         machine: ZXMachine::Sinclair128K,
+        // machine: ZXMachine::Sinclair48K,
         emulation_mode: EmulationMode::FrameCount(1),
         tape_fastload_enabled: true,
         kempston_enabled: false,
@@ -282,63 +302,27 @@ where
     let _ = emulator.load_tape(rustzx_core::host::Tape::Tap(tape_asset));
 
     info!("Entering emulator loop");
+    let mut kb = pc_keyboard::Keyboard::new(
+        ScancodeSet2::new(),
+        layouts::Us104Key,
+        HandleControl::MapLettersToUnicode,
+    );
 
     loop {
         // info!("Emulating frame");
         let read_result = serial.read();
-
         match read_result {
-            Ok(key) => {
-                println!("Read 0x{:02x}", key);
-                info!("Key: {} - {}", key, true);
-
-                let mapped_key_down_option = ascii_code_to_zxkey(key, true)
-                .or_else(|| ascii_code_to_modifier(key, true));
-
-                let mapped_key_down = match mapped_key_down_option {
-                    Some(x) => { x },
-                    _ => { Event::NoEvent }
-                };
-
-                let mapped_key_up_option = ascii_code_to_zxkey(key, false)
-                .or_else(|| ascii_code_to_modifier(key, false));
-
-                let mapped_key_up = match mapped_key_up_option {
-                    Some(x) => { x },
-                    _ => { Event::NoEvent }
-                };
-
-                debug!("-> key down");
-                match mapped_key_down {
-                    Event::ZXKey(k,p) => {
-                        debug!("-> ZXKey");
-                        emulator.send_key(k, p);
+            Ok(byte) => {
+                match kb.add_byte(byte) {
+                    Ok(Some(event)) => {
+                        info!("Event {:?}", event);
+                        handle_key_event(event.code, event.state, &mut emulator);
                     },
-                    Event::ZXKeyWithModifier(k, k2, p) => {
-                        debug!("-> ZXKeyWithModifier");
-                        emulator.send_key(k, p);
-                        emulator.send_key(k2, p);
-                    }
-                    _ => {
-                        debug!("Unknown key.");
-                    }
+                    Ok(None) => {},
+                    Err(_) => {},
                 }
-
-                emulator.emulate_frames(MAX_FRAME_DURATION);
-                debug!("-> key up");
-                match mapped_key_up {
-                    Event::ZXKey(k,p) => {
-                        emulator.send_key(k, p);
-                    },
-                    Event::ZXKeyWithModifier(k, k2, p) => {
-                        emulator.send_key(k, p);
-                        emulator.send_key(k2, p);
-                    }
-                    _ => {}
-                }
-            },
-
-            Err(_err) => {},
+            }
+            Err(_) => {},
         }
 
         // emulator.emulate_frames(MAX_FRAME_DURATION);

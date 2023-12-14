@@ -1,11 +1,7 @@
 
 extern crate alloc;
 use alloc::{vec, vec::Vec};
-use embedded_hal::can::Frame;
 use log::*;
-
-use embedded_graphics::prelude::*;
-use embedded_graphics::primitives::Rectangle;
 
 use rustzx_core::host::FrameBuffer;
 use rustzx_core::host::FrameBufferSource;
@@ -22,15 +18,7 @@ const LCD_PIXELS: usize = LCD_H_RES*192;
 // use rustzx_utils::stopwatch::InstantStopwatch;
 use crate::stopwatch::InstantStopwatch;
 use crate::io::FileAsset;
-use crate::spritebuf::SpriteBuf;
-
-use embedded_graphics_framebuf::FrameBuf;
-use embedded_graphics_framebuf::backends::{DMACapableFrameBufferBackend, FrameBufferBackend};
 use embedded_graphics::pixelcolor::Rgb565;
-
-use display_interface::WriteOnlyDataCommand;
-use embedded_hal::digital::v2::OutputPin;
-
 
 
 pub(crate) struct Esp32Host
@@ -69,45 +57,6 @@ impl EmbeddedGraphicsFrameBuffer {
     }
 }
 
-// impl EmbeddedGraphicsFrameBuffer {
-    // pub(crate) fn blit<D: DrawTarget>(
-    //     &self,
-    //     display: &mut D,
-    //     color_conv: fn(ZXColor, ZXBrightness) -> D::Color,
-    // ) -> Result<(), D::Error> {
-
-        // let mut changed = self.changed.borrow_mut();
-
-        // let mut y = 0_usize;
-        // while y < changed.len() {
-        //     let mut yoff = y;
-        //     while yoff < changed.len() && changed[yoff] {
-        //         changed[yoff] = false;
-        //         yoff += 1;
-
-        //         break; // TODO: Seems there is a bug with multiple rows
-        //     }
-
-        //     if y < yoff {
-        //         display.fill_contiguous(
-        //             &Rectangle::new(
-        //                 Point::new(0, y as i32),
-        //                 Size::new(self.buffer_width as u32, (yoff - y) as u32),
-        //             ),
-        //             self.buffer[y * self.buffer_width..yoff * self.buffer_width]
-        //                 .iter()
-        //                 .map(|zh_color| color_conv(*zh_color, ZXBrightness::Normal)),
-        //         )?;
-
-        //         y = yoff;
-        //     } else {
-        //         y += 1;
-        //     }
-        // }
-
-//         Ok(())
-//     }
-// }
 
 impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
     type Context = ();
@@ -126,13 +75,11 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
                 Self {
                     buffer: vec![ZXColor::Red; LCD_PIXELS],
                     buffer_width: LCD_H_RES as usize,
-                    // changed: RefCell::new(vec![true; height]),
                 }
             }
             FrameBufferSource::Border => Self {
                 buffer: vec![ZXColor::White; LCD_PIXELS],
                 buffer_width: LCD_H_RES as usize,
-                // changed: RefCell::new(Vec::new()),
             },
         }
     }

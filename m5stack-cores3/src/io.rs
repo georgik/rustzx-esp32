@@ -30,7 +30,7 @@ impl FileAsset {
 }
 
 impl SeekableAsset for FileAsset {
-    fn seek(&mut self, pos: SeekFrom) -> Result<usize, IoError> {
+    fn seek(&mut self, _pos: SeekFrom) -> Result<usize, IoError> {
         todo!()
     }
 }
