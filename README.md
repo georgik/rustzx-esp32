@@ -12,7 +12,7 @@ Hardware (work-in-progress):
 
 ### Assembly
 
-#### Assmbly of keyboard
+#### Assmebly of keyboard
 
 - flash ESP32-C3 which should serve as keyboard converter from [PS/2 or USB to serial](https://georgik.rocks/how-to-connect-usb-and-ps-2-keyboards-to-esp32-with-rust/)
 ```
