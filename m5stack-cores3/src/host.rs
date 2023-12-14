@@ -56,6 +56,20 @@ impl EmbeddedGraphicsFrameBuffer {
     pub fn get_pixel_iter(&self) -> impl Iterator<Item = Rgb565> + '_ {
         self.buffer.iter().copied()
     }
+
+    // fn set_colors(
+    //     &mut self,
+    //     x: usize,
+    //     y: usize,
+    //     colors: [ZXColor; 8],
+    //     brightness: ZXBrightness,
+    // ) {
+    //     let start = y * self.buffer_width + x;
+    //     let end = start + 8;
+    //     for (i, &color) in colors.iter().enumerate() {
+    //         self.buffer[start + i] = color_conv(&color, brightness);
+    //     }
+    // }
 }
 
 
@@ -96,6 +110,15 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
         // if *pixel != color {
         //     *pixel = color;
         // }
+    }
+
+
+    fn set_colors(&mut self, x: usize, y: usize, colors: [ZXColor; 8], brightness: ZXBrightness) {
+        let start = y * self.buffer_width + x;
+        let end = start + 8;
+        for (i, &color) in colors.iter().enumerate() {
+            self.buffer[start + i] = color_conv(&color, brightness);
+        }
     }
 }
 
