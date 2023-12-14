@@ -3,9 +3,7 @@ use rustzx_core::zx::keys::ZXKey;
 
 use crate::zx_event::Event;
 
-use pc_keyboard::{layouts, HandleControl, ScancodeSet2, KeyEvent, KeyCode};
-/// returns ZX Spectum key form scancode of None if not found
-// pub fn ascii_code_to_zxkey(ascii_code: u8, pressed: bool) -> Option<Event> {
+use pc_keyboard::KeyCode;
 
 pub(crate) fn pc_code_to_zxkey(keycode: KeyCode, pressed:bool) -> Option<Event> {
     let zxkey_event:Option<ZXKey> = match keycode {

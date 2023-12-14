@@ -10,8 +10,6 @@ use embedded_graphics::{
     Drawable,
 };
 
-use esp_println::println;
-
 use hal::{
     clock::{ClockControl, CpuClock},
     dma::DmaPriority,
@@ -40,13 +38,13 @@ use hal::{
 // use spooky_embedded::app::app_loop;
 
 use spooky_embedded::{
-    embedded_display::{LCD_H_RES, LCD_V_RES, LCD_MEMORY_SIZE},
+    embedded_display::LCD_MEMORY_SIZE,
     // controllers::{accel::AccelMovementController, composites::accel_composite::AccelCompositeController}
 };
 
 use esp_backtrace as _;
 
-use icm42670::{Address, Icm42670};
+// use icm42670::{Address, Icm42670};
 use shared_bus::BusManagerSimple;
 
 use rustzx_core::zx::video::colors::ZXBrightness;
@@ -56,10 +54,7 @@ use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSetting
 use log::{info, error, debug};
 
 use core::time::Duration;
-use embedded_graphics::{
-    prelude::*,
-    pixelcolor::Rgb565
-};
+use embedded_graphics::pixelcolor::Rgb565;
 
 use display_interface::WriteOnlyDataCommand;
 use mipidsi::models::Model;
@@ -70,7 +65,7 @@ use core::mem::MaybeUninit;
 use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
 
-use pc_keyboard::{layouts, HandleControl, ScancodeSet2, KeyEvent, KeyCode};
+use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -231,8 +226,6 @@ mod host;
 mod stopwatch;
 mod io;
 mod spritebuf;
-mod ascii_zxkey;
-use ascii_zxkey::{ascii_code_to_zxkey, ascii_code_to_modifier};
 mod pc_zxkey;
 use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
 mod zx_event;
@@ -242,7 +235,7 @@ use crate::io::FileAsset;
 
 fn app_loop<DI, M, RST>(
     display: &mut mipidsi::Display<DI, M, RST>,
-    color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
+    _color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
     mut serial: Uart<UART1>,
 ) //-> Result<(), core::fmt::Error>
 where
@@ -330,7 +323,7 @@ where
                             },
                             pc_keyboard::KeyState::Down => {
                                 let mapped_key_down_option = pc_code_to_zxkey(key, true)
-                                .or_else(|| pc_code_to_modifier(key, true));;
+                                .or_else(|| pc_code_to_modifier(key, true));
                                 info!("Mapped key down: ");
                                 let mapped_key_down = match mapped_key_down_option {
                                     Some(x) => { x },
