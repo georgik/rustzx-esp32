@@ -49,7 +49,7 @@ use shared_bus::BusManagerSimple;
 
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
-use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings};
+use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, host::Host};
 
 use log::{info, error, debug};
 
@@ -66,6 +66,17 @@ use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
 
 use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
+
+mod host;
+mod stopwatch;
+mod io;
+mod spritebuf;
+mod pc_zxkey;
+use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
+mod zx_event;
+use zx_event::Event;
+
+use crate::io::FileAsset;
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -222,16 +233,27 @@ fn color_conv(color: &ZXColor, _brightness: ZXBrightness) -> Rgb565 {
     }
 }
 
-mod host;
-mod stopwatch;
-mod io;
-mod spritebuf;
-mod pc_zxkey;
-use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
-mod zx_event;
-use zx_event::Event;
-
-use crate::io::FileAsset;
+fn handle_key_event<H: Host>(key: pc_keyboard::KeyCode, state: pc_keyboard::KeyState, emulator: &mut Emulator<H>) {
+    let is_pressed = matches!(state, pc_keyboard::KeyState::Down);
+    if let Some(mapped_key) = pc_code_to_zxkey(key, is_pressed).or_else(|| pc_code_to_modifier(key, is_pressed)) {
+        match mapped_key {
+            Event::ZXKey(k, p) => {
+                debug!("-> ZXKey");
+                emulator.send_key(k, p);
+            },
+            Event::NoEvent => {
+                error!("Key not implemented");
+            },
+            Event::ZXKeyWithModifier(k, k2, p) => {
+                debug!("-> ZXKeyWithModifier");
+                emulator.send_key(k, p);
+                emulator.send_key(k2, p);
+            }
+        }
+    } else {
+        info!("Mapped key: NoEvent");
+    }
+}
 
 fn app_loop<DI, M, RST>(
     display: &mut mipidsi::Display<DI, M, RST>,
@@ -294,65 +316,10 @@ where
                 match kb.add_byte(byte) {
                     Ok(Some(event)) => {
                         info!("Event {:?}", event);
-                        let key = event.code;
-
-
-                        match event.state {
-                            pc_keyboard::KeyState::Up => {
-                                let mapped_key_down_option = pc_code_to_zxkey(key, false)
-                                .or_else(|| pc_code_to_modifier(key, false));
-                                info!("Mapped key up: ");
-                                let mapped_key_down = match mapped_key_down_option {
-                                    Some(x) => { x },
-                                    _ => { Event::NoEvent }
-                                };
-                                match mapped_key_down {
-                                    Event::ZXKey(k,p) => {
-                                        debug!("-> ZXKey");
-                                        emulator.send_key(k, p);
-                                    },
-                                    Event::NoEvent => {
-                                        error!("Key not implemented");
-                                    },
-                                    Event::ZXKeyWithModifier(k, k2, p) => {
-                                        debug!("-> ZXKeyWithModifier");
-                                        emulator.send_key(k, p);
-                                        emulator.send_key(k2, p);
-                                    }
-                                }
-                            },
-                            pc_keyboard::KeyState::Down => {
-                                let mapped_key_down_option = pc_code_to_zxkey(key, true)
-                                .or_else(|| pc_code_to_modifier(key, true));
-                                info!("Mapped key down: ");
-                                let mapped_key_down = match mapped_key_down_option {
-                                    Some(x) => { x },
-                                    _ => { Event::NoEvent }
-                                };
-                                match mapped_key_down {
-                                    Event::ZXKey(k,p) => {
-                                        debug!("-> ZXKey");
-                                        emulator.send_key(k, p);
-                                    },
-                                    Event::NoEvent => {
-                                        error!("Key not implemented");
-                                    },
-                                    Event::ZXKeyWithModifier(k, k2, p) => {
-                                        debug!("-> ZXKeyWithModifier");
-                                        emulator.send_key(k, p);
-                                        emulator.send_key(k2, p);
-                                    }
-
-                                }
-                            }
-                    ,
-                            pc_keyboard::KeyState::SingleShot => {},
-                        }
-
+                        handle_key_event(event.code, event.state, &mut emulator);
                     },
                     Ok(None) => {},
                     Err(_) => {},
-
                 }
             }
             Err(_) => {},
