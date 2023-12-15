@@ -11,12 +11,8 @@ use rustzx_core::host::HostContext;
 use rustzx_core::host::StubIoExtender;
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
-// use spooky_embedded::embedded_display::LCD_H_RES;
-// use spooky_embedded::embedded_display::LCD_PIXELS;
 const LCD_H_RES: usize = 256;
 const LCD_PIXELS: usize = LCD_H_RES*192;
-// use rustzx_utils::io::FileAsset;
-// use rustzx_utils::stopwatch::InstantStopwatch;
 use crate::stopwatch::InstantStopwatch;
 use crate::io::FileAsset;
 use embedded_graphics::pixelcolor::Rgb565;
@@ -45,10 +41,22 @@ impl HostContext<Esp32Host> for Esp32HostContext
     }
 }
 
+const REGION_WIDTH: usize = 8;
+const REGION_HEIGHT: usize = 1;
+const MAX_DIRTY_REGIONS: usize = 80;
+
+pub(crate) struct DirtyRegion {
+    pub x: usize,
+    pub y: usize,
+    pub width: usize,
+    pub height: usize,
+}
+
 pub(crate) struct EmbeddedGraphicsFrameBuffer {
     buffer: Vec<Rgb565>,
     buffer_width: usize,
-    // changed: RefCell<Vec<bool>>,
+    pub dirty_regions: Vec<DirtyRegion>,
+    dirty_count: usize,
 }
 
 use crate::color_conv;
@@ -57,19 +65,35 @@ impl EmbeddedGraphicsFrameBuffer {
         self.buffer.iter().copied()
     }
 
-    // fn set_colors(
-    //     &mut self,
-    //     x: usize,
-    //     y: usize,
-    //     colors: [ZXColor; 8],
-    //     brightness: ZXBrightness,
-    // ) {
-    //     let start = y * self.buffer_width + x;
-    //     let end = start + 8;
-    //     for (i, &color) in colors.iter().enumerate() {
-    //         self.buffer[start + i] = color_conv(&color, brightness);
-    //     }
-    // }
+
+    fn mark_dirty(&mut self, x: usize, y: usize) {
+        // Check if the region is already marked dirty
+        for region in &self.dirty_regions {
+            if region.x == x && region.y == y {
+                return; // Region already marked, no need to add it again
+            }
+        }
+
+        // Add a new dirty region
+        if self.dirty_regions.len() < MAX_DIRTY_REGIONS {
+            self.dirty_regions.push(DirtyRegion { x, y, width: REGION_WIDTH, height: REGION_HEIGHT });
+            self.dirty_count += 1;
+        }
+    }
+
+
+    pub fn get_region_pixel_iter(&self, region: &DirtyRegion) -> impl Iterator<Item = Rgb565> + '_ {
+        let start_x = region.x;
+        let end_x = start_x + region.width;
+        let start_y = region.y;
+        let end_y = start_y + region.height;
+
+        (start_y..end_y).flat_map(move |y| {
+            (start_x..end_x).map(move |x| {
+                self.buffer[y * self.buffer_width + x]
+            })
+        })
+    }
 }
 
 
@@ -90,45 +114,38 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
                 Self {
                     buffer: vec![Rgb565::RED; LCD_PIXELS],
                     buffer_width: LCD_H_RES as usize,
+                    dirty_regions: Vec::new(),
+                    dirty_count: 0,
                 }
             }
             FrameBufferSource::Border => Self {
                 buffer: vec![Rgb565::WHITE; 1],
                 buffer_width: 1,
+                dirty_regions: Vec::new(),
+                dirty_count: 0,
             },
         }
     }
 
-    fn set_color(
-        &mut self,
-        x: usize,
-        y: usize,
-        zx_color: ZXColor,
-        zx_brightness: ZXBrightness,
-    ) {
-        self.buffer[y * self.buffer_width + x] = color_conv(&zx_color, zx_brightness);
-        // if *pixel != color {
-        //     *pixel = color;
-        // }
-    }
-
-
-    fn set_colors(&mut self, x: usize, y: usize, colors: [ZXColor; 8], brightness: ZXBrightness) {
-        let start = y * self.buffer_width + x;
-        let end = start + 8;
-        for (i, &color) in colors.iter().enumerate() {
-            self.buffer[start + i] = color_conv(&color, brightness);
+    fn set_color(&mut self, x: usize, y: usize, zx_color: ZXColor, zx_brightness: ZXBrightness) {
+        let index = y * self.buffer_width + x;
+        let new_color = color_conv(&zx_color, zx_brightness);
+        if self.buffer[index] != new_color {
+            self.buffer[index] = new_color;
+            self.mark_dirty(x - (x % REGION_WIDTH), y);
         }
     }
+
+    fn set_colors(&mut self, x: usize, y: usize, colors: [ZXColor; 8], brightness: ZXBrightness) {
+        for (i, &color) in colors.iter().enumerate() {
+            self.set_color(x + i, y, color, brightness);
+        }
+    }
+
+    // Reset dirty regions
+    fn reset_dirty_regions(&mut self) {
+        self.dirty_regions.clear();
+        self.dirty_count = 0;
+    }
+    
 }
-
-pub struct StubDebugInterface;
-// use rustzx_core::host::DebugInterface;
-
-// impl DebugInterface for StubDebugInterface {
-//     fn check_pc_breakpoint(&mut self, _addr: u16) -> bool {
-//         // In a stub implementation, you can simply return false
-//         // to indicate that no breakpoints are set.
-//         false
-//     }
-// }

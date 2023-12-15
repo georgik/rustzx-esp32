@@ -70,7 +70,6 @@ use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
 mod host;
 mod stopwatch;
 mod io;
-mod spritebuf;
 mod pc_zxkey;
 use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
 mod zx_event;
@@ -351,17 +350,35 @@ where
             }
             Err(_) => {},
         }
-
+        const MAX_DIRTY_REGIONS: usize = 80;
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
-                // info!("Emulation of frame succeeded");
-                let pixel_iterator = emulator.screen_buffer().get_pixel_iter();
-                // info!("Drawing frame");
-                let _ = display.set_pixels(0, 0, 256 - 1, 192, pixel_iterator);
+                let framebuffer = emulator.screen_buffer();
+                let dirty_regions = &framebuffer.dirty_regions;
+                let dirty_regions_count = dirty_regions.len();
+
+                if dirty_regions_count == 0 {
+                    // debug!("No dirty regions, skipping frame");
+                    continue;
+                } else if dirty_regions.len() >= MAX_DIRTY_REGIONS {
+                    debug!("Too many dirty regions, updating the entire screen");
+                    // Update the entire screen
+                    let pixel_iterator = framebuffer.get_pixel_iter();
+                    let _ = display.set_pixels(0, 0, 256 - 1, 192, pixel_iterator);
+                } else {
+                    // Update only dirty regions
+                    debug!("Updating dirty regions: {:?}",dirty_regions.len() );
+                    for region in dirty_regions {
+                        let pixel_iterator = framebuffer.get_region_pixel_iter(region);
+                        let _ = display.set_pixels(region.x as u16, region.y as u16, region.x as u16 + region.width as u16, region.y as u16 + region.height as u16, pixel_iterator);
+                    }
+                    // framebuffer.reset_dirty_regions();
+                }
+                emulator.reset_dirty_regions();
+
             }
             _ => {
-              error!("Emulation of frame failed");
+                error!("Emulation of frame failed");
             }
-        }
-    }
+        }    }
 }
