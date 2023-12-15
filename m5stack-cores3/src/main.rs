@@ -369,8 +369,9 @@ where
                     // Update only dirty regions
                     debug!("Updating dirty regions: {:?}",dirty_regions.len() );
                     for region in dirty_regions {
+                        debug!("Region X, Y: {:?}, {:?}, {:?}, {:?}", region.x, region.y, region.height, region.width);
                         let pixel_iterator = framebuffer.get_region_pixel_iter(region);
-                        let _ = display.set_pixels(region.x as u16, region.y as u16, region.x as u16 + region.width as u16, region.y as u16 + region.height as u16, pixel_iterator);
+                        let _ = display.set_pixels(region.x as u16, region.y as u16, region.x as u16 + region.width as u16 - 1, region.y as u16 + region.height as u16, pixel_iterator);
                     }
                     // framebuffer.reset_dirty_regions();
                 }

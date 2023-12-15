@@ -42,7 +42,7 @@ impl HostContext<Esp32Host> for Esp32HostContext
 }
 
 const REGION_WIDTH: usize = 8;
-const REGION_HEIGHT: usize = 1;
+const REGION_HEIGHT: usize = 8;
 const MAX_DIRTY_REGIONS: usize = 80;
 
 pub(crate) struct DirtyRegion {
@@ -67,19 +67,40 @@ impl EmbeddedGraphicsFrameBuffer {
 
 
     fn mark_dirty(&mut self, x: usize, y: usize) {
-        // Check if the region is already marked dirty
-        for region in &self.dirty_regions {
-            if region.x == x && region.y == y {
-                return; // Region already marked, no need to add it again
+        let region_start_x = x - (x % REGION_WIDTH);
+        let region_start_y = y - (y % REGION_HEIGHT);
+    
+        for region in &mut self.dirty_regions {
+            // Check if new pixel falls within or directly to the right of existing region
+            if region.y == region_start_y && region.x <= region_start_x && x < region.x + region.width + REGION_WIDTH {
+                // Extend region width in 8-pixel increments to cover the new pixel
+                while x >= region.x + region.width {
+                    region.width += REGION_WIDTH;
+                }
+                return;
             }
+        // Vertical extension: Check if new pixel falls within or directly below existing region
+        if region.x == region_start_x && region.y <= region_start_y && y < region.y + region.height + REGION_HEIGHT {
+            // Extend region height in 8-pixel increments to cover the new pixel
+            while y >= region.y + region.height {
+                region.height += REGION_HEIGHT;
+            }
+            return;
         }
-
-        // Add a new dirty region
+        }
+    
+        // Add a new dirty region if not adjacent to an existing region
         if self.dirty_regions.len() < MAX_DIRTY_REGIONS {
-            self.dirty_regions.push(DirtyRegion { x, y, width: REGION_WIDTH, height: REGION_HEIGHT });
+            self.dirty_regions.push(DirtyRegion { 
+                x: region_start_x, 
+                y: region_start_y, 
+                width: REGION_WIDTH, 
+                height: REGION_HEIGHT
+            });
             self.dirty_count += 1;
         }
     }
+        
 
 
     pub fn get_region_pixel_iter(&self, region: &DirtyRegion) -> impl Iterator<Item = Rgb565> + '_ {
@@ -132,7 +153,7 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
         let new_color = color_conv(&zx_color, zx_brightness);
         if self.buffer[index] != new_color {
             self.buffer[index] = new_color;
-            self.mark_dirty(x - (x % REGION_WIDTH), y);
+            self.mark_dirty(x, y);  // Mark the region as dirty
         }
     }
 
