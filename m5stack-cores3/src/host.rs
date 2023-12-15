@@ -41,73 +41,32 @@ impl HostContext<Esp32Host> for Esp32HostContext
     }
 }
 
-const REGION_WIDTH: usize = 8;
-const REGION_HEIGHT: usize = 8;
-const MAX_DIRTY_REGIONS: usize = 80;
-
-pub(crate) struct DirtyRegion {
-    pub x: usize,
-    pub y: usize,
-    pub width: usize,
-    pub height: usize,
-}
-
 pub(crate) struct EmbeddedGraphicsFrameBuffer {
     buffer: Vec<Rgb565>,
     buffer_width: usize,
-    pub dirty_regions: Vec<DirtyRegion>,
-    dirty_count: usize,
+    pub bounding_box_top_left: Option<(usize, usize)>,
+    pub bounding_box_bottom_right: Option<(usize, usize)>,
 }
 
 use crate::color_conv;
 impl EmbeddedGraphicsFrameBuffer {
-    pub fn get_pixel_iter(&self) -> impl Iterator<Item = Rgb565> + '_ {
-        self.buffer.iter().copied()
-    }
-
+    // pub fn get_pixel_iter(&self) -> impl Iterator<Item = Rgb565> + '_ {
+    //     self.buffer.iter().copied()
+    // }
 
     fn mark_dirty(&mut self, x: usize, y: usize) {
-        let region_start_x = x - (x % REGION_WIDTH);
-        let region_start_y = y - (y % REGION_HEIGHT);
-    
-        for region in &mut self.dirty_regions {
-            // Check if new pixel falls within or directly to the right of existing region
-            if region.y == region_start_y && region.x <= region_start_x && x < region.x + region.width + REGION_WIDTH {
-                // Extend region width in 8-pixel increments to cover the new pixel
-                while x >= region.x + region.width {
-                    region.width += REGION_WIDTH;
-                }
-                return;
-            }
-        // Vertical extension: Check if new pixel falls within or directly below existing region
-        if region.x == region_start_x && region.y <= region_start_y && y < region.y + region.height + REGION_HEIGHT {
-            // Extend region height in 8-pixel increments to cover the new pixel
-            while y >= region.y + region.height {
-                region.height += REGION_HEIGHT;
-            }
-            return;
-        }
-        }
-    
-        // Add a new dirty region if not adjacent to an existing region
-        if self.dirty_regions.len() < MAX_DIRTY_REGIONS {
-            self.dirty_regions.push(DirtyRegion { 
-                x: region_start_x, 
-                y: region_start_y, 
-                width: REGION_WIDTH, 
-                height: REGION_HEIGHT
-            });
-            self.dirty_count += 1;
-        }
+        let (min_x, min_y) = self.bounding_box_top_left.unwrap_or((x, y));
+        let (max_x, max_y) = self.bounding_box_bottom_right.unwrap_or((x, y));
+
+        self.bounding_box_top_left = Some((min_x.min(x), min_y.min(y)));
+        self.bounding_box_bottom_right = Some((max_x.max(x), max_y.max(y)));
     }
-        
 
-
-    pub fn get_region_pixel_iter(&self, region: &DirtyRegion) -> impl Iterator<Item = Rgb565> + '_ {
-        let start_x = region.x;
-        let end_x = start_x + region.width;
-        let start_y = region.y;
-        let end_y = start_y + region.height;
+    pub fn get_region_pixel_iter(&self, top_left: (usize, usize), bottom_right: (usize, usize)) -> impl Iterator<Item = Rgb565> + '_ {
+        let start_x = top_left.0;
+        let end_x = bottom_right.0 + 1; // Include the pixel at bottom_right coordinates
+        let start_y = top_left.1;
+        let end_y = bottom_right.1 + 1; // Include the pixel at bottom_right coordinates
 
         (start_y..end_y).flat_map(move |y| {
             (start_x..end_x).map(move |x| {
@@ -135,25 +94,26 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
                 Self {
                     buffer: vec![Rgb565::RED; LCD_PIXELS],
                     buffer_width: LCD_H_RES as usize,
-                    dirty_regions: Vec::new(),
-                    dirty_count: 0,
+                    bounding_box_bottom_right: None,
+                    bounding_box_top_left: None,
                 }
             }
             FrameBufferSource::Border => Self {
                 buffer: vec![Rgb565::WHITE; 1],
                 buffer_width: 1,
-                dirty_regions: Vec::new(),
-                dirty_count: 0,
+                bounding_box_bottom_right: None,
+                bounding_box_top_left: None,
             },
         }
     }
+
 
     fn set_color(&mut self, x: usize, y: usize, zx_color: ZXColor, zx_brightness: ZXBrightness) {
         let index = y * self.buffer_width + x;
         let new_color = color_conv(&zx_color, zx_brightness);
         if self.buffer[index] != new_color {
             self.buffer[index] = new_color;
-            self.mark_dirty(x, y);  // Mark the region as dirty
+            self.mark_dirty(x, y);  // Update the bounding box
         }
     }
 
@@ -163,10 +123,9 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
         }
     }
 
-    // Reset dirty regions
-    fn reset_dirty_regions(&mut self) {
-        self.dirty_regions.clear();
-        self.dirty_count = 0;
+    fn reset_bounding_box(&mut self) {
+        self.bounding_box_bottom_right = None;
+        self.bounding_box_top_left = None;
     }
-    
+
 }

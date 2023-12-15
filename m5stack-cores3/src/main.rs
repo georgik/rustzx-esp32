@@ -37,10 +37,10 @@ use hal::{
 
 // use spooky_embedded::app::app_loop;
 
-use spooky_embedded::{
-    embedded_display::LCD_MEMORY_SIZE,
+// use spooky_embedded::{
+    // embedded_display::LCD_MEMORY_SIZE,
     // controllers::{accel::AccelMovementController, composites::accel_composite::AccelCompositeController}
-};
+// };
 
 use esp_backtrace as _;
 
@@ -350,32 +350,19 @@ where
             }
             Err(_) => {},
         }
-        const MAX_DIRTY_REGIONS: usize = 80;
+
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
                 let framebuffer = emulator.screen_buffer();
-                let dirty_regions = &framebuffer.dirty_regions;
-                let dirty_regions_count = dirty_regions.len();
-
-                if dirty_regions_count == 0 {
-                    // debug!("No dirty regions, skipping frame");
-                    continue;
-                } else if dirty_regions.len() >= MAX_DIRTY_REGIONS {
-                    debug!("Too many dirty regions, updating the entire screen");
-                    // Update the entire screen
-                    let pixel_iterator = framebuffer.get_pixel_iter();
-                    let _ = display.set_pixels(0, 0, 256 - 1, 192, pixel_iterator);
-                } else {
-                    // Update only dirty regions
-                    debug!("Updating dirty regions: {:?}",dirty_regions.len() );
-                    for region in dirty_regions {
-                        debug!("Region X, Y: {:?}, {:?}, {:?}, {:?}", region.x, region.y, region.height, region.width);
-                        let pixel_iterator = framebuffer.get_region_pixel_iter(region);
-                        let _ = display.set_pixels(region.x as u16, region.y as u16, region.x as u16 + region.width as u16 - 1, region.y as u16 + region.height as u16, pixel_iterator);
-                    }
-                    // framebuffer.reset_dirty_regions();
+                if let (Some(top_left), Some(bottom_right)) = (framebuffer.bounding_box_top_left, framebuffer.bounding_box_bottom_right) {
+                    // let width = bottom_right.0 - top_left.0 + 1; // Calculate width
+                    // let height = bottom_right.1 - top_left.1 + 1; // Calculate height
+                    // debug!("Bounding box: {:?} {:?}", top_left, bottom_right);
+                    // debug!("Bounding box size:  {}", width * height);
+                    let pixel_iterator = framebuffer.get_region_pixel_iter(top_left, bottom_right);
+                    let _ = display.set_pixels(top_left.0 as u16, top_left.1 as u16, bottom_right.0 as u16, bottom_right.1 as u16, pixel_iterator);
                 }
-                emulator.reset_dirty_regions();
+                emulator.reset_bounding_box();
 
             }
             _ => {
