@@ -37,10 +37,10 @@ use hal::{
 
 // use spooky_embedded::app::app_loop;
 
-use spooky_embedded::{
-    embedded_display::LCD_MEMORY_SIZE,
+// use spooky_embedded::{
+    // embedded_display::LCD_MEMORY_SIZE,
     // controllers::{accel::AccelMovementController, composites::accel_composite::AccelCompositeController}
-};
+// };
 
 use esp_backtrace as _;
 
@@ -70,7 +70,6 @@ use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
 mod host;
 mod stopwatch;
 mod io;
-mod spritebuf;
 mod pc_zxkey;
 use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
 mod zx_event;
@@ -170,7 +169,7 @@ fn main() -> ! {
     delay.delay_ms(500u32);
 
     //https://github.com/m5stack/M5CoreS3/blob/main/src/utility/Config.h#L8
-    let di = spi_dma_displayinterface::new_no_cs(LCD_MEMORY_SIZE, spi, lcd_dc);
+    let di = spi_dma_displayinterface::new_no_cs(2*256*192, spi, lcd_dc);
 
     let mut display = mipidsi::Builder::ili9342c_rgb565(di)
         .with_display_size(320, 240)
@@ -352,17 +351,22 @@ where
             Err(_) => {},
         }
 
-        // emulator.emulate_frames(MAX_FRAME_DURATION);
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
-                // info!("Emulation of frame succeeded");
-                let pixel_iterator = emulator.screen_buffer().get_pixel_iter();
-                // info!("Drawing frame");
-                let _ = display.set_pixels(0, 0, 256 - 1, 192, pixel_iterator);
+                let framebuffer = emulator.screen_buffer();
+                if let (Some(top_left), Some(bottom_right)) = (framebuffer.bounding_box_top_left, framebuffer.bounding_box_bottom_right) {
+                    // let width = bottom_right.0 - top_left.0 + 1; // Calculate width
+                    // let height = bottom_right.1 - top_left.1 + 1; // Calculate height
+                    // debug!("Bounding box: {:?} {:?}", top_left, bottom_right);
+                    // debug!("Bounding box size:  {}", width * height);
+                    let pixel_iterator = framebuffer.get_region_pixel_iter(top_left, bottom_right);
+                    let _ = display.set_pixels(top_left.0 as u16, top_left.1 as u16, bottom_right.0 as u16, bottom_right.1 as u16, pixel_iterator);
+                }
+                emulator.reset_bounding_box();
+
             }
             _ => {
-              error!("Emulation of frame failed");
+                error!("Emulation of frame failed");
             }
-        }
-    }
+        }    }
 }
