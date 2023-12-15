@@ -89,6 +89,9 @@ fn init_heap() {
     }
 }
 
+const SCREEN_OFFSET_X: u16 = (320 - 256) / 2;
+const SCREEN_OFFSET_Y: u16 = (240 - 192) / 2;
+
 
 #[entry]
 fn main() -> ! {
@@ -360,7 +363,12 @@ where
                     // debug!("Bounding box: {:?} {:?}", top_left, bottom_right);
                     // debug!("Bounding box size:  {}", width * height);
                     let pixel_iterator = framebuffer.get_region_pixel_iter(top_left, bottom_right);
-                    let _ = display.set_pixels(top_left.0 as u16, top_left.1 as u16, bottom_right.0 as u16, bottom_right.1 as u16, pixel_iterator);
+                    let _ = display.set_pixels(
+                        top_left.0 as u16 + SCREEN_OFFSET_X,
+                        top_left.1 as u16 + SCREEN_OFFSET_Y,
+                        bottom_right.0 as u16 + SCREEN_OFFSET_X,
+                        bottom_right.1 as u16 + SCREEN_OFFSET_Y,
+                        pixel_iterator);
                 }
                 emulator.reset_bounding_box();
 
