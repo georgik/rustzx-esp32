@@ -18,6 +18,7 @@ esp-println = { version = "0.7.0", features = ["esp32s3", "log"] }
 critical-section = { version = "1.1.2" }
 display-interface = "0.4"
 esp-alloc = "0.3.0"
+esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = ["esp32s3", "wifi" ] }
 embedded-graphics = "0.8.0"
 embedded-hal = "0.2"
 embedded-graphics-framebuf = { version = "0.3.0", git = "https://github.com/georgik/embedded-graphics-framebuf.git", branch = "feature/embedded-graphics-0.8" }
