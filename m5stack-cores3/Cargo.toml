@@ -6,8 +6,7 @@ edition = "2021"
 license = "MIT"
 
 [target.xtensa-esp32s3-none-elf.dependencies]
-xtensa-atomic-emulation-trap = "0.4.0"
-hal = { package = "esp32s3-hal", version = "0.13.0" , features = ["psram-8m"] }
+hal = { package = "esp32s3-hal", version = "0.14.0" , features = ["psram-8m"] }
 esp-backtrace = { version = "0.9.0", features = [
     "esp32s3",
     "panic-handler",
@@ -27,9 +26,9 @@ log = "0.4"
 mipidsi = "0.7.1"
 #panic-halt = "0.2"
 shared-bus = { version = "0.3.0" }
-spooky-core = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "ad47396", default-features = false, features = ["static_maze"]}
-spooky-embedded = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "ad47396", default-features = false, features = [ "esp32s3", "static_maze", "resolution_320x240" ] }
-spi-dma-displayinterface = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "ad47396", features = ["esp32s3"] }
+spooky-core = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", default-features = false, features = ["static_maze"]}
+spooky-embedded = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", default-features = false, features = [ "esp32s3", "static_maze", "resolution_320x240" ] }
+spi-dma-displayinterface = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", features = ["esp32s3"] }
 #rustzx-utils = { version = "0.16.0" }
 #rustzx-core = { version = "0.16.0", features = ["embedded-roms"] }
 #rustzx-utils = { path = "../../rustzx/rustzx-utils" }
