@@ -43,7 +43,7 @@ espup install
 ```
 cargo install espflash
 ```
-- download a `.tap` file from Speccy archives and store it to `test.tap`
+- download a `.tap` file from Speccy archives and store it to `data/hello.tap`
 ```
 cd m5stack-cores3
 cargo build --release
