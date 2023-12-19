@@ -38,10 +38,11 @@ use hal::{
 
 // use spooky_embedded::app::app_loop;
 
-// use spooky_embedded::{
+use spooky_embedded::{
+    embedded_display::{LCD_H_RES, LCD_V_RES},
     // embedded_display::LCD_MEMORY_SIZE,
     // controllers::{accel::AccelMovementController, composites::accel_composite::AccelCompositeController}
-// };
+};
 
 use esp_backtrace as _;
 
@@ -60,9 +61,6 @@ use embedded_graphics::pixelcolor::Rgb565;
 use display_interface::WriteOnlyDataCommand;
 use mipidsi::models::Model;
 use embedded_hal::digital::v2::OutputPin;
-
-use axp2101::{ I2CPowerManagementInterface, Axp2101 };
-use aw9523::I2CGpioExpanderInterface;
 
 use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
 
@@ -106,12 +104,13 @@ fn main() -> ! {
     info!("About to initialize the SPI LED driver");
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
 
-    let lcd_sclk = io.pins.gpio36;
-    let lcd_mosi = io.pins.gpio37;
-    let lcd_cs = io.pins.gpio3;
-    let lcd_miso = io.pins.gpio6;
-    let lcd_dc = io.pins.gpio35.into_push_pull_output();
-    let lcd_reset = io.pins.gpio15.into_push_pull_output();
+    let lcd_sclk = io.pins.gpio7;
+    let lcd_mosi = io.pins.gpio6;
+    let lcd_cs = io.pins.gpio5;
+    let lcd_miso = io.pins.gpio2; // random unused pin
+    let lcd_dc = io.pins.gpio4.into_push_pull_output();
+    let mut lcd_backlight = io.pins.gpio45.into_push_pull_output();
+    let lcd_reset = io.pins.gpio48.into_push_pull_output();
 
     let serial_tx = io.pins.gpio17.into_push_pull_output();
     let serial_rx = io.pins.gpio18.into_floating_input();
@@ -126,28 +125,16 @@ fn main() -> ! {
     let mut descriptors = [0u32; 8 * 3];
     let mut rx_descriptors = [0u32; 8 * 3];
 
-    let i2c_bus = i2c::I2C::new(
-        peripherals.I2C0,
-        sda,
-        scl,
-        400u32.kHz(),
-        &clocks,
-    );
+    // let i2c_bus = i2c::I2C::new(
+    //     peripherals.I2C0,
+    //     sda,
+    //     scl,
+    //     400u32.kHz(),
+    //     &clocks,
+    // );
 
-    let bus = BusManagerSimple::new(i2c_bus);
+    // let bus = BusManagerSimple::new(i2c_bus);
 
-    info!("Initializing AXP2101");
-    let axp_interface = I2CPowerManagementInterface::new(bus.acquire_i2c());
-    let mut axp = Axp2101::new(axp_interface);
-    axp.init().unwrap();
-
-    info!("Initializing GPIO Expander");
-    let aw_interface = I2CGpioExpanderInterface::new(bus.acquire_i2c());
-    let mut aw = aw9523::Aw9523::new(aw_interface);
-    aw.init().unwrap();
-
-    // M5Stack CORE 2 - https://docs.m5stack.com/en/core/core2
-    // let mut backlight = io.pins.gpio3.into_push_pull_output();
     delay.delay_ms(500u32);
     info!("About to initialize the SPI LED driver");
 
@@ -169,16 +156,23 @@ fn main() -> ! {
     ));
 
     delay.delay_ms(500u32);
-
+    let _ = lcd_backlight.set_high();
     //https://github.com/m5stack/M5CoreS3/blob/main/src/utility/Config.h#L8
     let di = spi_dma_displayinterface::new_no_cs(2*256*192, spi, lcd_dc);
 
-    let mut display = mipidsi::Builder::ili9342c_rgb565(di)
-        .with_display_size(320, 240)
+    let mut display = match mipidsi::Builder::ili9342c_rgb565(di)
+        .with_display_size(LCD_H_RES, LCD_V_RES)
+        .with_orientation(mipidsi::Orientation::PortraitInverted(false))
         .with_color_order(mipidsi::ColorOrder::Bgr)
-        .with_invert_colors(mipidsi::ColorInversion::Inverted)
         .init(&mut delay, Some(lcd_reset))
-        .unwrap();
+    {
+        Ok(display) => display,
+        Err(_e) => {
+            // Handle the error and possibly exit the application
+            panic!("Display initialization failed");
+        }
+    };
+
     delay.delay_ms(500u32);
     info!("Initializing...");
     Text::new(
