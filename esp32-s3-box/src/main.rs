@@ -302,18 +302,32 @@ fn handle_key_event<H: Host>(key: pc_keyboard::KeyCode, state: pc_keyboard::KeyS
     }
 }
 
+type DisplayError = core::fmt::Error;
+
+pub trait DisplayOps {
+    fn clear(&mut self, color: Rgb565) -> Result<(), DisplayError>;
+}
+
+impl<DI, M, RST> DisplayOps for mipidsi::Display<DI, M, RST>
+where
+    DI: WriteOnlyDataCommand,
+    M: Model<ColorFormat = Rgb565>,
+    RST: OutputPin,
+{
+    fn clear(&mut self, color: Rgb565) -> Result<(), DisplayError> {
+        // self.clear_screen(color).map_err(|e| e.into())
+        todo!()
+    }
+}
+
+
 #[embassy_executor::task]
 async fn app_loop<DI, M, RST>(
-    display: &mut mipidsi::Display<DI, M, RST>,
+    display: &mut dyn DisplayOps,
     _color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
     mut serial: Uart<UART1>,
     shared_state: SharedState,
-)
-where
-    DI: WriteOnlyDataCommand + Send,
-    M: Model<ColorFormat = Rgb565> + Send,
-    RST: OutputPin + Send,
-{
+){
     // display
     //     .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal))
     //     .map_err(|err| error!("{:?}", err))
