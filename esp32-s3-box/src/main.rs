@@ -302,21 +302,24 @@ fn handle_key_event<H: Host>(key: pc_keyboard::KeyCode, state: pc_keyboard::KeyS
     }
 }
 
-fn app_loop<DI, M, RST>(
+#[embassy_executor::task]
+async fn app_loop<DI, M, RST>(
     display: &mut mipidsi::Display<DI, M, RST>,
     _color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
     mut serial: Uart<UART1>,
-) //-> Result<(), core::fmt::Error>
+    shared_state: SharedState,
+)
 where
-    DI: WriteOnlyDataCommand,
-    M: Model<ColorFormat = Rgb565>,
-    RST: OutputPin,
+    DI: WriteOnlyDataCommand + Send,
+    M: Model<ColorFormat = Rgb565> + Send,
+    RST: OutputPin + Send,
 {
     // display
     //     .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal))
     //     .map_err(|err| error!("{:?}", err))
     //     .ok();
 
+    let mut ticker = Ticker::every(Duration::from_secs(5));
     info!("Creating emulator");
 
     let settings = RustzxSettings {
@@ -357,6 +360,7 @@ where
 
     loop {
         // info!("Emulating frame");
+
         let read_result = serial.read();
         match read_result {
             Ok(byte) => {
