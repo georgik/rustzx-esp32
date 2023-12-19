@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![feature(type_alias_impl_trait)]
 
 use spi_dma_displayinterface::spi_dma_displayinterface;
 
@@ -13,6 +14,7 @@ use embedded_graphics::{
 use hal::{
     clock::{ClockControl, CpuClock},
     dma::DmaPriority,
+    embassy,
     gdma::Gdma,
     i2c,
     // interrupt,
@@ -74,6 +76,8 @@ use zx_event::Event;
 
 use crate::io::FileAsset;
 
+use embassy_executor::Spawner;
+
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
@@ -86,8 +90,8 @@ fn init_psram_heap() {
     }
 }
 
-#[entry]
-fn main() -> ! {
+#[main]
+async fn main(_spawner: Spawner) -> ! {
     let peripherals = Peripherals::take();
 
     psram::init_psram(peripherals.PSRAM);
