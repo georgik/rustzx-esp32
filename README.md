@@ -21,7 +21,7 @@ Hardware (work-in-progress):
 #### Assembly of the keyboard
 
 - plug USB keyboard to ESP32-S3-USB-OTG USB HOST connector
-- plug USB power suply to ESP32-S3-USB-OTG USB DEV connector
+- plug USB power supply to ESP32-S3-USB-OTG USB DEV connector
 - plug mini-USB connector to port for flashing
 
 #### Flashing keyboard
