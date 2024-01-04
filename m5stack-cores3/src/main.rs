@@ -21,6 +21,7 @@ use hal::{
         UART1
     },
     prelude::*,
+    psram,
     spi::{
         master::{prelude::*, Spi},
         SpiMode,
@@ -60,8 +61,6 @@ use display_interface::WriteOnlyDataCommand;
 use mipidsi::models::Model;
 use embedded_hal::digital::v2::OutputPin;
 
-use core::mem::MaybeUninit;
-
 use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
 
@@ -80,23 +79,22 @@ use crate::io::FileAsset;
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
-fn init_heap() {
-    const HEAP_SIZE: usize = 300 * 1024;
-    static mut HEAP: MaybeUninit<[u8; HEAP_SIZE]> = MaybeUninit::uninit();
-
-    unsafe {
-        ALLOCATOR.init(HEAP.as_mut_ptr() as *mut u8, HEAP_SIZE);
-    }
-}
-
 const SCREEN_OFFSET_X: u16 = (320 - 256) / 2;
 const SCREEN_OFFSET_Y: u16 = (240 - 192) / 2;
 
+fn init_psram_heap() {
+    unsafe {
+        ALLOCATOR.init(psram::psram_vaddr_start() as *mut u8, psram::PSRAM_BYTES);
+    }
+}
 
 #[entry]
 fn main() -> ! {
-    init_heap();
     let peripherals = Peripherals::take();
+
+    psram::init_psram(peripherals.PSRAM);
+    init_psram_heap();
+
     let system = peripherals.SYSTEM.split();
 
     let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
@@ -200,8 +198,29 @@ fn main() -> ! {
     // let accel_movement_controller = AccelMovementController::new(icm, 0.2);
     // let demo_movement_controller = spooky_core::demo_movement_controller::DemoMovementController::new(seed_buffer);
     // let movement_controller = AccelCompositeController::new(demo_movement_controller, accel_movement_controller);
-
+    use esp_wifi::{initialize, EspWifiInitFor};
     // app_loop( &mut display, seed_buffer, movement_controller);
+    info!("Initializing WiFi");
+    use hal::Rng;
+    #[cfg(target_arch = "xtensa")]
+    let timer = hal::timer::TimerGroup::new(peripherals.TIMG1, &clocks).timer0;
+    #[cfg(target_arch = "riscv32")]
+    let timer = hal::systimer::SystemTimer::new(peripherals.SYSTIMER).alarm0;
+    match initialize(
+        EspWifiInitFor::Wifi,
+        timer,
+        Rng::new(peripherals.RNG),
+        system.radio_clock_control,
+        &clocks,
+    ) {
+        Ok(_) => {
+            info!("WiFi initialized");
+        },
+        Err(err) => {
+            error!("Error initializing WiFi: {:?}", err);
+        }
+    }
+
 
     let config = Config {
         baudrate: 115200,
@@ -327,7 +346,7 @@ where
 
 
     info!("Loading tape");
-    let tape_bytes = include_bytes!("../test.tap");
+    let tape_bytes = include_bytes!("../../data/hello.tap");
     let tape_asset = FileAsset::new(tape_bytes);
     let _ = emulator.load_tape(rustzx_core::host::Tape::Tap(tape_asset));
 
