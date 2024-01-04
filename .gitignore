@@ -3,5 +3,7 @@
 !.vscode/launch.json
 /.embuild
 target/
+build/
+managed_components/
 Cargo.lock
 cfg.toml

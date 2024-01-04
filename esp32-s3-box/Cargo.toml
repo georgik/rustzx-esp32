@@ -40,7 +40,7 @@ spi-dma-displayinterface = { git = "https://github.com/georgik/esp32-spooky-maze
 #rustzx-core = { path = "../../rustzx/rustzx-core" , features = ["embedded-roms"] }
 rustzx-utils = { git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box" }
 rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }
-pc-keyboard = "0.7.0"
+# pc-keyboard = "0.7.0"
 esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32s3", "esp-now", "async", "phy-enable-usb" ] }
 
 

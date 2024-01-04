@@ -16,12 +16,7 @@ use hal::{
     dma::DmaPriority,
     embassy,
     gdma::Gdma,
-    // i2c,
-    // interrupt,
-    peripherals::{
-        Peripherals,
-        UART1
-    },
+    peripherals::Peripherals,
     prelude::*,
     psram,
     spi::{
@@ -31,14 +26,7 @@ use hal::{
     Delay,
     Rng,
     IO,
-    uart::{
-        config::{Config, DataBits, Parity, StopBits},
-        TxRxPins,
-    },
-    Uart
 };
-
-// use spooky_embedded::app::app_loop;
 
 use spooky_embedded::{
     embedded_display::{LCD_H_RES, LCD_V_RES},
@@ -50,29 +38,21 @@ use esp_backtrace as _;
 
 use esp_wifi::{initialize, EspWifiInitFor};
 
-// use icm42670::{Address, Icm42670};
-// use shared_bus::BusManagerSimple;
-
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
 use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, host::Host};
 
 use log::{info, error, debug};
 
-// use core::time::Duration;
 use embedded_graphics::pixelcolor::Rgb565;
 
-use display_interface::WriteOnlyDataCommand;
-use mipidsi::models::Model;
 use embedded_hal::digital::v2::OutputPin;
-
-use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
 
 mod host;
 mod stopwatch;
 mod io;
-mod pc_zxkey;
-use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
+mod usb_zxkey;
+use usb_zxkey::{ usb_code_to_zxkey, usb_code_to_modifier };
 mod zx_event;
 use zx_event::Event;
 
@@ -168,9 +148,9 @@ fn color_conv(color: &ZXColor, brightness: ZXBrightness) -> Rgb565 {
     }
 }
 
-fn handle_key_event<H: Host>(key: pc_keyboard::KeyCode, state: pc_keyboard::KeyState, emulator: &mut Emulator<H>) {
-    let is_pressed = matches!(state, pc_keyboard::KeyState::Down);
-    if let Some(mapped_key) = pc_code_to_zxkey(key, is_pressed).or_else(|| pc_code_to_modifier(key, is_pressed)) {
+fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator: &mut Emulator<H>) {
+    let is_pressed = key_state == 1;
+    if let Some(mapped_key) = usb_code_to_zxkey(key_code, is_pressed).or_else(|| usb_code_to_modifier(key_code, is_pressed)) {
         match mapped_key {
             Event::ZXKey(k, p) => {
                 debug!("-> ZXKey");
@@ -387,29 +367,8 @@ async fn app_loop()
     let _ = emulator.load_tape(rustzx_core::host::Tape::Tap(tape_asset));
 
     info!("Entering emulator loop");
-    let mut kb = pc_keyboard::Keyboard::new(
-        ScancodeSet2::new(),
-        layouts::Us104Key,
-        HandleControl::MapLettersToUnicode,
-    );
 
     loop {
-        // info!("Emulating frame");
-        // let read_result = serial.read();
-        // match read_result {
-        //     Ok(byte) => {
-        //         match kb.add_byte(byte) {
-        //             Ok(Some(event)) => {
-        //                 info!("Event {:?}", event);
-        //                 handle_key_event(event.code, event.state, &mut emulator);
-        //             },
-        //             Ok(None) => {},
-        //             Err(_) => {},
-        //         }
-        //     }
-        //     Err(_) => {},
-        // }
-
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
                 let framebuffer = emulator.screen_buffer();
@@ -439,6 +398,7 @@ async fn app_loop()
             let mut bytes = [0u8; 3];
             let bytes_read = PIPE.read(&mut bytes).await;
             info!("Bytes read from pipe: {}", bytes_read);
+            handle_key_event(bytes[0], bytes[1], bytes[2], &mut emulator);
         }
 
         Timer::after(Duration::from_millis(5)).await;
