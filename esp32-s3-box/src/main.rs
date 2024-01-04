@@ -16,7 +16,7 @@ use hal::{
     dma::DmaPriority,
     embassy,
     gdma::Gdma,
-    i2c,
+    // i2c,
     // interrupt,
     peripherals::{
         Peripherals,
@@ -29,7 +29,7 @@ use hal::{
         SpiMode,
     },
     Delay,
-    // Rng,
+    Rng,
     IO,
     uart::{
         config::{Config, DataBits, Parity, StopBits},
@@ -48,8 +48,10 @@ use spooky_embedded::{
 
 use esp_backtrace as _;
 
+use esp_wifi::{initialize, EspWifiInitFor};
+
 // use icm42670::{Address, Icm42670};
-use shared_bus::BusManagerSimple;
+// use shared_bus::BusManagerSimple;
 
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
@@ -57,7 +59,7 @@ use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSetting
 
 use log::{info, error, debug};
 
-use core::time::Duration;
+// use core::time::Duration;
 use embedded_graphics::pixelcolor::Rgb565;
 
 use display_interface::WriteOnlyDataCommand;
@@ -77,6 +79,7 @@ use zx_event::Event;
 use crate::io::FileAsset;
 
 use embassy_executor::Spawner;
+use esp_wifi::esp_now::{EspNow, PeerInfo, BROADCAST_ADDRESS};
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -90,8 +93,10 @@ fn init_psram_heap() {
     }
 }
 
+
+use embassy_time::{Duration, Ticker, Timer};
 #[main]
-async fn main(_spawner: Spawner) -> ! {
+async fn main(spawner: Spawner) -> ! {
     let peripherals = Peripherals::take();
 
     psram::init_psram(peripherals.PSRAM);
@@ -99,143 +104,22 @@ async fn main(_spawner: Spawner) -> ! {
 
     let system = peripherals.SYSTEM.split();
 
-    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
-
     esp_println::logger::init_logger_from_env();
 
-    let mut delay = Delay::new(&clocks);
 
-    info!("About to initialize the SPI LED driver");
-    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-
-    let lcd_sclk = io.pins.gpio7;
-    let lcd_mosi = io.pins.gpio6;
-    let lcd_cs = io.pins.gpio5;
-    let lcd_miso = io.pins.gpio2; // random unused pin
-    let lcd_dc = io.pins.gpio4.into_push_pull_output();
-    let mut lcd_backlight = io.pins.gpio45.into_push_pull_output();
-    let lcd_reset = io.pins.gpio48.into_push_pull_output();
-
-    let serial_tx = io.pins.gpio17.into_push_pull_output();
-    let serial_rx = io.pins.gpio18.into_floating_input();
-
-    // I2C
-    let sda = io.pins.gpio12;
-    let scl = io.pins.gpio11;
-
-    let dma = Gdma::new(peripherals.DMA);
-    let dma_channel = dma.channel0;
-
-    let mut descriptors = [0u32; 8 * 3];
-    let mut rx_descriptors = [0u32; 8 * 3];
-
-    // let i2c_bus = i2c::I2C::new(
-    //     peripherals.I2C0,
-    //     sda,
-    //     scl,
-    //     400u32.kHz(),
-    //     &clocks,
-    // );
-
-    // let bus = BusManagerSimple::new(i2c_bus);
-
-    delay.delay_ms(500u32);
-    info!("About to initialize the SPI LED driver");
-
-    let spi = Spi::new(
-        peripherals.SPI3,
-        60u32.MHz(),
-        SpiMode::Mode0,
-        &clocks,
-    ).with_pins(
-        Some(lcd_sclk),
-        Some(lcd_mosi),
-        Some(lcd_miso),
-        Some(lcd_cs),
-    ).with_dma(dma_channel.configure(
-        false,
-        &mut descriptors,
-        &mut rx_descriptors,
-        DmaPriority::Priority0,
-    ));
-
-    delay.delay_ms(500u32);
-    let _ = lcd_backlight.set_high();
-    //https://github.com/m5stack/M5CoreS3/blob/main/src/utility/Config.h#L8
-    let di = spi_dma_displayinterface::new_no_cs(2*256*192, spi, lcd_dc);
-
-    let mut display = match mipidsi::Builder::ili9342c_rgb565(di)
-        .with_display_size(LCD_H_RES, LCD_V_RES)
-        .with_orientation(mipidsi::Orientation::PortraitInverted(false))
-        .with_color_order(mipidsi::ColorOrder::Bgr)
-        .init(&mut delay, Some(lcd_reset))
-    {
-        Ok(display) => display,
-        Err(_e) => {
-            // Handle the error and possibly exit the application
-            panic!("Display initialization failed");
-        }
-    };
-
-    delay.delay_ms(500u32);
-    info!("Initializing...");
-    Text::new(
-        "Initializing...",
-        Point::new(80, 110),
-        MonoTextStyle::new(&FONT_8X13, RgbColor::WHITE),
-    )
-    .draw(&mut display)
-    .unwrap();
-
-    info!("Initialized");
-
-    // let mut rng = Rng::new(peripherals.RNG);
-    // let mut seed_buffer = [0u8; 32];
-    // rng.read(&mut seed_buffer).unwrap();
-
-    // let accel_movement_controller = AccelMovementController::new(icm, 0.2);
-    // let demo_movement_controller = spooky_core::demo_movement_controller::DemoMovementController::new(seed_buffer);
-    // let movement_controller = AccelCompositeController::new(demo_movement_controller, accel_movement_controller);
-    use esp_wifi::{initialize, EspWifiInitFor};
-    // app_loop( &mut display, seed_buffer, movement_controller);
-    info!("Initializing WiFi");
-    use hal::Rng;
-    #[cfg(target_arch = "xtensa")]
-    let timer = hal::timer::TimerGroup::new(peripherals.TIMG1, &clocks).timer0;
-    #[cfg(target_arch = "riscv32")]
-    let timer = hal::systimer::SystemTimer::new(peripherals.SYSTIMER).alarm0;
-    match initialize(
-        EspWifiInitFor::Wifi,
-        timer,
-        Rng::new(peripherals.RNG),
-        system.radio_clock_control,
-        &clocks,
-    ) {
-        Ok(_) => {
-            info!("WiFi initialized");
-        },
-        Err(err) => {
-            error!("Error initializing WiFi: {:?}", err);
-        }
+    info!("Starting up");
+    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
+    let embassy_timer = hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks).timer0;
+    embassy::init(&clocks, embassy_timer);
+    spawner.spawn(app_loop()).unwrap();
+    spawner.spawn(esp_now_receiver()).unwrap();
+    let mut ticker = Ticker::every(Duration::from_secs(1));
+    loop {
+        info!("Tick");
+        ticker.next().await;
+        // use embassy::time::{Duration, Timer};
+        // Timer::after(Duration::from_secs(1)).await;
     }
-
-
-    let config = Config {
-        baudrate: 115200,
-        data_bits: DataBits::DataBits8,
-        parity: Parity::ParityNone,
-        stop_bits: StopBits::STOP1,
-    };
-
-    let pins = TxRxPins::new_tx_rx(
-        serial_tx,
-        serial_rx,
-    );
-
-    let serial = Uart::new_with_config(peripherals.UART1, config, Some(pins), &clocks);
-
-    let _ = app_loop(&mut display, color_conv, serial);
-    loop {}
 
 }
 
@@ -302,16 +186,161 @@ fn handle_key_event<H: Host>(key: pc_keyboard::KeyCode, state: pc_keyboard::KeyS
     }
 }
 
-fn app_loop<DI, M, RST>(
-    display: &mut mipidsi::Display<DI, M, RST>,
-    _color_conv: fn(&ZXColor, ZXBrightness) -> Rgb565,
-    mut serial: Uart<UART1>,
-) //-> Result<(), core::fmt::Error>
-where
-    DI: WriteOnlyDataCommand,
-    M: Model<ColorFormat = Rgb565>,
-    RST: OutputPin,
+
+const ESP_NOW_PAYLOAD_INDEX: usize = 20;
+
+#[embassy_executor::task]
+async fn esp_now_receiver() {
+    info!("ESP-NOW receiver task");
+    let peripherals = unsafe { Peripherals::steal() };
+    let system = peripherals.SYSTEM.split();
+    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
+    let wifi_timer = hal::timer::TimerGroup::new(peripherals.TIMG1, &clocks).timer0;
+    let rng = Rng::new(peripherals.RNG);
+    let radio_clock_control = system.radio_clock_control;
+
+
+    let wifi = peripherals.WIFI;
+
+    let init = initialize(
+        EspWifiInitFor::Wifi,
+        wifi_timer,
+        rng,
+        radio_clock_control,
+        &clocks,
+    );
+
+    match init {
+        Ok(init) => {
+            info!("ESP-NOW init");
+            let mut esp_now = EspNow::new(&init, wifi);
+            match esp_now {
+                Ok(mut esp_now) => {
+                    let peer_info = PeerInfo {
+                        // Specify a unique peer address here (replace with actual address)
+                        peer_address: [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF],
+                        lmk: None,
+                        channel: Some(1), // Specify the channel if known
+                        encrypt: false, // Set to true if encryption is needed
+                    };
+
+                    // Check if the peer already exists
+                    if !esp_now.peer_exists(&peer_info.peer_address) {
+                        info!("Adding peer");
+                        match esp_now.add_peer(peer_info) {
+                            Ok(_) => info!("Peer added"),
+                            Err(e) => error!("Peer add error: {:?}", e),
+                        }
+                    } else {
+                        info!("Peer already exists, not adding");
+                    }
+
+                    loop {
+                        let received_data = esp_now.receive();
+                        match received_data {
+                            Some(data) => {
+                                let bytes = data.data;
+                                info!("Key code received over ESP-NOW: state = {:?}, modifier = {:?}, key = {:?}", bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]);
+                            }
+                            None => {
+                                //error!("ESP-NOW receive error");
+                            }
+                        }
+                        Timer::after(Duration::from_millis(5)).await;
+                    }
+                }
+                Err(e) => error!("ESP-NOW initialization error: {:?}", e),
+            }
+        }
+        Err(e) => error!("WiFi initialization error: {:?}", e),
+    }
+}
+
+
+#[embassy_executor::task]
+async fn app_loop()
+ //-> Result<(), core::fmt::Error>
 {
+
+    Timer::after(Duration::from_millis(1500)).await;
+
+    let peripherals = unsafe { Peripherals::steal() };
+    let system = peripherals.SYSTEM.split();
+    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
+
+    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
+
+
+    let lcd_sclk = io.pins.gpio7;
+    let lcd_mosi = io.pins.gpio6;
+    let lcd_cs = io.pins.gpio5;
+    let lcd_miso = io.pins.gpio2; // random unused pin
+    let lcd_dc = io.pins.gpio4.into_push_pull_output();
+    let mut lcd_backlight = io.pins.gpio45.into_push_pull_output();
+    let lcd_reset = io.pins.gpio48.into_push_pull_output();
+
+    let dma = Gdma::new(peripherals.DMA);
+    let dma_channel = dma.channel0;
+
+    let mut descriptors = [0u32; 8 * 3];
+    let mut rx_descriptors = [0u32; 8 * 3];
+
+
+    let mut delay = Delay::new(&clocks);
+
+    // delay.delay_ms(500u32);
+    info!("About to initialize the SPI LED driver");
+
+    let spi = Spi::new(
+        peripherals.SPI3,
+        60u32.MHz(),
+        SpiMode::Mode0,
+        &clocks,
+    ).with_pins(
+        Some(lcd_sclk),
+        Some(lcd_mosi),
+        Some(lcd_miso),
+        Some(lcd_cs),
+    ).with_dma(dma_channel.configure(
+        false,
+        &mut descriptors,
+        &mut rx_descriptors,
+        DmaPriority::Priority0,
+    ));
+
+    Timer::after(Duration::from_millis(500)).await;
+
+    let _ = lcd_backlight.set_high();
+    //https://github.com/m5stack/M5CoreS3/blob/main/src/utility/Config.h#L8
+    let di = spi_dma_displayinterface::new_no_cs(2*256*192, spi, lcd_dc);
+
+    let mut display = match mipidsi::Builder::ili9342c_rgb565(di)
+        .with_display_size(LCD_H_RES, LCD_V_RES)
+        .with_orientation(mipidsi::Orientation::PortraitInverted(false))
+        .with_color_order(mipidsi::ColorOrder::Bgr)
+        .init(&mut delay, Some(lcd_reset))
+    {
+        Ok(display) => display,
+        Err(_e) => {
+            // Handle the error and possibly exit the application
+            panic!("Display initialization failed");
+        }
+    };
+
+    Timer::after(Duration::from_millis(500)).await;
+
+    info!("Initializing...");
+    Text::new(
+        "Initializing...",
+        Point::new(80, 110),
+        MonoTextStyle::new(&FONT_8X13, RgbColor::WHITE),
+    )
+    .draw(&mut display)
+    .unwrap();
+
+    info!("Initialized");
+
+
     // display
     //     .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal))
     //     .map_err(|err| error!("{:?}", err))
@@ -330,7 +359,7 @@ where
     };
 
     info!("Initialize emulator");
-    const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
+    const MAX_FRAME_DURATION: core::time::Duration = core::time::Duration::from_millis(0);
 
     let mut emulator: Emulator<host::Esp32Host> =
         match Emulator::new(settings, host::Esp32HostContext {}) {
@@ -357,20 +386,20 @@ where
 
     loop {
         // info!("Emulating frame");
-        let read_result = serial.read();
-        match read_result {
-            Ok(byte) => {
-                match kb.add_byte(byte) {
-                    Ok(Some(event)) => {
-                        info!("Event {:?}", event);
-                        handle_key_event(event.code, event.state, &mut emulator);
-                    },
-                    Ok(None) => {},
-                    Err(_) => {},
-                }
-            }
-            Err(_) => {},
-        }
+        // let read_result = serial.read();
+        // match read_result {
+        //     Ok(byte) => {
+        //         match kb.add_byte(byte) {
+        //             Ok(Some(event)) => {
+        //                 info!("Event {:?}", event);
+        //                 handle_key_event(event.code, event.state, &mut emulator);
+        //             },
+        //             Ok(None) => {},
+        //             Err(_) => {},
+        //         }
+        //     }
+        //     Err(_) => {},
+        // }
 
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
@@ -394,5 +423,7 @@ where
             _ => {
                 error!("Emulation of frame failed");
             }
-        }    }
+        }
+        Timer::after(Duration::from_millis(5)).await;
+    }
 }
