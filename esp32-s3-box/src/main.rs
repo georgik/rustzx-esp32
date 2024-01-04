@@ -93,6 +93,12 @@ fn init_psram_heap() {
     }
 }
 
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::pipe::Pipe;
+
+// Pipe for transporting keystrokes from ESP-NOW to emulator core
+const PIPE_BUF_SIZE: usize = 15;
+static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
 
 use embassy_time::{Duration, Ticker, Timer};
 #[main]
@@ -117,8 +123,6 @@ async fn main(spawner: Spawner) -> ! {
     loop {
         info!("Tick");
         ticker.next().await;
-        // use embassy::time::{Duration, Timer};
-        // Timer::after(Duration::from_secs(1)).await;
     }
 
 }
@@ -241,6 +245,11 @@ async fn esp_now_receiver() {
                             Some(data) => {
                                 let bytes = data.data;
                                 info!("Key code received over ESP-NOW: state = {:?}, modifier = {:?}, key = {:?}", bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]);
+                                let bytes_written = PIPE.write(&[bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]]).await;
+                                if bytes_written != 3 {
+                                    error!("Failed to write to pipe");
+                                    break;
+                                }
                             }
                             None => {
                                 //error!("ESP-NOW receive error");
@@ -424,6 +433,14 @@ async fn app_loop()
                 error!("Emulation of frame failed");
             }
         }
+
+        // Read 3 bytes from PIPE if available
+        if PIPE.len() >= 3 {
+            let mut bytes = [0u8; 3];
+            let bytes_read = PIPE.read(&mut bytes).await;
+            info!("Bytes read from pipe: {}", bytes_read);
+        }
+
         Timer::after(Duration::from_millis(5)).await;
     }
 }
