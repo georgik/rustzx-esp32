@@ -31,6 +31,7 @@ Hardware (work-in-progress):
 cd esp32-s3-usb-otg-keyboard
 idf.py build flash monitor
 ```
+- code is based on [ESP-IDF USB HID example](https://github.com/espressif/esp-idf/tree/master/examples/peripherals/usb/host/hid)
 
 ### Assembly of the main part
 
@@ -106,4 +107,6 @@ Hit enter to load the tape included in the memory.
 ## References
 
 - RustZX wrapper code reused from https://github.com/pacmancoder/rustzx
+- [ESP-IDF USB HID example](https://github.com/espressif/esp-idf/tree/master/examples/peripherals/usb/host/hid)
+- [Rust ESP-NOW](https://github.com/esp-rs/esp-wifi)
 - older RustZX-ESP32 based with std on [v1.0.0-archive](https://github.com/georgik/rustzx-esp32/tree/v1.0.0-archive)
