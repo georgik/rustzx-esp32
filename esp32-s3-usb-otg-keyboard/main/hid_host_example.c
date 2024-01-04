@@ -230,11 +230,11 @@ static inline bool hid_keyboard_get_char(uint8_t modifier,
     ESP_LOGI(TAG, "Key code: %d", key_code);
 
     // Array with one keycode
-    uint8_t key_code_array[1] = {key_code};
+    // uint8_t key_code_array[1] = {key_code};
 
     // esp_now_send(broadcast_address, &key_code, sizeof(key_code));
-    esp_err_t ret  = ESP_OK;
-    ret = espnow_send(ESPNOW_DATA_TYPE_DATA, ESPNOW_ADDR_BROADCAST, key_code_array, 1, &frame_head, portMAX_DELAY);
+    // esp_err_t ret  = ESP_OK;
+    // ret = espnow_send(ESPNOW_DATA_TYPE_DATA, ESPNOW_ADDR_BROADCAST, key_code_array, 1, &frame_head, portMAX_DELAY);
     // ESP_ERROR_CONTINUE(ret != ESP_OK, "<%s> espnow_send", esp_err_to_name(ret));
 
     if ((key_code >= HID_KEY_A) && (key_code <= HID_KEY_SLASH)) {
@@ -266,6 +266,21 @@ static inline void hid_keyboard_print_char(unsigned int key_char)
 }
 
 /**
+ * @brief Send key_event over esp-now
+ *
+ * Information is sent in three bytes.
+ * The first byte contains keypress state.
+ * The second byte contains modifier state.
+ * The third byte contains key code.
+ */
+static inline void hid_keyboard_send_key_event(key_event_t *key_event)
+{
+    uint8_t key_event_array[3] = {key_event->state, key_event->modifier, key_event->key_code};
+    esp_err_t ret  = ESP_OK;
+    ret = espnow_send(ESPNOW_DATA_TYPE_DATA, ESPNOW_ADDR_BROADCAST, key_event_array, 3, &frame_head, portMAX_DELAY);
+}
+
+/**
  * @brief Key Event. Key event with the key code, state and modifier.
  *
  * @param[in] key_event Pointer to Key Event structure
@@ -276,6 +291,8 @@ static void key_event_callback(key_event_t *key_event)
     unsigned char key_char;
 
     hid_print_new_device_report_header(HID_PROTOCOL_KEYBOARD);
+    hid_keyboard_send_key_event(key_event);
+
 
     if (KEY_STATE_PRESSED == key_event->state) {
         if (hid_keyboard_get_char(key_event->modifier,
