@@ -149,7 +149,7 @@ fn color_conv(color: &ZXColor, brightness: ZXBrightness) -> Rgb565 {
 }
 
 fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator: &mut Emulator<H>) {
-    let is_pressed = key_state == 1;
+    let is_pressed = key_state == 0;
     if let Some(mapped_key) = usb_code_to_zxkey(key_code, is_pressed).or_else(|| usb_code_to_modifier(key_code, is_pressed)) {
         match mapped_key {
             Event::ZXKey(k, p) => {
