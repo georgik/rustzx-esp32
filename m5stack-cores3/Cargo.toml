@@ -48,9 +48,10 @@ embassy-executor = { version = "0.4.0", package = "embassy-executor", features =
 embassy-time = { version = "0.2.0", optional = true }
 
 # WiFi dependencies
-esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", optional = true, features = [ "esp32c3", "esp-now", "async" ] }
+#esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", optional = true, features = [ "esp32c3", "esp-now", "async" ] }
 
 [features]
-default = [ "hal", "embassy", "wifi"]
+#default = [ "hal", "embassy", "wifi"]
+default = [ "hal/psram-8m" ]
 embassy = [ "hal/psram-8m", "hal/embassy", "hal/async", "hal/embassy-time-timg0", "hal/rt", "hal/embassy-executor-thread", "embedded-hal-async", "embassy-sync", "embassy-futures", "embassy-executor", "embassy-time" ]
-wifi = [ "esp-wifi" ]
+#wifi = [ "esp-wifi" ]

@@ -198,28 +198,28 @@ fn main() -> ! {
     // let accel_movement_controller = AccelMovementController::new(icm, 0.2);
     // let demo_movement_controller = spooky_core::demo_movement_controller::DemoMovementController::new(seed_buffer);
     // let movement_controller = AccelCompositeController::new(demo_movement_controller, accel_movement_controller);
-    use esp_wifi::{initialize, EspWifiInitFor};
+    // use esp_wifi::{initialize, EspWifiInitFor};
     // app_loop( &mut display, seed_buffer, movement_controller);
-    info!("Initializing WiFi");
-    use hal::Rng;
-    #[cfg(target_arch = "xtensa")]
-    let timer = hal::timer::TimerGroup::new(peripherals.TIMG1, &clocks).timer0;
-    #[cfg(target_arch = "riscv32")]
-    let timer = hal::systimer::SystemTimer::new(peripherals.SYSTIMER).alarm0;
-    match initialize(
-        EspWifiInitFor::Wifi,
-        timer,
-        Rng::new(peripherals.RNG),
-        system.radio_clock_control,
-        &clocks,
-    ) {
-        Ok(_) => {
-            info!("WiFi initialized");
-        },
-        Err(err) => {
-            error!("Error initializing WiFi: {:?}", err);
-        }
-    }
+    // info!("Initializing WiFi");
+    // use hal::Rng;
+    // #[cfg(target_arch = "xtensa")]
+    // let timer = hal::timer::TimerGroup::new(peripherals.TIMG1, &clocks).timer0;
+    // #[cfg(target_arch = "riscv32")]
+    // let timer = hal::systimer::SystemTimer::new(peripherals.SYSTIMER).alarm0;
+    // match initialize(
+    //     EspWifiInitFor::Wifi,
+    //     timer,
+    //     Rng::new(peripherals.RNG),
+    //     system.radio_clock_control,
+    //     &clocks,
+    // ) {
+    //     Ok(_) => {
+    //         info!("WiFi initialized");
+    //     },
+    //     Err(err) => {
+    //         error!("Error initializing WiFi: {:?}", err);
+    //     }
+    // }
 
 
     let config = Config {
