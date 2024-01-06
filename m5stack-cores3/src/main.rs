@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![feature(type_alias_impl_trait)]
 
 use spi_dma_displayinterface::spi_dma_displayinterface;
 
@@ -86,7 +87,7 @@ fn init_psram_heap() {
     }
 }
 
-#[entry]
+#[main]
 async fn main(spawner: Spawner) -> ! {
     let peripherals = Peripherals::take();
 
@@ -94,8 +95,6 @@ async fn main(spawner: Spawner) -> ! {
     init_psram_heap();
 
     let system = peripherals.SYSTEM.split();
-
-    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
 
     esp_println::logger::init_logger_from_env();
 
@@ -268,7 +267,6 @@ async fn app_loop()
     let mut delay = Delay::new(&clocks);
 
     info!("About to initialize the SPI LED driver");
-    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
 
     let lcd_sclk = io.pins.gpio36;
     let lcd_mosi = io.pins.gpio37;
