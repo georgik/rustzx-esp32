@@ -5,7 +5,7 @@ The project is still work in progress.
 
 Hardware (working):
 - ZX Spectrum with USB keyboard over ESP-NOW (wireless)
-  - [ESP32-S3-BOX](https://github.com/espressif/esp-box) as main emulator unit with display
+  - [ESP32-S3-BOX](https://github.com/espressif/esp-box) or [M5Stack CoreS3](https://shop.m5stack.com/products/) as main emulator unit with display
   - [ESP32-S3-USB-OTG](https://github.com/espressif/esp-bsp/tree/master/bsp/esp32_s3_usb_otg) as USB keyboard to ESP-NOW converter (wireless) (ESP-IDF)
 - ZX Spectrum PS/2 keyboard over UART (wired)
   - [M5Stack CoreS3](https://shop.m5stack.com/products/m5stack-cores3-esp32s3-lotdevelopment-kit) as main emulator unit with display
@@ -35,7 +35,7 @@ idf.py build flash monitor
 
 ### Assembly of the main part
 
-- connect ESP32-S3-BOX with USB-C to computer and flash the application
+- connect ESP32-S3-BOX or M5Stack CoreS3 with USB-C to computer and flash the application
 
 ## Software setup
 
@@ -51,11 +51,20 @@ cargo install espflash
 
 ## Run
 
-Flash and monitor the application:
+Flash and monitor the application.
+
+ESP32-S3-BOX:
 ```
 cd esp32-s3-box
 cargo run --release
 ```
+
+M5Stack CoreS3:
+```
+cd m5stack-cores3
+cargo run --release
+```
+
 
 ## ZX Spectrum PS/2 keyboard over UART (wired)
 
@@ -98,7 +107,7 @@ cargo install espflash
 
 Flash and monitor the application:
 ```
-cd m5stack-cores3
+cd m5stack-cores3-ps2-keyboard
 cargo run --release
 ```
 

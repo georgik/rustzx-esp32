@@ -2,7 +2,7 @@
 runner = "espflash flash --monitor"
 rustflags = [
   "-C", "link-arg=-Tlinkall.x",
-  "-C", "link-arg=-Trom_functions.x",
+  #"-C", "link-arg=-Trom_functions.x",
   "-C", "link-arg=-nostartfiles",
 ]
 
@@ -18,6 +18,6 @@ build-std = [ "core", "alloc" ]
 
 [env]
 # Use clean build after changing ESP_LOGLEVEL
-#ESP_LOGLEVEL="TRACE"
-ESP_LOGLEVEL="DEBUG"
+ESP_LOGLEVEL="TRACE"
+#ESP_LOGLEVEL="DEBUG"
 
