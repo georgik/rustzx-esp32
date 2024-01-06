@@ -6,7 +6,7 @@ edition = "2021"
 license = "MIT"
 
 [target.xtensa-esp32s3-none-elf.dependencies]
-hal = { package = "esp32s3-hal", version = "0.14.0" , optional = true }
+hal = { package = "esp32s3-hal", version = "0.14.0" , features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread", "opsram-8m"] }
 esp-backtrace = { version = "0.9.0", features = [
     "esp32s3",
     "panic-handler",
@@ -18,6 +18,13 @@ esp-println = { version = "0.8.0", features = ["esp32s3", "log"] }
 critical-section = { version = "1.1.2" }
 display-interface = "0.4"
 esp-alloc = "0.3.0"
+
+embassy-sync = { version = "0.5.0" }
+embassy-futures = { version = "0.1.0" }
+embassy-net = { version = "0.2.1", features = ["tcp", "udp", "dhcpv4", "medium-ethernet"] }
+embassy-executor = { version = "0.4.0", package = "embassy-executor", features = ["nightly", "integrated-timers"] }
+embassy-time = { version = "0.2.0" }
+
 embedded-graphics = "0.8.0"
 embedded-hal = "0.2"
 embedded-graphics-framebuf = { version = "0.3.0", git = "https://github.com/georgik/embedded-graphics-framebuf.git", branch = "feature/embedded-graphics-0.8" }
@@ -38,20 +45,12 @@ rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "featur
 axp2101 = { git = "https://github.com/georgik/axp2101-rs.git", rev = "60db0e1" }
 aw9523 = { git = "https://github.com/georgik/aw9523-rs.git", rev = "af49728" }
 pc-keyboard = "0.7.0"
+esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32s3", "esp-now", "async", "phy-enable-usb" ] }
 
-
-# Async dependencies
-embedded-hal-async = { version = "=1.0.0-rc.2", optional = true }
-embassy-sync = { version = "0.5.0",optional = true }
-embassy-futures = { version = "0.1.0", optional = true }
-embassy-executor = { version = "0.4.0", package = "embassy-executor", features = ["nightly", "integrated-timers"], optional = true }
-embassy-time = { version = "0.2.0", optional = true }
-
-# WiFi dependencies
-#esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", optional = true, features = [ "esp32c3", "esp-now", "async" ] }
-
-[features]
-#default = [ "hal", "embassy", "wifi"]
-default = [ "hal/psram-8m" ]
-embassy = [ "hal/psram-8m", "hal/embassy", "hal/async", "hal/embassy-time-timg0", "hal/rt", "hal/embassy-executor-thread", "embedded-hal-async", "embassy-sync", "embassy-futures", "embassy-executor", "embassy-time" ]
-#wifi = [ "esp-wifi" ]
+[patch.crates-io]
+embassy-net = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-net", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
+embassy-time = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-time", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
+embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
+embassy-executor-macros = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor-macros", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
+embassy-sync = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-sync", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
+embassy-futures = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-futures", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}

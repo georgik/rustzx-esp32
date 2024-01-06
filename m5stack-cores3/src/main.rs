@@ -13,13 +13,11 @@ use embedded_graphics::{
 use hal::{
     clock::{ClockControl, CpuClock},
     dma::DmaPriority,
+    embassy,
     gdma::Gdma,
     i2c,
     // interrupt,
-    peripherals::{
-        Peripherals,
-        UART1
-    },
+    peripherals::Peripherals,
     prelude::*,
     psram,
     spi::{
@@ -27,15 +25,21 @@ use hal::{
         SpiMode,
     },
     Delay,
-    // Rng,
+    Rng,
     IO,
-    uart::{
-        config::{Config, DataBits, Parity, StopBits},
-        TxRxPins,
-    },
-    Uart
 };
 
+use embassy_executor::Spawner;
+use esp_wifi::esp_now::{EspNow, PeerInfo};
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::pipe::Pipe;
+use esp_wifi::{initialize, EspWifiInitFor};
+
+// Pipe for transporting keystrokes from ESP-NOW to emulator core
+const PIPE_BUF_SIZE: usize = 15;
+static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
+
+use embassy_time::{Duration, Ticker, Timer};
 
 use esp_backtrace as _;
 
@@ -48,7 +52,7 @@ use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSetting
 
 use log::{info, error, debug};
 
-use core::time::Duration;
+// use core::time::Duration;
 use embedded_graphics::pixelcolor::Rgb565;
 
 use display_interface::WriteOnlyDataCommand;
@@ -63,8 +67,8 @@ use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
 mod host;
 mod stopwatch;
 mod io;
-mod pc_zxkey;
-use pc_zxkey::{ pc_code_to_zxkey, pc_code_to_modifier };
+mod usb_zxkey;
+use usb_zxkey::{ usb_code_to_zxkey, usb_code_to_modifier };
 mod zx_event;
 use zx_event::Event;
 
@@ -94,8 +98,6 @@ async fn main(spawner: Spawner) -> ! {
     let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
 
     esp_println::logger::init_logger_from_env();
-
-
 
     info!("Starting up");
     let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
@@ -363,7 +365,7 @@ async fn app_loop()
     };
 
     info!("Initialize emulator");
-    const MAX_FRAME_DURATION: Duration = Duration::from_millis(0);
+    const MAX_FRAME_DURATION: core::time::Duration = core::time::Duration::from_millis(0);
 
     let mut emulator: Emulator<host::Esp32Host> =
         match Emulator::new(settings, host::Esp32HostContext {}) {
@@ -382,29 +384,8 @@ async fn app_loop()
     let _ = emulator.load_tape(rustzx_core::host::Tape::Tap(tape_asset));
 
     info!("Entering emulator loop");
-    let mut kb = pc_keyboard::Keyboard::new(
-        ScancodeSet2::new(),
-        layouts::Us104Key,
-        HandleControl::MapLettersToUnicode,
-    );
 
     loop {
-        // info!("Emulating frame");
-        let read_result = serial.read();
-        match read_result {
-            Ok(byte) => {
-                match kb.add_byte(byte) {
-                    Ok(Some(event)) => {
-                        info!("Event {:?}", event);
-                        handle_key_event(event.code, event.state, &mut emulator);
-                    },
-                    Ok(None) => {},
-                    Err(_) => {},
-                }
-            }
-            Err(_) => {},
-        }
-
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
                 let framebuffer = emulator.screen_buffer();
@@ -429,6 +410,15 @@ async fn app_loop()
             }
         }
 
+        // Read 3 bytes from PIPE if available
+        if PIPE.len() >= 3 {
+            let mut bytes = [0u8; 3];
+            let bytes_read = PIPE.read(&mut bytes).await;
+            info!("Bytes read from pipe: {}", bytes_read);
+            handle_key_event(bytes[0], bytes[1], bytes[2], &mut emulator);
+        }
+
         Timer::after(Duration::from_millis(5)).await;
     }
+
 }
