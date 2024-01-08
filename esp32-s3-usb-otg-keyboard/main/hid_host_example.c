@@ -29,6 +29,7 @@
 #include "espnow_storage.h"
 #include "espnow_utils.h"
 
+#include "lvgl.h"
 
 /* GPIO Pin number for quit from example logic */
 #define APP_QUIT_PIN                GPIO_NUM_0
@@ -636,6 +637,7 @@ void app_main(void)
     //     .encrypt = false,
     // };
     // ESP_ERROR_CHECK(esp_now_add_peer(&peer_info));
+    lv_init();
 
 app_wifi_init();
    espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
