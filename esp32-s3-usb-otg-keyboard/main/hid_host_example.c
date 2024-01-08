@@ -29,7 +29,12 @@
 #include "espnow_storage.h"
 #include "espnow_utils.h"
 
+#include "esp_log.h"
+#include "bsp/esp-bsp.h"
 #include "lvgl.h"
+#include "esp_lvgl_port.h"
+
+static lv_disp_t *display;
 
 /* GPIO Pin number for quit from example logic */
 #define APP_QUIT_PIN                GPIO_NUM_0
@@ -600,6 +605,7 @@ static void app_wifi_init()
     ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
     ESP_ERROR_CHECK(esp_wifi_start());
 }
+
 void app_main(void)
 {
     BaseType_t task_created;
@@ -637,11 +643,18 @@ void app_main(void)
     //     .encrypt = false,
     // };
     // ESP_ERROR_CHECK(esp_now_add_peer(&peer_info));
-    lv_init();
 
-app_wifi_init();
-   espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
-   espnow_config.forward_enable = 0;
+    // bsp_usb_host_start(BSP_USB_HOST_POWER_MODE_USB_DEV, true);
+
+    /* Initialize display and LVGL */
+    display = bsp_display_start();
+
+    /* Set display brightness to 100% */
+    bsp_display_backlight_on();
+
+    app_wifi_init();
+    espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
+    espnow_config.forward_enable = 0;
     espnow_init(&espnow_config);
 
     // espnow_set_config_for_data_type(ESPNOW_DATA_TYPE_DATA, true, app_uart_write_handle);
