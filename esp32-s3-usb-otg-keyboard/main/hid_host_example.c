@@ -35,6 +35,8 @@
 #include "esp_lvgl_port.h"
 
 static lv_disp_t *display;
+static lv_obj_t *log_console = NULL;
+
 
 /* GPIO Pin number for quit from example logic */
 #define APP_QUIT_PIN                GPIO_NUM_0
@@ -651,6 +653,12 @@ void app_main(void)
 
     /* Set display brightness to 100% */
     bsp_display_backlight_on();
+
+    log_console = lv_textarea_create(lv_scr_act());
+    lv_obj_set_size(log_console, 240, 240);
+    lv_textarea_set_text(log_console, "");
+    // lv_textarea_set_readonly(log_console, true);
+    // lv_textarea_set_scrollbar_mode(log_console, LV_SCROLLBAR_MODE_AUTO);
 
     app_wifi_init();
     espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
