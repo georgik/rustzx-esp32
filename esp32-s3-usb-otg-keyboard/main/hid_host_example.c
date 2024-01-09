@@ -29,6 +29,14 @@
 #include "espnow_storage.h"
 #include "espnow_utils.h"
 
+#include "esp_log.h"
+#include "bsp/esp-bsp.h"
+#include "lvgl.h"
+#include "esp_lvgl_port.h"
+
+static lv_disp_t *display;
+static lv_obj_t *log_console = NULL;
+
 
 /* GPIO Pin number for quit from example logic */
 #define APP_QUIT_PIN                GPIO_NUM_0
@@ -201,6 +209,13 @@ static inline bool hid_keyboard_is_modifier_shift(uint8_t modifier)
     return false;
 }
 
+void set_console_text(const char *text)
+{
+    bsp_display_lock(0);
+    lv_textarea_set_text(log_console, text);
+    bsp_display_unlock();
+}
+
 #define ESP_NOW_ETH_ALEN 6
 // const uint8_t broadcast_address[ESP_NOW_ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -226,8 +241,6 @@ static inline bool hid_keyboard_get_char(uint8_t modifier,
 {
     uint8_t mod = (hid_keyboard_is_modifier_shift(modifier)) ? 1 : 0;
 
-    // Log key_code
-    ESP_LOGI(TAG, "Key code: %d", key_code);
 
     // Array with one keycode
     // uint8_t key_code_array[1] = {key_code};
@@ -276,8 +289,15 @@ static inline void hid_keyboard_print_char(unsigned int key_char)
 static inline void hid_keyboard_send_key_event(key_event_t *key_event)
 {
     uint8_t key_event_array[3] = {key_event->state, key_event->modifier, key_event->key_code};
+    char key_event_str[50];
+    snprintf(key_event_str, sizeof(key_event_str), "State: 0x%x\nModifier: 0x%x\nKey: 0x%x", key_event->state, key_event->modifier, key_event->key_code);
+
+    ESP_LOGI(TAG, "%s", key_event_str);
+
     esp_err_t ret  = ESP_OK;
     ret = espnow_send(ESPNOW_DATA_TYPE_DATA, ESPNOW_ADDR_BROADCAST, key_event_array, 3, &frame_head, portMAX_DELAY);
+
+    set_console_text(key_event_str);
 }
 
 /**
@@ -294,14 +314,14 @@ static void key_event_callback(key_event_t *key_event)
     hid_keyboard_send_key_event(key_event);
 
 
-    if (KEY_STATE_PRESSED == key_event->state) {
-        if (hid_keyboard_get_char(key_event->modifier,
-                                  key_event->key_code, &key_char)) {
+    // if (KEY_STATE_PRESSED == key_event->state) {
+    //     if (hid_keyboard_get_char(key_event->modifier,
+    //                               key_event->key_code, &key_char)) {
 
-            hid_keyboard_print_char(key_char);
+    //         hid_keyboard_print_char(key_char);
 
-        }
-    }
+    //     }
+    // }
 }
 
 /**
@@ -599,6 +619,8 @@ static void app_wifi_init()
     ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
     ESP_ERROR_CHECK(esp_wifi_start());
 }
+
+
 void app_main(void)
 {
     BaseType_t task_created;
@@ -637,9 +659,13 @@ void app_main(void)
     // };
     // ESP_ERROR_CHECK(esp_now_add_peer(&peer_info));
 
-app_wifi_init();
-   espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
-   espnow_config.forward_enable = 0;
+    // bsp_usb_host_start(BSP_USB_HOST_POWER_MODE_USB_DEV, true);
+
+
+
+    app_wifi_init();
+    espnow_config_t espnow_config = ESPNOW_INIT_CONFIG_DEFAULT();
+    espnow_config.forward_enable = 0;
     espnow_init(&espnow_config);
 
     // espnow_set_config_for_data_type(ESPNOW_DATA_TYPE_DATA, true, app_uart_write_handle);
@@ -714,10 +740,24 @@ app_wifi_init();
     app_event_queue = xQueueCreate(10, sizeof(app_event_queue_t));
 
     ESP_LOGI(TAG, "Waiting for HID Device to be connected");
-
+    ESP_LOGI(TAG, "LVGL init");
+    /* Initialize display and LVGL */
+    display = bsp_display_start();
+    ESP_LOGI(TAG, "LVGL init done");
     // esp_err_t ret  = ESP_OK;
     // uint8_t key_code = 42;
     // espnow_send(ESPNOW_DATA_TYPE_DATA, ESPNOW_ADDR_BROADCAST, &key_code, sizeof(key_code), &frame_head, portMAX_DELAY);
+
+    bsp_display_backlight_on();
+
+    bsp_display_lock(0);
+    log_console = lv_textarea_create(lv_scr_act());
+    lv_obj_set_size(log_console, 240, 240);
+    bsp_display_unlock();
+
+    set_console_text("USB Keyboard to ESP-NOW\n");
+    // lv_textarea_set_readonly(log_console, true);
+    // lv_textarea_set_scrollbar_mode(log_console, LV_SCROLLBAR_MODE_AUTO);
 
     while (1) {
         // Wait queue

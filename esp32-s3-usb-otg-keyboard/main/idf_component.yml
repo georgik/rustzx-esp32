@@ -1,5 +1,6 @@
 ## IDF Component Manager Manifest File
 dependencies:
+  espressif/esp32_s3_usb_otg: "^1.5.0~1"
   espressif/esp-now: "^2.4.0"
   idf: ">=4.4"
   usb_host_hid: "^1.0.1"
