@@ -3,7 +3,7 @@ use rustzx_core::zx::keys::ZXKey;
 
 use crate::zx_event::Event;
 
-pub (crate) fn usb_code_to_zxkey(pressed: bool, modifier: u8, keycode: u8) -> Option<Event> {
+pub fn usb_code_to_zxkey(pressed: bool, modifier: u8, keycode: u8) -> Option<Event> {
 
     if modifier == 0 {
         let zxkey_event:Option<ZXKey> = match keycode {
@@ -113,6 +113,7 @@ pub (crate) fn usb_code_to_zxkey(pressed: bool, modifier: u8, keycode: u8) -> Op
 
         // // ========= Row 4 (ASDF) =========
         (0,51) => Some((ZXKey::SymShift, ZXKey::O)), // ;
+        (2,52) => Some((ZXKey::SymShift, ZXKey::P)), // "
         // // KeyCode::Oem3 => Some((ZXKey::SymShift, ZXKey::Z)), // :
         // KeyCode::Oem3 => Some((ZXKey::SymShift, ZXKey::N7)), // '
 

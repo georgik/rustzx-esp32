@@ -51,10 +51,10 @@ use embedded_hal::digital::v2::OutputPin;
 mod host;
 mod stopwatch;
 mod io;
-mod usb_zxkey;
-use usb_zxkey::{ usb_code_to_zxkey, usb_code_to_modifier };
-mod zx_event;
-use zx_event::Event;
+use usb_zx::{
+    usb_zx_key::usb_code_to_zxkey,
+    zx_event::Event
+};
 
 use crate::io::FileAsset;
 
@@ -150,7 +150,7 @@ fn color_conv(color: &ZXColor, brightness: ZXBrightness) -> Rgb565 {
 
 fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator: &mut Emulator<H>) {
     let is_pressed = key_state == 0;
-    if let Some(mapped_key) = usb_code_to_zxkey(key_code, is_pressed).or_else(|| usb_code_to_modifier(key_code, is_pressed)) {
+    if let Some(mapped_key) = usb_code_to_zxkey(is_pressed, modifier, key_code) {
         match mapped_key {
             Event::ZXKey(k, p) => {
                 debug!("-> ZXKey");
@@ -169,7 +169,6 @@ fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator:
         info!("Mapped key: NoEvent");
     }
 }
-
 
 const ESP_NOW_PAYLOAD_INDEX: usize = 20;
 
@@ -367,6 +366,7 @@ async fn app_loop()
     let _ = emulator.load_tape(rustzx_core::host::Tape::Tap(tape_asset));
 
     info!("Entering emulator loop");
+    let mut last_modifier:u8 = 0;
 
     loop {
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
@@ -398,7 +398,16 @@ async fn app_loop()
             let mut bytes = [0u8; 3];
             let bytes_read = PIPE.read(&mut bytes).await;
             info!("Bytes read from pipe: {}", bytes_read);
-            handle_key_event(bytes[0], bytes[1], bytes[2], &mut emulator);
+            let (key_state, modifier, key_code) = (bytes[0], bytes[1], bytes[2]);
+
+            // USB Keyaboards send a key up event with modifier 0 when a modifier key is released
+            // We need to keep track of the last modifier key pressed to know if we should send a key up event
+            if (key_state == 1) && (modifier == 0) {
+                handle_key_event(key_state, last_modifier, key_code, &mut emulator);
+            } else {
+                handle_key_event(key_state, modifier, key_code, &mut emulator);
+                last_modifier = modifier;
+            }
         }
 
         Timer::after(Duration::from_millis(5)).await;

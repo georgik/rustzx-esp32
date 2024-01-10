@@ -1,0 +1,8 @@
+[package]
+name = "usb-zx"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }

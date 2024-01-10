@@ -68,10 +68,10 @@ use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
 mod host;
 mod stopwatch;
 mod io;
-mod usb_zxkey;
-use usb_zxkey::usb_code_to_zxkey;
-mod zx_event;
-use zx_event::Event;
+use usb_zx::{
+    usb_zx_key::usb_code_to_zxkey,
+    zx_event::Event
+};
 
 use crate::io::FileAsset;
 
