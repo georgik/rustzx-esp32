@@ -245,11 +245,6 @@ static inline bool hid_keyboard_get_char(uint8_t modifier,
     // Array with one keycode
     // uint8_t key_code_array[1] = {key_code};
 
-    // esp_now_send(broadcast_address, &key_code, sizeof(key_code));
-    // esp_err_t ret  = ESP_OK;
-    // ret = espnow_send(ESPNOW_DATA_TYPE_DATA, ESPNOW_ADDR_BROADCAST, key_code_array, 1, &frame_head, portMAX_DELAY);
-    // ESP_ERROR_CONTINUE(ret != ESP_OK, "<%s> espnow_send", esp_err_to_name(ret));
-
     if ((key_code >= HID_KEY_A) && (key_code <= HID_KEY_SLASH)) {
         *key_char = keycode2ascii[key_code][mod];
     } else {
@@ -297,7 +292,14 @@ static inline void hid_keyboard_send_key_event(key_event_t *key_event)
     esp_err_t ret  = ESP_OK;
     ret = espnow_send(ESPNOW_DATA_TYPE_DATA, ESPNOW_ADDR_BROADCAST, key_event_array, 3, &frame_head, portMAX_DELAY);
 
-    set_console_text(key_event_str);
+    if (ret == ESP_OK) {
+        set_console_text(key_event_str);
+    } else {
+        ESP_LOGE(TAG, "Error sending data: %s", esp_err_to_name(ret));
+        set_console_text("Error sending data");
+    }
+
+
 }
 
 /**
@@ -575,6 +577,75 @@ static void gpio_isr_cb(void *arg)
     }
 }
 
+// Global variable to store the current rotation state
+static lv_disp_rot_t current_rotation = LV_DISP_ROT_NONE;
+
+// Rotate the screen to the left
+void rotate_screen_left() {
+    bsp_display_lock(0);
+    lv_disp_t *disp = lv_disp_get_default();
+
+    // Rotate left (counter-clockwise)
+    if (current_rotation == LV_DISP_ROT_NONE) {
+        current_rotation = LV_DISP_ROT_270;
+    } else if (current_rotation == LV_DISP_ROT_90) {
+        current_rotation = LV_DISP_ROT_NONE;
+    } else if (current_rotation == LV_DISP_ROT_180) {
+        current_rotation = LV_DISP_ROT_90;
+    } else if (current_rotation == LV_DISP_ROT_270) {
+        current_rotation = LV_DISP_ROT_180;
+    }
+
+    lv_disp_set_rotation(disp, current_rotation);
+    bsp_display_unlock();
+}
+
+// Rotate the screen to the right
+void rotate_screen_right() {
+    bsp_display_lock(0);
+    lv_disp_t *disp = lv_disp_get_default();
+
+    // Rotate right (clockwise)
+    if (current_rotation == LV_DISP_ROT_NONE) {
+        current_rotation = LV_DISP_ROT_90;
+    } else if (current_rotation == LV_DISP_ROT_90) {
+        current_rotation = LV_DISP_ROT_180;
+    } else if (current_rotation == LV_DISP_ROT_180) {
+        current_rotation = LV_DISP_ROT_270;
+    } else if (current_rotation == LV_DISP_ROT_270) {
+        current_rotation = LV_DISP_ROT_NONE;
+    }
+
+    lv_disp_set_rotation(disp, current_rotation);
+    bsp_display_unlock();
+}
+
+// ISR Handler for buttons
+static void IRAM_ATTR button_isr_handler(void* arg) {
+    int gpio_num = (int)arg;
+    if (gpio_num == 10) {
+        // Handle left button press (rotate screen left)
+        rotate_screen_left();
+    } else if (gpio_num == 11) {
+        // Handle right button press (rotate screen right)
+        rotate_screen_right();
+    }
+}
+
+void init_button_gpios() {
+    gpio_config_t button_config = {
+        .pin_bit_mask = (1ULL << 10) | (1ULL << 11),
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .intr_type = GPIO_INTR_NEGEDGE,
+    };
+    gpio_config(&button_config);
+
+    // Attach the interrupt service routines
+    gpio_isr_handler_add(10, button_isr_handler, (void*) 10);
+    gpio_isr_handler_add(11, button_isr_handler, (void*) 11);
+}
+
 /**
  * @brief HID Host Device callback
  *
@@ -756,6 +827,9 @@ void app_main(void)
     bsp_display_unlock();
 
     set_console_text("USB Keyboard to ESP-NOW\n");
+
+    // Add reaction on Up and Down buttons - rotate the screen
+    init_button_gpios();
     // lv_textarea_set_readonly(log_console, true);
     // lv_textarea_set_scrollbar_mode(log_console, LV_SCROLLBAR_MODE_AUTO);
 
