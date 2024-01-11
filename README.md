@@ -5,7 +5,7 @@ The project is still work in progress.
 
 Hardware (working):
 - ZX Spectrum with USB keyboard over ESP-NOW (wireless)
-  - [ESP32-S3-BOX](https://github.com/espressif/esp-box) or [M5Stack CoreS3](https://shop.m5stack.com/products/) as main emulator unit with display
+  - [ESP32-S3-BOX](https://github.com/espressif/esp-box), [M5Stack CoreS3](https://shop.m5stack.com/products/) or [ESP32-C6-DevKitC-1](https://docs.espressif.com/projects/espressif-esp-dev-kits/en/latest/esp32c6/esp32-c6-devkitc-1/index.html) as main emulator unit with display
   - [ESP32-S3-USB-OTG](https://github.com/espressif/esp-bsp/tree/master/bsp/esp32_s3_usb_otg) as USB keyboard to ESP-NOW converter (wireless) (ESP-IDF)
 - ZX Spectrum PS/2 keyboard over UART (wired)
   - [M5Stack CoreS3](https://shop.m5stack.com/products/m5stack-cores3-esp32s3-lotdevelopment-kit) as main emulator unit with display
@@ -65,6 +65,11 @@ cd m5stack-cores3
 cargo run --release
 ```
 
+ESP32-C6-DevKitC-1:
+```
+cd esp32-c6
+cargo run --release
+```
 
 ## ZX Spectrum PS/2 keyboard over UART (wired)
 
