@@ -7,6 +7,8 @@ Hardware (working):
 - ZX Spectrum with USB keyboard over ESP-NOW (wireless)
   - [ESP32-S3-BOX](https://github.com/espressif/esp-box), [M5Stack CoreS3](https://shop.m5stack.com/products/) or [ESP32-C6-DevKitC-1](https://docs.espressif.com/projects/espressif-esp-dev-kits/en/latest/esp32c6/esp32-c6-devkitc-1/index.html) as main emulator unit with display
   - [ESP32-S3-USB-OTG](https://github.com/espressif/esp-bsp/tree/master/bsp/esp32_s3_usb_otg) as USB keyboard to ESP-NOW converter (wireless) (ESP-IDF)
+- ZX Spectrum with UART keyboard over `espflash monitor`
+  - [ESP32-C6-DevKitC-1](https://docs.espressif.com/projects/espressif-esp-dev-kits/en/latest/esp32c6/esp32-c6-devkitc-1/index.html) as main emulator unit with display
 - ZX Spectrum PS/2 keyboard over UART (wired)
   - [M5Stack CoreS3](https://shop.m5stack.com/products/m5stack-cores3-esp32s3-lotdevelopment-kit) as main emulator unit with display
   - [ESP32-C3 DevKit](https://docs.espressif.com/projects/esp-idf/en/latest/esp32c3/hw-reference/esp32c3/user-guide-devkitm-1.html) as PS/2 or USB COMBO keyboard converter to serial
@@ -70,6 +72,34 @@ ESP32-C6-DevKitC-1:
 cd esp32-c6
 cargo run --release
 ```
+
+## ZX Spectrum with UART keyboard over `espflash monitor`
+
+## Software setup
+
+- use [espup](https://github.com/esp-rs/espup) to install Rust toolchain for Xtensa (ESP32-S3)
+```
+espup install
+```
+- use [espflash](https://github.com/esp-rs/espflash) to flash binaries
+```
+cargo install espflash
+```
+- download a `.tap` file from Speccy archives and store it to `data/hello.tap`
+
+## Run
+
+Flash and monitor the application.
+
+ESP32-C6-DevKitC-1:
+```
+cd esp32-c6
+cargo run --release
+```
+
+Command `cargo run --release` will turn on `espflash monitor` after the flashing.
+You can use the monitor console as kkeyboard output.
+
 
 ## ZX Spectrum PS/2 keyboard over UART (wired)
 
