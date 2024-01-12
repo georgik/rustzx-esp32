@@ -53,7 +53,7 @@ mod host;
 mod stopwatch;
 mod io;
 use usb_zx::{
-    uart_usb_key::uart_code_to_usb_key,
+    uart_usb_key::{uart_code_to_usb_key, uart_composite_code_to_usb_key},
     usb_zx_key::usb_code_to_zxkey,
     zx_event::Event
 };
@@ -281,8 +281,6 @@ async fn uart_receiver() {
     const MAX_BUFFER_SIZE: usize = 16;
     let mut rbuf: [u8; MAX_BUFFER_SIZE] = [0u8; MAX_BUFFER_SIZE];
 
-    // let mut cnt = 0;
-    // let mut read = [0u8; 2];
     loop {
         let result = embedded_io_async::Read::read(&mut rx, &mut rbuf).await;
         match result {
@@ -299,36 +297,23 @@ async fn uart_receiver() {
                         }
                     }
 
-                }
-                else if bytes_read == 3 {
+                } else if bytes_read == 3 {
                     info!("UART read: {:x} {:x} {:x}", rbuf[0], rbuf[1], rbuf[2]);
-                    match (rbuf[0], rbuf[1], rbuf[2]) {
-                        (0x1b, 0x5b, 0x41) => { // Arrow up
-                            usb_press_key(0x0, 0x52).await;
+                    match uart_composite_code_to_usb_key(rbuf[0], rbuf[1], rbuf[2]) {
+                        Some((modifier, key_code)) => {
+                            usb_press_key(modifier, key_code).await;
                         },
-                        (0x1b, 0x5b, 0x42) => { // Arrow down
-                            usb_press_key(0x0, 0x51).await;
-                        },
-
-                        _ => { error!("Unknown key code");}
+                        None => {
+                            error!("Unknown key code");
+                        }
                     }
-
-                // if bytes_read == 3 {
-                //     let bytes_written = PIPE.write(&[rbuf[0], rbuf[1], rbuf[2]]).await;
-                //     if bytes_written != 3 {
-                //         error!("Failed to write to pipe");
-                //         break;
-                //     }
                 }
             },
             Err(e) => {
                 error!("UART read error: {:?}", e);
             }
         }
-        
-        // if let nb::Result::Ok(c) = uart0.read() {
-        //     info!("UART read: {}", c);
-        // }
+
         Timer::after(Duration::from_millis(5)).await;
     }
 }
