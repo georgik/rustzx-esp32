@@ -25,7 +25,8 @@ use hal::{
     Delay,
     Rng,
     IO,
-    systimer::SystemTimer
+    systimer::SystemTimer,
+    Uart
 };
 
 use spooky_embedded::{
@@ -104,6 +105,7 @@ async fn main(spawner: Spawner) -> ! {
     embassy::init(&clocks, embassy_timer);
     spawner.spawn(app_loop()).unwrap();
     spawner.spawn(esp_now_receiver()).unwrap();
+    spawner.spawn(uart_receiver()).unwrap();
     let mut ticker = Ticker::every(Duration::from_secs(1));
     loop {
         info!("Tick");
@@ -249,6 +251,71 @@ async fn esp_now_receiver() {
     }
 }
 
+/// Read from UART and send to emulator
+#[embassy_executor::task]
+async fn uart_receiver() {
+    info!("UART receiver task");
+    let peripherals = unsafe { Peripherals::steal() };
+    let system = peripherals.SYSTEM.split();
+    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock160MHz).freeze();
+
+    let uart0 = Uart::new(peripherals.UART0, &clocks);
+    let (_,  mut rx) = uart0.split();
+    const MAX_BUFFER_SIZE: usize = 16;
+    let mut rbuf: [u8; MAX_BUFFER_SIZE] = [0u8; MAX_BUFFER_SIZE];
+
+    // let mut cnt = 0;
+    // let mut read = [0u8; 2];
+    loop {
+        let result = embedded_io_async::Read::read(&mut rx, &mut rbuf).await;
+        match result {
+            Ok(bytes_read) => {
+                info!("UART read: {} bytes", bytes_read);
+                if bytes_read == 1 {
+                    info!("UART read: {:x}", rbuf[0]);
+                    match rbuf[0] {
+                        0xd => { // Enter
+                            PIPE.write(&[0x0, 0x0, 0x28]).await;
+                            PIPE.write(&[0x1, 0x0, 0x28]).await;
+                        },
+                        _ => { error!("Unknown key code");}
+                    }
+
+                }
+                else if bytes_read == 3 {
+                    info!("UART read: {:x} {:x} {:x}", rbuf[0], rbuf[1], rbuf[2]);
+                    match (rbuf[0], rbuf[1], rbuf[2]) {
+                        (0x1b, 0x5b, 0x41) => { // Arrow up
+                            PIPE.write(&[0x0, 0x0, 0x52]).await;
+                            PIPE.write(&[0x1, 0x0, 0x52]).await;
+                        },
+                        (0x1b, 0x5b, 0x42) => { // Arrow down
+                            PIPE.write(&[0x0, 0x0, 0x51]).await;
+                            PIPE.write(&[0x1, 0x0, 0x51]).await;
+                        },
+
+                        _ => { error!("Unknown key code");}
+                    }
+
+                // if bytes_read == 3 {
+                //     let bytes_written = PIPE.write(&[rbuf[0], rbuf[1], rbuf[2]]).await;
+                //     if bytes_written != 3 {
+                //         error!("Failed to write to pipe");
+                //         break;
+                //     }
+                }
+            },
+            Err(e) => {
+                error!("UART read error: {:?}", e);
+            }
+        }
+        
+        // if let nb::Result::Ok(c) = uart0.read() {
+        //     info!("UART read: {}", c);
+        // }
+        Timer::after(Duration::from_millis(5)).await;
+    }
+}
 
 #[embassy_executor::task]
 async fn app_loop()
