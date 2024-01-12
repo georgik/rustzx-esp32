@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+elf = "target/riscv32imac-unknown-none-elf/release/rustzx-esp32-c6"
+firmware = "target/riscv32imac-unknown-none-elf/release/rustzx-esp32-c6"

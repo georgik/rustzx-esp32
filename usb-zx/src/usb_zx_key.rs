@@ -69,7 +69,7 @@ pub fn usb_code_to_zxkey(pressed: bool, modifier: u8, keycode: u8) -> Option<Eve
 
 
     let zxkey_event:Option<(ZXKey, ZXKey)> = match (modifier, keycode) {
-        (0,42) => Some((ZXKey::Shift, ZXKey::N0)),
+        (0,42) => Some((ZXKey::Shift, ZXKey::N0)), // Backspace
 
         (0,80) => Some((ZXKey::Shift, ZXKey::N5)), // Left
         (0,81) => Some((ZXKey::Shift, ZXKey::N6)), // Down
