@@ -53,6 +53,7 @@ mod host;
 mod stopwatch;
 mod io;
 use usb_zx::{
+    uart_usb_key::uart_code_to_usb_key,
     usb_zx_key::usb_code_to_zxkey,
     zx_event::Event
 };
@@ -251,6 +252,22 @@ async fn esp_now_receiver() {
     }
 }
 
+async fn usb_write_key(key_state: u8, modifier: u8, key_code:u8) {
+    let mut bytes = [0u8; 3];
+    bytes[0] = key_state;
+    bytes[1] = modifier;
+    bytes[2] = key_code;
+    let bytes_written = PIPE.write(&bytes).await;
+    if bytes_written != 3 {
+        error!("Failed to write to pipe");
+    }
+}
+
+async fn usb_press_key(modifier: u8, key_code:u8) {
+    usb_write_key(0, modifier, key_code).await;
+    usb_write_key(1, modifier, key_code).await;
+}
+
 /// Read from UART and send to emulator
 #[embassy_executor::task]
 async fn uart_receiver() {
@@ -273,12 +290,13 @@ async fn uart_receiver() {
                 info!("UART read: {} bytes", bytes_read);
                 if bytes_read == 1 {
                     info!("UART read: {:x}", rbuf[0]);
-                    match rbuf[0] {
-                        0xd => { // Enter
-                            PIPE.write(&[0x0, 0x0, 0x28]).await;
-                            PIPE.write(&[0x1, 0x0, 0x28]).await;
+                    match uart_code_to_usb_key(rbuf[0]) {
+                        Some((modifier, key_code)) => {
+                            usb_press_key(modifier, key_code).await;
                         },
-                        _ => { error!("Unknown key code");}
+                        None => {
+                            error!("Unknown key code");
+                        }
                     }
 
                 }
@@ -286,12 +304,10 @@ async fn uart_receiver() {
                     info!("UART read: {:x} {:x} {:x}", rbuf[0], rbuf[1], rbuf[2]);
                     match (rbuf[0], rbuf[1], rbuf[2]) {
                         (0x1b, 0x5b, 0x41) => { // Arrow up
-                            PIPE.write(&[0x0, 0x0, 0x52]).await;
-                            PIPE.write(&[0x1, 0x0, 0x52]).await;
+                            usb_press_key(0x0, 0x52).await;
                         },
                         (0x1b, 0x5b, 0x42) => { // Arrow down
-                            PIPE.write(&[0x0, 0x0, 0x51]).await;
-                            PIPE.write(&[0x1, 0x0, 0x51]).await;
+                            usb_press_key(0x0, 0x51).await;
                         },
 
                         _ => { error!("Unknown key code");}
