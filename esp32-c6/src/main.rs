@@ -94,7 +94,6 @@ static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
 use embassy_time::{Duration, Ticker, Timer};
 use hal::gpio::{GpioPin, Output, PushPull};
 use hal::spi::FullDuplexMode;
-
 // Struct that encapsulate SPI configuration, so that it can be passed to a function
 struct SpiConfig {
     spi: hal::spi::master::Spi<'static, hal::peripherals::SPI2, FullDuplexMode>,
@@ -195,9 +194,38 @@ async fn main(spawner: Spawner) -> ! {
         delay,
         gdma: dma,
     };
+    let dma_channel = spi_config.gdma.channel0;
+
+    let mut descriptors = make_static!([0u32; 8 * 3]);
+    let mut rx_descriptors = make_static!([0u32; 8 * 3]);
+
+
+    let spi = spi_config.spi.with_dma(
+        dma_channel.configure(
+            false,
+            &mut *descriptors,
+            &mut *rx_descriptors,
+            DmaPriority::Priority0,
+        )
+    );
+    let di = spi_dma_displayinterface::new_no_cs(2 * 256 * 192, spi, spi_config.lcd_dc);
+
+    let mut display = match mipidsi::Builder::ili9341_rgb565(di)
+        .with_display_size(LCD_H_RES, LCD_V_RES)
+        .with_orientation(mipidsi::Orientation::Landscape(true))
+        .with_color_order(mipidsi::ColorOrder::Rgb)
+        .init(&mut spi_config.delay, Some(spi_config.lcd_reset))
+    {
+        Ok(display) => display,
+        Err(_e) => {
+            // Handle the error and possibly exit the application
+            panic!("Display initialization failed");
+        }
+    };
+
 
     // Main Emulator loop
-    spawner.spawn(app_loop(spi_config)).unwrap();
+    spawner.spawn(app_loop(display)).unwrap();
 
     let mut ticker = Ticker::every(Duration::from_secs(1));
     loop {
@@ -376,41 +404,15 @@ async fn uart_receiver(uart0: Uart<'static, UART0>) {
     }
 }
 
+type IliDisplay = mipidsi::Display<crate::spi_dma_displayinterface::SPIInterface<'static, GpioPin<Output<hal::gpio::PushPull>, 21>, GpioPin<Output<hal::gpio::PushPull>, 0>, hal::peripherals::SPI2, hal::gdma::Channel0, FullDuplexMode>, mipidsi::models::ILI9341Rgb565, GpioPin<Output<hal::gpio::PushPull>, 3>>;
+
 #[embassy_executor::task]
-async fn app_loop(mut spi_config: SpiConfig)
+async fn app_loop(mut display:IliDisplay/*,  dma_buffers: DmaBuffers*/)
  //-> Result<(), core::fmt::Error>
 {
 
 
-    Timer::after(Duration::from_millis(500)).await;
-
     // let _ = lcd_backlight.set_high();
-    let dma_channel = spi_config.gdma.channel0;
-    let mut descriptors: [u32; 24] = [0u32; 8 * 3];
-    let mut rx_descriptors: [u32; 24] = [0u32; 8 * 3];
-
-    let spi = spi_config.spi.with_dma(
-        dma_channel.configure(
-            false,
-            &mut descriptors,
-            &mut rx_descriptors,
-            DmaPriority::Priority0,
-        )
-    );
-    let di = spi_dma_displayinterface::new_no_cs(2*256*192, spi, spi_config.lcd_dc);
-
-    let mut display = match mipidsi::Builder::ili9341_rgb565(di)
-        .with_display_size(LCD_H_RES, LCD_V_RES)
-        .with_orientation(mipidsi::Orientation::Landscape(true))
-        .with_color_order(mipidsi::ColorOrder::Rgb)
-        .init(&mut spi_config.delay, Some(spi_config.lcd_reset))
-    {
-        Ok(display) => display,
-        Err(_e) => {
-            // Handle the error and possibly exit the application
-            panic!("Display initialization failed");
-        }
-    };
 
     Timer::after(Duration::from_millis(500)).await;
 
