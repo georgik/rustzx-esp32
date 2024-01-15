@@ -398,7 +398,7 @@ async fn uart_receiver(uart0: Uart<'static, UART0>) {
 type IliDisplay = mipidsi::Display<crate::spi_dma_displayinterface::SPIInterface<'static, GpioPin<Output<hal::gpio::PushPull>, 21>, GpioPin<Output<hal::gpio::PushPull>, 0>, hal::peripherals::SPI2, hal::gdma::Channel0, FullDuplexMode>, mipidsi::models::ILI9341Rgb565, GpioPin<Output<hal::gpio::PushPull>, 3>>;
 
 #[embassy_executor::task]
-async fn app_loop(mut display:IliDisplay/*,  dma_buffers: DmaBuffers*/)
+async fn app_loop(mut display:IliDisplay)
  //-> Result<(), core::fmt::Error>
 {
     // let _ = lcd_backlight.set_high();
