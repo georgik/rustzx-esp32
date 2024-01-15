@@ -165,17 +165,10 @@ async fn main(spawner: Spawner) -> ! {
     let lcd_reset = io.pins.gpio3.into_push_pull_output();
 
     let dma = Gdma::new(peripherals.DMA);
-    // let dma_channel = dma.channel0;
-
-    // let mut descriptors: [u32; 24] = [0u32; 8 * 3];
-    // let mut rx_descriptors: [u32; 24] = [0u32; 8 * 3];
-
 
     let mut delay = Delay::new(&clocks);
 
-    // delay.delay_ms(500u32);
     info!("About to initialize the SPI LED driver");
-
 
     let mut spi_config = SpiConfig {
         spi: Spi::new(
@@ -199,7 +192,6 @@ async fn main(spawner: Spawner) -> ! {
     let mut descriptors = make_static!([0u32; 8 * 3]);
     let mut rx_descriptors = make_static!([0u32; 8 * 3]);
 
-
     let spi = spi_config.spi.with_dma(
         dma_channel.configure(
             false,
@@ -222,7 +214,6 @@ async fn main(spawner: Spawner) -> ! {
             panic!("Display initialization failed");
         }
     };
-
 
     // Main Emulator loop
     spawner.spawn(app_loop(display)).unwrap();
@@ -410,8 +401,6 @@ type IliDisplay = mipidsi::Display<crate::spi_dma_displayinterface::SPIInterface
 async fn app_loop(mut display:IliDisplay/*,  dma_buffers: DmaBuffers*/)
  //-> Result<(), core::fmt::Error>
 {
-
-
     // let _ = lcd_backlight.set_high();
 
     Timer::after(Duration::from_millis(500)).await;
