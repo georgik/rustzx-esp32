@@ -16,7 +16,10 @@ use hal::{
     dma::DmaPriority,
     embassy,
     gdma::Gdma,
-    peripherals::Peripherals,
+    peripherals::{
+        Peripherals,
+        UART0,
+    },
     prelude::*,
     spi::{
         master::{prelude::*, Spi},
@@ -89,6 +92,7 @@ const PIPE_BUF_SIZE: usize = 15;
 static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
 
 use embassy_time::{Duration, Ticker, Timer};
+
 #[main]
 async fn main(spawner: Spawner) -> ! {
     init_heap();
@@ -106,7 +110,7 @@ async fn main(spawner: Spawner) -> ! {
     embassy::init(&clocks, embassy_timer);
     spawner.spawn(app_loop()).unwrap();
     spawner.spawn(esp_now_receiver()).unwrap();
-    spawner.spawn(uart_receiver()).unwrap();
+    spawner.spawn(uart_receiver(Uart::new(peripherals.UART0, &clocks))).unwrap();
     let mut ticker = Ticker::every(Duration::from_secs(1));
     loop {
         info!("Tick");
@@ -270,13 +274,9 @@ async fn usb_press_key(modifier: u8, key_code:u8) {
 
 /// Read from UART and send to emulator
 #[embassy_executor::task]
-async fn uart_receiver() {
+async fn uart_receiver(uart0: Uart<'static, UART0>) {
     info!("UART receiver task");
-    let peripherals = unsafe { Peripherals::steal() };
-    let system = peripherals.SYSTEM.split();
-    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock160MHz).freeze();
 
-    let uart0 = Uart::new(peripherals.UART0, &clocks);
     let (_,  mut rx) = uart0.split();
     const MAX_BUFFER_SIZE: usize = 16;
     let mut rbuf: [u8; MAX_BUFFER_SIZE] = [0u8; MAX_BUFFER_SIZE];
