@@ -40,7 +40,7 @@ use spooky_embedded::{
 
 use esp_backtrace as _;
 
-use esp_wifi::{initialize, EspWifiInitFor};
+use esp_wifi::{initialize, EspWifiInitFor, EspWifiInitialization, InitializationError};
 
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
@@ -64,7 +64,7 @@ use usb_zx::{
 use crate::io::FileAsset;
 
 use embassy_executor::Spawner;
-use esp_wifi::esp_now::{EspNow, PeerInfo, BROADCAST_ADDRESS};
+use esp_wifi::esp_now::{EspNow, EspNowError, PeerInfo};
 
 use core::mem::MaybeUninit;
 
@@ -100,17 +100,54 @@ async fn main(spawner: Spawner) -> ! {
     let peripherals = Peripherals::take();
 
     let system = peripherals.SYSTEM.split();
+    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock160MHz).freeze();
 
     esp_println::logger::init_logger_from_env();
 
-
     info!("Starting up");
-    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock160MHz).freeze();
     let embassy_timer = hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks).timer0;
     embassy::init(&clocks, embassy_timer);
+
+    // ESP-NOW keyboard receiver
+    let wifi_timer = SystemTimer::new(peripherals.SYSTIMER).alarm0;
+    let rng = Rng::new(peripherals.RNG);
+    let radio_clock_control = system.radio_clock_control;
+
+    let wifi = peripherals.WIFI;
+
+    let esp_now_init = initialize(
+        EspWifiInitFor::Wifi,
+        wifi_timer,
+        rng,
+        radio_clock_control,
+        &clocks,
+    );
+
+    match esp_now_init {
+        Ok(init) => {
+            info!("ESP-NOW init");
+            let mut esp_now: Result<EspNow, EspNowError> = EspNow::new(&init, wifi);
+            match esp_now {
+                Ok(mut esp_now) => {
+                    spawner.spawn(esp_now_receiver(esp_now)).unwrap();
+                }
+                _ => {
+                    error!("ESP-NOW startup error");
+                }
+            }
+        }
+        _ => {
+            error!("ESP-NOW init error");
+        }
+    }
+
+    // UART Keyboard receiver
+    let uart0 = Uart::new(peripherals.UART0, &clocks);
+    spawner.spawn(uart_receiver(uart0)).unwrap();
+
+    // Main Emulator loop
     spawner.spawn(app_loop()).unwrap();
-    spawner.spawn(esp_now_receiver()).unwrap();
-    spawner.spawn(uart_receiver(Uart::new(peripherals.UART0, &clocks))).unwrap();
+
     let mut ticker = Ticker::every(Duration::from_secs(1));
     loop {
         info!("Tick");
@@ -185,74 +222,44 @@ fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator:
 const ESP_NOW_PAYLOAD_INDEX: usize = 20;
 
 #[embassy_executor::task]
-async fn esp_now_receiver() {
+async fn esp_now_receiver(esp_now: EspNow<'static>) {
     info!("ESP-NOW receiver task");
-    let peripherals = unsafe { Peripherals::steal() };
-    let system = peripherals.SYSTEM.split();
-    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock160MHz).freeze();
-    let wifi_timer = SystemTimer::new(peripherals.SYSTIMER).alarm0;
-    let rng = Rng::new(peripherals.RNG);
-    let radio_clock_control = system.radio_clock_control;
+    let peer_info = PeerInfo {
+        // Specify a unique peer address here (replace with actual address)
+        peer_address: [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF],
+        lmk: None,
+        channel: Some(1), // Specify the channel if known
+        encrypt: false, // Set to true if encryption is needed
+    };
 
+    // Check if the peer already exists
+    if !esp_now.peer_exists(&peer_info.peer_address) {
+        info!("Adding peer");
+        match esp_now.add_peer(peer_info) {
+            Ok(_) => info!("Peer added"),
+            Err(e) => error!("Peer add error: {:?}", e),
+        }
+    } else {
+        info!("Peer already exists, not adding");
+    }
 
-    let wifi = peripherals.WIFI;
-
-    let init = initialize(
-        EspWifiInitFor::Wifi,
-        wifi_timer,
-        rng,
-        radio_clock_control,
-        &clocks,
-    );
-
-    match init {
-        Ok(init) => {
-            info!("ESP-NOW init");
-            let mut esp_now = EspNow::new(&init, wifi);
-            match esp_now {
-                Ok(mut esp_now) => {
-                    let peer_info = PeerInfo {
-                        // Specify a unique peer address here (replace with actual address)
-                        peer_address: [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF],
-                        lmk: None,
-                        channel: Some(1), // Specify the channel if known
-                        encrypt: false, // Set to true if encryption is needed
-                    };
-
-                    // Check if the peer already exists
-                    if !esp_now.peer_exists(&peer_info.peer_address) {
-                        info!("Adding peer");
-                        match esp_now.add_peer(peer_info) {
-                            Ok(_) => info!("Peer added"),
-                            Err(e) => error!("Peer add error: {:?}", e),
-                        }
-                    } else {
-                        info!("Peer already exists, not adding");
-                    }
-
-                    loop {
-                        let received_data = esp_now.receive();
-                        match received_data {
-                            Some(data) => {
-                                let bytes = data.data;
-                                info!("Key code received over ESP-NOW: state = {:?}, modifier = {:?}, key = {:?}", bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]);
-                                let bytes_written = PIPE.write(&[bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]]).await;
-                                if bytes_written != 3 {
-                                    error!("Failed to write to pipe");
-                                    break;
-                                }
-                            }
-                            None => {
-                                //error!("ESP-NOW receive error");
-                            }
-                        }
-                        Timer::after(Duration::from_millis(5)).await;
-                    }
+    loop {
+        let received_data = esp_now.receive();
+        match received_data {
+            Some(data) => {
+                let bytes = data.data;
+                info!("Key code received over ESP-NOW: state = {:?}, modifier = {:?}, key = {:?}", bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]);
+                let bytes_written = PIPE.write(&[bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]]).await;
+                if bytes_written != 3 {
+                    error!("Failed to write to pipe");
+                    break;
                 }
-                Err(e) => error!("ESP-NOW initialization error: {:?}", e),
+            }
+            None => {
+                //error!("ESP-NOW receive error");
             }
         }
-        Err(e) => error!("WiFi initialization error: {:?}", e),
+        Timer::after(Duration::from_millis(5)).await;
     }
 }
 
