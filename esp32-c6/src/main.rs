@@ -92,6 +92,17 @@ const PIPE_BUF_SIZE: usize = 15;
 static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
 
 use embassy_time::{Duration, Ticker, Timer};
+use hal::gpio::{GpioPin, Output, PushPull};
+use hal::spi::FullDuplexMode;
+
+// Struct that encapsulate SPI configuration, so that it can be passed to a function
+struct SpiConfig {
+    spi: hal::spi::master::Spi<'static, hal::peripherals::SPI2, FullDuplexMode>,
+    lcd_reset: GpioPin<Output<PushPull>, 3>,
+    lcd_dc: GpioPin<Output<PushPull>, 21>,
+    delay: Delay,
+    gdma: Gdma<'static>,
+}
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
@@ -145,8 +156,48 @@ async fn main(spawner: Spawner) -> ! {
     let uart0 = Uart::new(peripherals.UART0, &clocks);
     spawner.spawn(uart_receiver(uart0)).unwrap();
 
+    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
+    let lcd_sclk = io.pins.gpio6;
+    let lcd_mosi = io.pins.gpio7;
+    let lcd_cs = io.pins.gpio20;
+    let lcd_miso = io.pins.gpio0; // random unused pin
+    let lcd_dc = io.pins.gpio21.into_push_pull_output();
+    let _lcd_backlight = io.pins.gpio4.into_push_pull_output();
+    let lcd_reset = io.pins.gpio3.into_push_pull_output();
+
+    let dma = Gdma::new(peripherals.DMA);
+    // let dma_channel = dma.channel0;
+
+    // let mut descriptors: [u32; 24] = [0u32; 8 * 3];
+    // let mut rx_descriptors: [u32; 24] = [0u32; 8 * 3];
+
+
+    let mut delay = Delay::new(&clocks);
+
+    // delay.delay_ms(500u32);
+    info!("About to initialize the SPI LED driver");
+
+
+    let mut spi_config = SpiConfig {
+        spi: Spi::new(
+            peripherals.SPI2,
+            40u32.MHz(),
+            SpiMode::Mode0,
+            &clocks
+        ).with_pins(
+            Some(lcd_sclk),
+            Some(lcd_mosi),
+            Some(lcd_miso),
+            Some(lcd_cs),
+        ),
+        lcd_reset,
+        lcd_dc,
+        delay,
+        gdma: dma,
+    };
+
     // Main Emulator loop
-    spawner.spawn(app_loop()).unwrap();
+    spawner.spawn(app_loop(spi_config)).unwrap();
 
     let mut ticker = Ticker::every(Duration::from_secs(1));
     loop {
@@ -326,66 +377,33 @@ async fn uart_receiver(uart0: Uart<'static, UART0>) {
 }
 
 #[embassy_executor::task]
-async fn app_loop()
+async fn app_loop(mut spi_config: SpiConfig)
  //-> Result<(), core::fmt::Error>
 {
 
-    Timer::after(Duration::from_millis(1500)).await;
-
-    let peripherals = unsafe { Peripherals::steal() };
-    let system = peripherals.SYSTEM.split();
-    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-
-    let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock160MHz).freeze();
-
-    let lcd_sclk = io.pins.gpio6;
-    let lcd_mosi = io.pins.gpio7;
-    let lcd_cs = io.pins.gpio20;
-    let lcd_miso = io.pins.gpio0; // random unused pin
-    let lcd_dc = io.pins.gpio21.into_push_pull_output();
-    let _lcd_backlight = io.pins.gpio4.into_push_pull_output();
-    let lcd_reset = io.pins.gpio3.into_push_pull_output();
-
-    let dma = Gdma::new(peripherals.DMA);
-    let dma_channel = dma.channel0;
-
-    let mut descriptors = [0u32; 8 * 3];
-    let mut rx_descriptors = [0u32; 8 * 3];
-
-
-    let mut delay = Delay::new(&clocks);
-
-    // delay.delay_ms(500u32);
-    info!("About to initialize the SPI LED driver");
-
-    let spi = Spi::new(
-        peripherals.SPI2,
-        40u32.MHz(),
-        SpiMode::Mode0,
-        &clocks
-    ).with_pins(
-        Some(lcd_sclk),
-        Some(lcd_mosi),
-        Some(lcd_miso),
-        Some(lcd_cs),
-    ).with_dma(dma_channel.configure(
-        false,
-        &mut descriptors,
-        &mut rx_descriptors,
-        DmaPriority::Priority0,
-    ));
 
     Timer::after(Duration::from_millis(500)).await;
 
     // let _ = lcd_backlight.set_high();
+    let dma_channel = spi_config.gdma.channel0;
+    let mut descriptors: [u32; 24] = [0u32; 8 * 3];
+    let mut rx_descriptors: [u32; 24] = [0u32; 8 * 3];
 
-    let di = spi_dma_displayinterface::new_no_cs(2*256*192, spi, lcd_dc);
+    let spi = spi_config.spi.with_dma(
+        dma_channel.configure(
+            false,
+            &mut descriptors,
+            &mut rx_descriptors,
+            DmaPriority::Priority0,
+        )
+    );
+    let di = spi_dma_displayinterface::new_no_cs(2*256*192, spi, spi_config.lcd_dc);
 
     let mut display = match mipidsi::Builder::ili9341_rgb565(di)
         .with_display_size(LCD_H_RES, LCD_V_RES)
         .with_orientation(mipidsi::Orientation::Landscape(true))
         .with_color_order(mipidsi::ColorOrder::Rgb)
-        .init(&mut delay, Some(lcd_reset))
+        .init(&mut spi_config.delay, Some(spi_config.lcd_reset))
     {
         Ok(display) => display,
         Err(_e) => {
