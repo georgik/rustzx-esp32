@@ -17,10 +17,7 @@ use hal::{
     dma::DmaPriority,
     embassy,
     gdma::Gdma,
-    peripherals::{
-        Peripherals,
-        UART0,
-    },
+    peripherals::Peripherals,
     prelude::*,
     spi::{
         master::{prelude::*, Spi},
@@ -51,7 +48,6 @@ mod host;
 mod stopwatch;
 mod io;
 use usb_zx::{
-    uart_usb_key::{uart_code_to_usb_key, uart_composite_code_to_usb_key},
     usb_zx_key::usb_code_to_zxkey,
     zx_event::Event
 };
@@ -80,14 +76,7 @@ fn init_heap() {
 const SCREEN_OFFSET_X: u16 = (320 - 256) / 2;
 const SCREEN_OFFSET_Y: u16 = (240 - 192) / 2;
 
-
-// use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use keyboard_pipe::PIPE;
-// use embassy_sync::pipe::Pipe;
-
-// // Pipe for transporting keystrokes from ESP-NOW to emulator core
-// const PIPE_BUF_SIZE: usize = 15;
-// static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
 
 use embassy_time::{Duration, Ticker, Timer};
 use hal::gpio::{GpioPin, Output};
@@ -95,7 +84,6 @@ use hal::spi::FullDuplexMode;
 
 use esp_bsp_rs::{define_display_type, lcd_gpios};
 
-// type IliDisplay = mipidsi::Display<crate::spi_dma_displayinterface::SPIInterface<'static, GpioPin<Output<hal::gpio::PushPull>, 21>, GpioPin<Output<hal::gpio::PushPull>, 0>, hal::peripherals::SPI2, hal::gdma::Channel0, FullDuplexMode>, mipidsi::models::ILI9341Rgb565, GpioPin<Output<hal::gpio::PushPull>, 3>>;
 type AppDisplay = define_display_type!("ESP32-C6-DevKitC-1");
 
 #[main]
