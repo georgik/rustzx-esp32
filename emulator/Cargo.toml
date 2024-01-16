@@ -1,0 +1,26 @@
+[package]
+name = "emulator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+embassy-executor = { version = "0.4.0", package = "embassy-executor", features = ["nightly", "integrated-timers"] }
+embedded-graphics = "0.8.0"
+embedded-io-async  = "0.6.1"
+embassy-time = { version = "0.2.0" }
+esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32c6", "esp-now", "async", "phy-enable-usb" ] }
+hal = { package = "esp32c6-hal", version = "0.7.0" , features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
+log = "0.4"
+mipidsi = "0.7.1"
+rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }
+spi-dma-displayinterface = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", features = ["esp32c6"] }
+
+esp-bsp-rs = { path = "../esp-bsp-rs" }
+graphics = { path = "../graphics" }
+keyboard-pipe = { path = "../keyboard-pipe" }
+usb-zx = { path = "../usb-zx" }
+
+[patch.crates-io]
+embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
+embassy-executor-macros = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor-macros", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
+embassy-time = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-time", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
