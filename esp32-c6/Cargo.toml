@@ -45,6 +45,8 @@ rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "featur
 esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32c6", "esp-now", "async", "phy-enable-usb" ] }
 usb-zx = { path = "../usb-zx" }
 static_cell = { version = "2.0.0", features = ["nightly"] }
+esp-bsp-rs = { path = "../esp-bsp-rs" }
+graphics = { path = "../graphics" }
 
 [patch.crates-io]
 embassy-net = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-net", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}

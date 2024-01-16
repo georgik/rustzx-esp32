@@ -17,6 +17,7 @@ use crate::stopwatch::InstantStopwatch;
 use crate::io::FileAsset;
 use embedded_graphics::pixelcolor::Rgb565;
 
+use graphics::color_conv;
 
 pub(crate) struct Esp32Host
 {
@@ -48,7 +49,6 @@ pub(crate) struct EmbeddedGraphicsFrameBuffer {
     pub bounding_box_bottom_right: Option<(usize, usize)>,
 }
 
-use crate::color_conv;
 impl EmbeddedGraphicsFrameBuffer {
     // pub fn get_pixel_iter(&self) -> impl Iterator<Item = Rgb565> + '_ {
     //     self.buffer.iter().copied()

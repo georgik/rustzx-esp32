@@ -41,17 +41,11 @@ use spooky_embedded::{
 
 use esp_backtrace as _;
 
-use esp_wifi::{initialize, EspWifiInitFor, EspWifiInitialization, InitializationError};
+use esp_wifi::{initialize, EspWifiInitFor};
 
-use rustzx_core::zx::video::colors::ZXBrightness;
-use rustzx_core::zx::video::colors::ZXColor;
 use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, host::Host};
 
 use log::{info, error, debug};
-
-use embedded_graphics::pixelcolor::Rgb565;
-
-use embedded_hal::digital::v2::OutputPin;
 
 mod host;
 mod stopwatch;
@@ -93,44 +87,10 @@ const PIPE_BUF_SIZE: usize = 15;
 static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
 
 use embassy_time::{Duration, Ticker, Timer};
-use hal::gpio::{GpioPin, Output, PushPull};
+use hal::gpio::{GpioPin, Output};
 use hal::spi::FullDuplexMode;
-// Struct that encapsulate SPI configuration, so that it can be passed to a function
-struct SpiConfig {
-    spi: hal::spi::master::Spi<'static, hal::peripherals::SPI2, FullDuplexMode>,
-    lcd_reset: GpioPin<Output<PushPull>, 3>,
-    lcd_dc: GpioPin<Output<PushPull>, 21>,
-    delay: Delay,
-    gdma: Gdma<'static>,
-}
 
-#[macro_export]
-macro_rules! lcd_gpios {
-    ("ESP32-C6-DevKitC-1", $io:ident) => {
-        (
-            $io.pins.gpio6,     // lcd_sclk
-            $io.pins.gpio7,     // lcd_mosi
-            $io.pins.gpio20,    // lcd_cs
-            $io.pins.gpio0,     // lcd_miso
-            $io.pins.gpio21.into_push_pull_output(),    // lcd_dc
-            $io.pins.gpio4.into_push_pull_output(),     // lcd_backlight
-            $io.pins.gpio3.into_push_pull_output()      // lcd_reset
-        )
-    };
-}
-
-#[macro_export]
-macro_rules! define_display_type {
-    ("ESP32-C6-DevKitC-1") => {
-        mipidsi::Display<crate::spi_dma_displayinterface::SPIInterface<'static, GpioPin<Output<hal::gpio::PushPull>, 21>,
-            GpioPin<Output<hal::gpio::PushPull>, 0>,
-            hal::peripherals::SPI2, hal::gdma::Channel0, FullDuplexMode>,
-            mipidsi::models::ILI9341Rgb565,
-            GpioPin<Output<hal::gpio::PushPull>,
-            3
-        >>
-    };
-}
+use esp_bsp_rs::{define_display_type, lcd_gpios};
 
 // type IliDisplay = mipidsi::Display<crate::spi_dma_displayinterface::SPIInterface<'static, GpioPin<Output<hal::gpio::PushPull>, 21>, GpioPin<Output<hal::gpio::PushPull>, 0>, hal::peripherals::SPI2, hal::gdma::Channel0, FullDuplexMode>, mipidsi::models::ILI9341Rgb565, GpioPin<Output<hal::gpio::PushPull>, 3>>;
 type AppDisplay = define_display_type!("ESP32-C6-DevKitC-1");
@@ -168,9 +128,9 @@ async fn main(spawner: Spawner) -> ! {
     match esp_now_init {
         Ok(init) => {
             info!("ESP-NOW init");
-            let mut esp_now: Result<EspNow, EspNowError> = EspNow::new(&init, wifi);
+            let esp_now: Result<EspNow, EspNowError> = EspNow::new(&init, wifi);
             match esp_now {
-                Ok(mut esp_now) => {
+                Ok(esp_now) => {
                     spawner.spawn(esp_now_receiver(esp_now)).unwrap();
                 }
                 _ => {
@@ -191,13 +151,15 @@ async fn main(spawner: Spawner) -> ! {
     let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!("ESP32-C6-DevKitC-1", io);
 
     let dma = Gdma::new(peripherals.DMA);
+    let dma_channel = dma.channel0;
 
     let mut delay = Delay::new(&clocks);
 
+    let descriptors = make_static!([0u32; 8 * 3]);
+    let rx_descriptors = make_static!([0u32; 8 * 3]);
     info!("About to initialize the SPI LED driver");
 
-    let mut spi_config = SpiConfig {
-        spi: Spi::new(
+    let spi = Spi::new(
             peripherals.SPI2,
             40u32.MHz(),
             SpiMode::Mode0,
@@ -207,32 +169,22 @@ async fn main(spawner: Spawner) -> ! {
             Some(lcd_mosi),
             Some(lcd_miso),
             Some(lcd_cs),
-        ),
-        lcd_reset,
-        lcd_dc,
-        delay,
-        gdma: dma,
-    };
-    let dma_channel = spi_config.gdma.channel0;
-
-    let mut descriptors = make_static!([0u32; 8 * 3]);
-    let mut rx_descriptors = make_static!([0u32; 8 * 3]);
-
-    let spi = spi_config.spi.with_dma(
-        dma_channel.configure(
-            false,
-            &mut *descriptors,
-            &mut *rx_descriptors,
-            DmaPriority::Priority0,
+        ).with_dma(
+            dma_channel.configure(
+                false,
+                &mut *descriptors,
+                &mut *rx_descriptors,
+                DmaPriority::Priority0,
         )
     );
-    let di = spi_dma_displayinterface::new_no_cs(2 * 256 * 192, spi, spi_config.lcd_dc);
 
-    let mut display = match mipidsi::Builder::ili9341_rgb565(di)
+    let di = spi_dma_displayinterface::new_no_cs(2 * 256 * 192, spi, lcd_dc);
+
+    let display = match mipidsi::Builder::ili9341_rgb565(di)
         .with_display_size(LCD_H_RES, LCD_V_RES)
         .with_orientation(mipidsi::Orientation::Landscape(true))
         .with_color_order(mipidsi::ColorOrder::Rgb)
-        .init(&mut spi_config.delay, Some(spi_config.lcd_reset))
+        .init(&mut delay, Some(lcd_reset))
     {
         Ok(display) => display,
         Err(_e) => {
@@ -250,47 +202,6 @@ async fn main(spawner: Spawner) -> ! {
         ticker.next().await;
     }
 
-}
-
-const ZX_BLACK: Rgb565 = Rgb565::BLACK;
-const ZX_BRIGHT_BLUE: Rgb565 = Rgb565::new(0, 0, Rgb565::MAX_B);
-const ZX_BRIGHT_RED: Rgb565 = Rgb565::new(Rgb565::MAX_R, 0, 0);
-const ZX_BRIGHT_PURPLE: Rgb565 = Rgb565::new(Rgb565::MAX_R, 0, Rgb565::MAX_B);
-const ZX_BRIGHT_GREEN: Rgb565 = Rgb565::new(0, Rgb565::MAX_G, 0);
-const ZX_BRIGHT_CYAN: Rgb565 = Rgb565::new(0, Rgb565::MAX_G, Rgb565::MAX_B);
-const ZX_BRIGHT_YELLOW: Rgb565 = Rgb565::new(Rgb565::MAX_R, Rgb565::MAX_G, 0);
-const ZX_BRIGHT_WHITE: Rgb565 = Rgb565::WHITE;
-
-const ZX_NORMAL_BLUE: Rgb565 = Rgb565::new(0, 0, Rgb565::MAX_B / 2);
-const ZX_NORMAL_RED: Rgb565 = Rgb565::new(Rgb565::MAX_R / 2, 0, 0);
-const ZX_NORMAL_PURPLE: Rgb565 = Rgb565::new(Rgb565::MAX_R / 2, 0, Rgb565::MAX_B / 2);
-const ZX_NORMAL_GREEN: Rgb565 = Rgb565::new(0, Rgb565::MAX_G / 2, 0);
-const ZX_NORMAL_CYAN: Rgb565 = Rgb565::new(0, Rgb565::MAX_G / 2, Rgb565::MAX_B / 2);
-const ZX_NORMAL_YELLOW: Rgb565 = Rgb565::new(Rgb565::MAX_R / 2, Rgb565::MAX_G / 2, 0);
-const ZX_NORMAL_WHITE: Rgb565 = Rgb565::new(Rgb565::MAX_R / 2, Rgb565::MAX_G / 2, Rgb565::MAX_B / 2);
-
-fn color_conv(color: &ZXColor, brightness: ZXBrightness) -> Rgb565 {
-    match (color, brightness) {
-        (ZXColor::Black, _) => ZX_BLACK,
-
-        // Bright Colors
-        (ZXColor::Blue, ZXBrightness::Bright) => ZX_BRIGHT_BLUE,
-        (ZXColor::Red, ZXBrightness::Bright) => ZX_BRIGHT_RED,
-        (ZXColor::Purple, ZXBrightness::Bright) => ZX_BRIGHT_PURPLE,
-        (ZXColor::Green, ZXBrightness::Bright) => ZX_BRIGHT_GREEN,
-        (ZXColor::Cyan, ZXBrightness::Bright) => ZX_BRIGHT_CYAN,
-        (ZXColor::Yellow, ZXBrightness::Bright) => ZX_BRIGHT_YELLOW,
-        (ZXColor::White, ZXBrightness::Bright) => ZX_BRIGHT_WHITE,
-
-        // Normal Colors
-        (ZXColor::Blue, ZXBrightness::Normal) => ZX_NORMAL_BLUE,
-        (ZXColor::Red, ZXBrightness::Normal) => ZX_NORMAL_RED,
-        (ZXColor::Purple, ZXBrightness::Normal) => ZX_NORMAL_PURPLE,
-        (ZXColor::Green, ZXBrightness::Normal) => ZX_NORMAL_GREEN,
-        (ZXColor::Cyan, ZXBrightness::Normal) => ZX_NORMAL_CYAN,
-        (ZXColor::Yellow, ZXBrightness::Normal) => ZX_NORMAL_YELLOW,
-        (ZXColor::White, ZXBrightness::Normal) => ZX_NORMAL_WHITE,
-    }
 }
 
 fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator: &mut Emulator<H>) {
