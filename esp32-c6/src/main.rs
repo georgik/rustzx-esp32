@@ -60,6 +60,7 @@ use esp_wifi::esp_now::{EspNow, EspNowError, PeerInfo};
 use core::mem::MaybeUninit;
 
 use uart_keyboard::uart_receiver;
+use esp_now_keyboard::esp_now_receiver;
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -217,49 +218,6 @@ fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator:
     }
 }
 
-const ESP_NOW_PAYLOAD_INDEX: usize = 20;
-
-#[embassy_executor::task]
-async fn esp_now_receiver(esp_now: EspNow<'static>) {
-    info!("ESP-NOW receiver task");
-    let peer_info = PeerInfo {
-        // Specify a unique peer address here (replace with actual address)
-        peer_address: [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF],
-        lmk: None,
-        channel: Some(1), // Specify the channel if known
-        encrypt: false, // Set to true if encryption is needed
-    };
-
-    // Check if the peer already exists
-    if !esp_now.peer_exists(&peer_info.peer_address) {
-        info!("Adding peer");
-        match esp_now.add_peer(peer_info) {
-            Ok(_) => info!("Peer added"),
-            Err(e) => error!("Peer add error: {:?}", e),
-        }
-    } else {
-        info!("Peer already exists, not adding");
-    }
-
-    loop {
-        let received_data = esp_now.receive();
-        match received_data {
-            Some(data) => {
-                let bytes = data.data;
-                info!("Key code received over ESP-NOW: state = {:?}, modifier = {:?}, key = {:?}", bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]);
-                let bytes_written = PIPE.write(&[bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]]).await;
-                if bytes_written != 3 {
-                    error!("Failed to write to pipe");
-                    break;
-                }
-            }
-            None => {
-                //error!("ESP-NOW receive error");
-            }
-        }
-        Timer::after(Duration::from_millis(5)).await;
-    }
-}
 
 #[embassy_executor::task]
 async fn app_loop(mut display:AppDisplay)
