@@ -1,0 +1,10 @@
+[package]
+name = "keyboard-pipe"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+embassy-sync = { version = "0.5.0" }
+
+[patch.crates-io]
+embassy-sync = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-sync", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}

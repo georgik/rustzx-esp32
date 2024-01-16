@@ -63,6 +63,8 @@ use esp_wifi::esp_now::{EspNow, EspNowError, PeerInfo};
 
 use core::mem::MaybeUninit;
 
+use uart_keyboard::uart_receiver;
+
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
@@ -79,12 +81,13 @@ const SCREEN_OFFSET_X: u16 = (320 - 256) / 2;
 const SCREEN_OFFSET_Y: u16 = (240 - 192) / 2;
 
 
-use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
-use embassy_sync::pipe::Pipe;
+// use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use keyboard_pipe::PIPE;
+// use embassy_sync::pipe::Pipe;
 
-// Pipe for transporting keystrokes from ESP-NOW to emulator core
-const PIPE_BUF_SIZE: usize = 15;
-static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
+// // Pipe for transporting keystrokes from ESP-NOW to emulator core
+// const PIPE_BUF_SIZE: usize = 15;
+// static PIPE: Pipe<CriticalSectionRawMutex, PIPE_BUF_SIZE> = Pipe::new();
 
 use embassy_time::{Duration, Ticker, Timer};
 use hal::gpio::{GpioPin, Output};
@@ -266,68 +269,6 @@ async fn esp_now_receiver(esp_now: EspNow<'static>) {
                 //error!("ESP-NOW receive error");
             }
         }
-        Timer::after(Duration::from_millis(5)).await;
-    }
-}
-
-async fn usb_write_key(key_state: u8, modifier: u8, key_code:u8) {
-    let mut bytes = [0u8; 3];
-    bytes[0] = key_state;
-    bytes[1] = modifier;
-    bytes[2] = key_code;
-    let bytes_written = PIPE.write(&bytes).await;
-    if bytes_written != 3 {
-        error!("Failed to write to pipe");
-    }
-}
-
-async fn usb_press_key(modifier: u8, key_code:u8) {
-    usb_write_key(0, modifier, key_code).await;
-    usb_write_key(1, modifier, key_code).await;
-}
-
-/// Read from UART and send to emulator
-#[embassy_executor::task]
-async fn uart_receiver(uart0: Uart<'static, UART0>) {
-    info!("UART receiver task");
-
-    let (_,  mut rx) = uart0.split();
-    const MAX_BUFFER_SIZE: usize = 16;
-    let mut rbuf: [u8; MAX_BUFFER_SIZE] = [0u8; MAX_BUFFER_SIZE];
-
-    loop {
-        let result = embedded_io_async::Read::read(&mut rx, &mut rbuf).await;
-        match result {
-            Ok(bytes_read) => {
-                info!("UART read: {} bytes", bytes_read);
-                if bytes_read == 1 {
-                    info!("UART read: {:x}", rbuf[0]);
-                    match uart_code_to_usb_key(rbuf[0]) {
-                        Some((modifier, key_code)) => {
-                            usb_press_key(modifier, key_code).await;
-                        },
-                        None => {
-                            error!("Unknown key code");
-                        }
-                    }
-
-                } else if bytes_read == 3 {
-                    info!("UART read: {:x} {:x} {:x}", rbuf[0], rbuf[1], rbuf[2]);
-                    match uart_composite_code_to_usb_key(rbuf[0], rbuf[1], rbuf[2]) {
-                        Some((modifier, key_code)) => {
-                            usb_press_key(modifier, key_code).await;
-                        },
-                        None => {
-                            error!("Unknown key code");
-                        }
-                    }
-                }
-            },
-            Err(e) => {
-                error!("UART read error: {:?}", e);
-            }
-        }
-
         Timer::after(Duration::from_millis(5)).await;
     }
 }
