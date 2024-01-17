@@ -48,10 +48,13 @@ use usb_zx::{
 
 use crate::io::FileAsset;
 
-#[cfg(feature = "esp32c6")]
+#[cfg(feature = "esp32_c6_devkit_c1")]
 type AppDisplay = define_display_type!(BoardType::ESP32C6DevKitC1);
-#[cfg(feature = "esp32s3")]
+#[cfg(feature = "m5stack_cores3")]
 type AppDisplay = define_display_type!(BoardType::M5StackCoreS3);
+#[cfg(feature = "esp32_s3_box")]
+type AppDisplay = define_display_type!(BoardType::ESP32S3Box);
+
 
 const SCREEN_OFFSET_X: u16 = (320 - 256) / 2;
 const SCREEN_OFFSET_Y: u16 = (240 - 192) / 2;
