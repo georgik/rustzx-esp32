@@ -15,7 +15,7 @@ esp-backtrace = { version = "0.9.0", features = [
 esp-println = { version = "0.8.0", features = ["esp32s3", "log"] }
 
 [dependencies]
-critical-section = { version = "1.1.2" }
+# critical-section = { version = "1.1.2" }
 display-interface = "0.4"
 esp-alloc = "0.3.0"
 
@@ -45,8 +45,16 @@ rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "featur
 axp2101 = { git = "https://github.com/georgik/axp2101-rs.git", rev = "60db0e1" }
 aw9523 = { git = "https://github.com/georgik/aw9523-rs.git", rev = "af49728" }
 pc-keyboard = "0.7.0"
-esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32s3", "esp-now", "async", "phy-enable-usb" ] }
+#esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32s3", "esp-now", "async", "phy-enable-usb" ] }
+
 usb-zx = { path = "../usb-zx" }
+static_cell = { version = "2.0.0", features = ["nightly"] }
+esp-bsp-rs = { path = "../esp-bsp-rs" }
+graphics = { path = "../graphics" }
+keyboard-pipe = { path = "../keyboard-pipe" }
+uart-keyboard = { path = "../uart-keyboard", features = [ "esp32s3" ] }
+esp-now-keyboard = { path = "../esp-now-keyboard", features = [ "esp32s3" ] }
+emulator = { path = "../emulator", features = [ "esp32s3" ] }
 
 [patch.crates-io]
 embassy-net = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-net", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}

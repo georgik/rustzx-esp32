@@ -15,12 +15,12 @@ embassy-executor = { version = "0.4.0", package = "embassy-executor", features =
 embedded-graphics = "0.8.0"
 embedded-io-async  = "0.6.1"
 embassy-time = { version = "0.2.0" }
-esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32c6", "esp-now", "async", "phy-enable-usb" ] }
+#esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32c6", "esp-now", "async", "phy-enable-usb" ] }
 # hal = { package = "esp32c6-hal", version = "0.7.0" , features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
 log = "0.4"
 mipidsi = "0.7.1"
 rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }
-spi-dma-displayinterface = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", features = ["esp32c6"] }
+spi-dma-displayinterface = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", optional = true }
 
 esp-bsp-rs = { path = "../esp-bsp-rs" }
 graphics = { path = "../graphics" }
@@ -29,12 +29,12 @@ usb-zx = { path = "../usb-zx" }
 
 [features]
 # default = [ "esp32" ]
-esp32 =   [ "esp32-hal" ]
-esp32s2 = [ "esp32s2-hal" ]
-esp32s3 = [ "esp32s3-hal" ]
-esp32c3 = [ "esp32c3-hal" ]
-esp32c6 = [ "esp32c6-hal" ]
-esp32h2 = [ "esp32h2-hal" ]
+esp32 =   [ "esp32-hal", "spi-dma-displayinterface/esp32" ]
+esp32s2 = [ "esp32s2-hal", "spi-dma-displayinterface/esp32s2" ]
+esp32s3 = [ "esp32s3-hal", "spi-dma-displayinterface/esp32s3" ]
+esp32c3 = [ "esp32c3-hal", "spi-dma-displayinterface/esp32c3" ]
+esp32c6 = [ "esp32c6-hal", "spi-dma-displayinterface/esp32c6" ]
+esp32h2 = [ "esp32h2-hal", "spi-dma-displayinterface/esp32h2" ]
 
 [patch.crates-io]
 embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}

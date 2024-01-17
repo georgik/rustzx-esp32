@@ -13,6 +13,39 @@ macro_rules! lcd_gpios {
             $io.pins.gpio3.into_push_pull_output()      // lcd_reset
         )
     };
+    ("M5Stack-CoreS3", $io:ident) => {
+        (
+            $io.pins.gpio36,    // lcd_sclk
+            $io.pins.gpio37,    // lcd_mosi
+            $io.pins.gpio3,     // lcd_cs
+            $io.pins.gpio6,    // lcd_miso
+            $io.pins.gpio35.into_push_pull_output(),    // lcd_dc
+            None,    // lcd_backlight
+            $io.pins.gpio15.into_push_pull_output()     // lcd_reset
+        )
+    };
+    ("M5Stack-CoreInk", $io:ident) => {
+        (
+            $io.pins.gpio18,    // lcd_sclk
+            $io.pins.gpio23,    // lcd_mosi
+            $io.pins.gpio5,     // lcd_cs
+            $io.pins.gpio19,    // lcd_miso
+            $io.pins.gpio26.into_push_pull_output(),    // lcd_dc
+            $io.pins.gpio14.into_push_pull_output(),    // lcd_backlight
+            $io.pins.gpio27.into_push_pull_output()     // lcd_reset
+        )
+    };
+    ("M5Stack-Fire", $io:ident) => {
+        (
+            $io.pins.gpio18,    // lcd_sclk
+            $io.pins.gpio23,    // lcd_mosi
+            $io.pins.gpio5,     // lcd_cs
+            $io.pins.gpio19,    // lcd_miso
+            $io.pins.gpio26.into_push_pull_output(),    // lcd_dc
+            $io.pins.gpio14.into_push_pull_output(),    // lcd_backlight
+            $io.pins.gpio27.into_push_pull_output()     // lcd_reset
+        )
+    };
 }
 
 #[macro_export]
