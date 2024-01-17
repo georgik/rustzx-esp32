@@ -48,7 +48,7 @@ static_cell = { version = "2.0.0", features = ["nightly"] }
 esp-bsp-rs = { path = "../esp-bsp-rs" }
 graphics = { path = "../graphics" }
 keyboard-pipe = { path = "../keyboard-pipe" }
-uart-keyboard = { path = "../uart-keyboard" }
+uart-keyboard = { path = "../uart-keyboard", features = [ "esp32c6" ] }
 esp-now-keyboard = { path = "../esp-now-keyboard" }
 emulator = { path = "../emulator" }
 
