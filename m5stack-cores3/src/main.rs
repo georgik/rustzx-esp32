@@ -153,9 +153,9 @@ async fn main(spawner: Spawner) -> ! {
     }
 
     // UART Keyboard receiver
-    let uart0 = Uart::new(peripherals.UART0, &clocks);
-    spawner.spawn(uart_receiver(uart0)).unwrap();
-    
+    // let uart0 = Uart::new(peripherals.UART0, &clocks);
+    // spawner.spawn(uart_receiver(uart0)).unwrap();
+
     let dma = Gdma::new(peripherals.DMA);
     let dma_channel = dma.channel0;
 
