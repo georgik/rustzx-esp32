@@ -49,8 +49,8 @@ esp-bsp-rs = { path = "../esp-bsp-rs" }
 graphics = { path = "../graphics" }
 keyboard-pipe = { path = "../keyboard-pipe" }
 uart-keyboard = { path = "../uart-keyboard", features = [ "esp32c6" ] }
-esp-now-keyboard = { path = "../esp-now-keyboard" }
-emulator = { path = "../emulator" }
+esp-now-keyboard = { path = "../esp-now-keyboard", features = [ "esp32c6" ] }
+emulator = { path = "../emulator", features = [ "esp32c6" ] }
 
 [patch.crates-io]
 embassy-net = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-net", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}

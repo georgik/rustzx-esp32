@@ -4,14 +4,30 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+esp32-hal = { version = "0.17.0", optional = true, default-features = false, features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
+esp32s2-hal = { version = "0.14.0", optional = true, default-features = false, features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
+esp32s3-hal = { version = "0.14.0", optional = true, default-features = false, features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
+esp32c3-hal = { version = "0.14.0", optional = true, default-features = false, features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
+esp32c6-hal = { version = "0.7.0", optional = true, default-features = false, features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
+esp32h2-hal = { version = "0.5.0", optional = true, default-features = false, features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
+
 embassy-executor = { version = "0.4.0", package = "embassy-executor", features = ["nightly", "integrated-timers"] }
 embedded-io-async  = "0.6.1"
 embassy-time = { version = "0.2.0" }
 esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", features = [ "esp32c6", "esp-now", "async", "phy-enable-usb" ] }
-hal = { package = "esp32c6-hal", version = "0.7.0" , features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
+# hal = { package = "esp32c6-hal", version = "0.7.0" , features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
 keyboard-pipe = { path = "../keyboard-pipe" }
 log = "0.4"
 usb-zx = { path = "../usb-zx" }
+
+[features]
+# default = [ "esp32" ]
+esp32 =   [ "esp32-hal" ]
+esp32s2 = [ "esp32s2-hal" ]
+esp32s3 = [ "esp32s3-hal" ]
+esp32c3 = [ "esp32c3-hal" ]
+esp32c6 = [ "esp32c6-hal" ]
+esp32h2 = [ "esp32h2-hal" ]
 
 [patch.crates-io]
 embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
