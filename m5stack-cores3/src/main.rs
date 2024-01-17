@@ -29,10 +29,11 @@ use hal::{
     Delay,
     Rng,
     IO,
+    Uart
 };
 
 use embassy_executor::Spawner;
-use esp_wifi::esp_now::{EspNow, PeerInfo};
+use esp_wifi::esp_now::{EspNow, EspNowError};
 use esp_wifi::{initialize, EspWifiInitFor};
 
 use embassy_time::{Duration, Ticker, Timer};
@@ -42,33 +43,19 @@ use esp_backtrace as _;
 // use icm42670::{Address, Icm42670};
 use shared_bus::BusManagerSimple;
 
-use rustzx_core::zx::video::colors::ZXBrightness;
-use rustzx_core::zx::video::colors::ZXColor;
-use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, host::Host};
+use log::{info, error};
 
-use log::{info, error, debug};
-
-// use core::time::Duration;
-use embedded_graphics::pixelcolor::Rgb565;
-
-use display_interface::WriteOnlyDataCommand;
 use mipidsi::models::Model;
 use embedded_hal::digital::v2::OutputPin;
 
 use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
 
-use pc_keyboard::{layouts, HandleControl, ScancodeSet2};
+use esp_bsp_rs::lcd_gpios;
 
-mod host;
-mod stopwatch;
-mod io;
-use usb_zx::{
-    usb_zx_key::usb_code_to_zxkey,
-    zx_event::Event
-};
-
-use crate::io::FileAsset;
+use uart_keyboard::uart_receiver;
+use esp_now_keyboard::esp_now_receiver;
+use emulator::app_loop;
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -96,6 +83,9 @@ async fn main(spawner: Spawner) -> ! {
     info!("Starting up");
     let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
 
+    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
+    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!("M5Stack-CoreS3", io);
+
     // I2C
     let sda = io.pins.gpio12;
     let scl = io.pins.gpio11;
@@ -122,6 +112,7 @@ async fn main(spawner: Spawner) -> ! {
 
     // M5Stack CORE 2 - https://docs.m5stack.com/en/core/core2
     // let mut backlight = io.pins.gpio3.into_push_pull_output();
+    let mut delay = Delay::new(&clocks);
     delay.delay_ms(500u32);
     info!("About to initialize the SPI LED driver");
 
@@ -129,7 +120,7 @@ async fn main(spawner: Spawner) -> ! {
     embassy::init(&clocks, embassy_timer);
 
     // ESP-NOW keyboard receiver
-    let wifi_timer = SystemTimer::new(peripherals.SYSTIMER).alarm0;
+    let wifi_timer = hal::timer::TimerGroup::new(peripherals.TIMG1, &clocks).timer0;
     let rng = Rng::new(peripherals.RNG);
     let radio_clock_control = system.radio_clock_control;
 
@@ -164,10 +155,7 @@ async fn main(spawner: Spawner) -> ! {
     // UART Keyboard receiver
     let uart0 = Uart::new(peripherals.UART0, &clocks);
     spawner.spawn(uart_receiver(uart0)).unwrap();
-
-    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!("ESP32-C6-DevKitC-1", io);
-
+    
     let dma = Gdma::new(peripherals.DMA);
     let dma_channel = dma.channel0;
 

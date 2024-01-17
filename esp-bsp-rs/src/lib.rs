@@ -18,9 +18,9 @@ macro_rules! lcd_gpios {
             $io.pins.gpio36,    // lcd_sclk
             $io.pins.gpio37,    // lcd_mosi
             $io.pins.gpio3,     // lcd_cs
-            $io.pins.gpio6,    // lcd_miso
+            $io.pins.gpio6,     // lcd_miso
             $io.pins.gpio35.into_push_pull_output(),    // lcd_dc
-            None,    // lcd_backlight
+            $io.pins.gpio0.into_push_pull_output(),    // lcd_backlight
             $io.pins.gpio15.into_push_pull_output()     // lcd_reset
         )
     };
@@ -57,6 +57,15 @@ macro_rules! define_display_type {
             mipidsi::models::ILI9341Rgb565,
             GpioPin<Output<hal::gpio::PushPull>,
             3
+        >>
+    };
+    ("M5Stack-CoreS3") => {
+        mipidsi::Display<crate::spi_dma_displayinterface::SPIInterface<'static, GpioPin<Output<esp32s3_hal::gpio::PushPull>, 35>,
+            GpioPin<Output<esp32s3_hal::gpio::PushPull>, 0>,
+            esp32s3_hal::peripherals::SPI2, esp32s3_hal::gdma::Channel0, FullDuplexMode>,
+            mipidsi::models::ILI9342CRgb565,
+            GpioPin<Output<esp32s3_hal::gpio::PushPull>,
+            15
         >>
     };
 }

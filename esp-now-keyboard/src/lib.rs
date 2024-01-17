@@ -17,12 +17,8 @@ pub use esp32s2_hal as hal;
 pub use esp32s3_hal as hal;
 
 use keyboard_pipe::PIPE;
-use log::{info, error, debug};
-use hal::{
-    embassy,
-    Uart,
-    peripherals::UART0
-};
+use log::{info, error};
+use hal::embassy;
 use embassy_time::{Duration, Ticker, Timer};
 use usb_zx::{
     uart_usb_key::{uart_code_to_usb_key, uart_composite_code_to_usb_key},
