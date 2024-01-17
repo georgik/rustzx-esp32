@@ -5,13 +5,6 @@
 use spi_dma_displayinterface::spi_dma_displayinterface;
 use static_cell::make_static;
 
-use embedded_graphics::{
-    mono_font::{ascii::FONT_8X13, MonoTextStyle},
-    prelude::{Point, RgbColor},
-    text::Text,
-    Drawable,
-};
-
 use hal::{
     clock::{ClockControl, CpuClock},
     dma::DmaPriority,
@@ -29,14 +22,14 @@ use hal::{
     Delay,
     Rng,
     IO,
-    Uart
+    // Uart
 };
 
 use embassy_executor::Spawner;
 use esp_wifi::esp_now::{EspNow, EspNowError};
 use esp_wifi::{initialize, EspWifiInitFor};
 
-use embassy_time::{Duration, Ticker, Timer};
+use embassy_time::{Duration, Ticker};
 
 use esp_backtrace as _;
 
@@ -51,7 +44,7 @@ use embedded_hal::digital::v2::OutputPin;
 use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
 
-use esp_bsp_rs::lcd_gpios;
+use esp_bsp_rs::{lcd_gpios, BoardType};
 
 use uart_keyboard::uart_receiver;
 use esp_now_keyboard::esp_now_receiver;
@@ -84,7 +77,7 @@ async fn main(spawner: Spawner) -> ! {
     let clocks = ClockControl::configure(system.clock_control, CpuClock::Clock240MHz).freeze();
 
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!("M5Stack-CoreS3", io);
+    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!(BoardType::M5StackCoreS3, io);
 
     // I2C
     let sda = io.pins.gpio12;

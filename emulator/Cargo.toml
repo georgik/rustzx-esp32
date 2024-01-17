@@ -36,6 +36,9 @@ esp32c3 = [ "esp32c3-hal", "spi-dma-displayinterface/esp32c3" ]
 esp32c6 = [ "esp32c6-hal", "spi-dma-displayinterface/esp32c6" ]
 esp32h2 = [ "esp32h2-hal", "spi-dma-displayinterface/esp32h2" ]
 
+esp32_c6_devkit_c1 = [ "esp32c6" ]
+m5stack_cores3 = [ "esp32s3" ]
+
 [patch.crates-io]
 embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
 embassy-executor-macros = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor-macros", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}

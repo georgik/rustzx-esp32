@@ -28,7 +28,7 @@ use keyboard_pipe::PIPE;
 
 use embassy_time::{Duration, Timer};
 
-use esp_bsp_rs::define_display_type;
+use esp_bsp_rs::{define_display_type, BoardType};
 
 use embedded_graphics::{
     mono_font::{ascii::FONT_8X13, MonoTextStyle},
@@ -49,9 +49,9 @@ use usb_zx::{
 use crate::io::FileAsset;
 
 #[cfg(feature = "esp32c6")]
-type AppDisplay = define_display_type!("ESP32-C6-DevKitC-1");
+type AppDisplay = define_display_type!(BoardType::ESP32C6DevKitC1);
 #[cfg(feature = "esp32s3")]
-type AppDisplay = define_display_type!("M5Stack-CoreS3");
+type AppDisplay = define_display_type!(BoardType::M5StackCoreS3);
 
 const SCREEN_OFFSET_X: u16 = (320 - 256) / 2;
 const SCREEN_OFFSET_Y: u16 = (240 - 192) / 2;

@@ -113,7 +113,7 @@ async fn main(spawner: Spawner) -> ! {
     spawner.spawn(uart_receiver(uart0)).unwrap();
 
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!("ESP32-C6-DevKitC-1", io);
+    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!(BoardType::ESP32C6DevKitC1, io);
 
     let dma = Gdma::new(peripherals.DMA);
     let dma_channel = dma.channel0;
