@@ -22,7 +22,7 @@ mipidsi = "0.7.1"
 rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }
 spi-dma-displayinterface = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", optional = true }
 
-esp-bsp-rs = { path = "../esp-bsp-rs" }
+esp-bsp = { version = "0.1.0" }
 graphics = { path = "../graphics" }
 keyboard-pipe = { path = "../keyboard-pipe" }
 usb-zx = { path = "../usb-zx" }

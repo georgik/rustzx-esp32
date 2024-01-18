@@ -44,7 +44,7 @@ esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", fe
 
 usb-zx = { path = "../usb-zx" }
 static_cell = { version = "2.0.0", features = ["nightly"] }
-esp-bsp-rs = { path = "../esp-bsp-rs" }
+esp-bsp = { version = "0.1.0" }
 graphics = { path = "../graphics" }
 keyboard-pipe = { path = "../keyboard-pipe" }
 uart-keyboard = { path = "../uart-keyboard", features = [ "esp32s3" ] }
