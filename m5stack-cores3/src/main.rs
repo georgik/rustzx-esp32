@@ -44,7 +44,7 @@ use embedded_hal::digital::v2::OutputPin;
 use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
 
-use esp_bsp_rs::{lcd_gpios, BoardType};
+use esp_bsp::{lcd_gpios, BoardType};
 
 use uart_keyboard::uart_receiver;
 use esp_now_keyboard::esp_now_receiver;
