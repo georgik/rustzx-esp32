@@ -28,7 +28,7 @@ use keyboard_pipe::PIPE;
 
 use embassy_time::{Duration, Timer};
 
-use esp_bsp_rs::{define_display_type, BoardType};
+use esp_bsp::{define_display_type, BoardType};
 
 use embedded_graphics::{
     mono_font::{ascii::FONT_8X13, MonoTextStyle},

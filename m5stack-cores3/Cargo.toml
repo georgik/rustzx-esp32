@@ -48,12 +48,12 @@ esp-wifi = { git = "https://github.com/esp-rs/esp-wifi.git", rev = "a69545d", fe
 
 usb-zx = { path = "../usb-zx" }
 static_cell = { version = "2.0.0", features = ["nightly"] }
-esp-bsp-rs = { path = "../esp-bsp-rs" }
+esp-bsp = { version = "0.1.0" }
 graphics = { path = "../graphics" }
 keyboard-pipe = { path = "../keyboard-pipe" }
 uart-keyboard = { path = "../uart-keyboard", features = [ "esp32s3" ] }
 esp-now-keyboard = { path = "../esp-now-keyboard", features = [ "esp32s3" ] }
-emulator = { path = "../emulator", features = [ "esp32s3" ] }
+emulator = { path = "../emulator", features = [ "m5stack_cores3" ] }
 
 [patch.crates-io]
 embassy-net = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-net", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}

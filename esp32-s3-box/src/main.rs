@@ -56,7 +56,7 @@ fn init_psram_heap() {
 
 use embassy_time::{Duration, Ticker};
 
-use esp_bsp_rs::lcd_gpios;
+use esp_bsp::lcd_gpios;
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
