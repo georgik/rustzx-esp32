@@ -32,14 +32,14 @@ mipidsi = "0.7.1"
 shared-bus = { version = "0.3.0" }
 #spooky-core = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", default-features = false, features = ["static_maze"]}
 #spooky-embedded = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", default-features = false, features = [ "esp32s3", "static_maze", "resolution_320x240" ] }
-esp-display-interface-spi-dma = { git = "https://github.com/georgik/esp-display-interface-spi-dma.git", features = ["esp32s3"] }
+esp-display-interface-spi-dma = { version = "0.1.0", features = ["esp32s3"] }
 #rustzx-utils = { version = "0.16.0" }
 #rustzx-core = { version = "0.16.0", features = ["embedded-roms"] }
 #rustzx-utils = { path = "../../rustzx/rustzx-utils" }
 #rustzx-core = { path = "../../rustzx/rustzx-core" , features = ["embedded-roms"] }
 rustzx-utils = { git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box" }
 rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }
-esp-wifi  = { version = "0.3.0", features = [ "wifi", "utils", "tcp", "smoltcp", "dhcpv4"] }
+esp-wifi  = { version = "0.3.0", features = [ "wifi", "utils", "tcp", "smoltcp", "dhcpv4", "phy-enable-usb"] }
 
 usb-zx = { path = "../usb-zx" }
 static_cell = { version = "2.0.0", features = ["nightly"] }
