@@ -37,7 +37,7 @@ use embedded_graphics::{
     Drawable,
 };
 
-use spi_dma_displayinterface::spi_dma_displayinterface;
+use esp_display_interface_spi_dma::display_interface_spi_dma;
 use hal::gpio::{GpioPin, Output};
 use hal::spi::FullDuplexMode;
 

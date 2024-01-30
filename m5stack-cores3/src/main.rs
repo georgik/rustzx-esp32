@@ -2,7 +2,8 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-use spi_dma_displayinterface::spi_dma_displayinterface;
+use esp_display_interface_spi_dma::display_interface_spi_dma;
+
 use static_cell::make_static;
 
 use hal::{
