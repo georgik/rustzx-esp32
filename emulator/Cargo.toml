@@ -21,7 +21,7 @@ mipidsi = "0.7.1"
 rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }
 esp-display-interface-spi-dma = { version = "0.1.0", features = ["esp32s3"] }
 
-esp-bsp = { git = "https://github.com/georgik/esp-bsp-rs", branch = "feature/display_interface_spi_dma" }
+esp-bsp = { version = "0.2.0" }
 graphics = { path = "../graphics" }
 keyboard-pipe = { path = "../keyboard-pipe" }
 usb-zx = { path = "../usb-zx" }

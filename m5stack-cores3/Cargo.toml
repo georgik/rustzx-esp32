@@ -44,7 +44,7 @@ esp-wifi  = { version = "0.3.0", features = [ "wifi", "utils", "tcp", "smoltcp",
 
 usb-zx = { path = "../usb-zx" }
 static_cell = { version = "2.0.0", features = ["nightly"] }
-esp-bsp = { git = "https://github.com/georgik/esp-bsp-rs", branch = "feature/display_interface_spi_dma" }
+esp-bsp = { version = "0.2.0" }
 graphics = { path = "../graphics" }
 keyboard-pipe = { path = "../keyboard-pipe" }
 uart-keyboard = { path = "../uart-keyboard", features = [ "esp32s3" ] }
