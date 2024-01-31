@@ -16,27 +16,24 @@ use hal::{
         master::{prelude::*, Spi},
         SpiMode,
     },
-    Delay,
-    Rng,
-    IO,
     systimer::SystemTimer,
-    Uart
+    Delay, Rng, Uart, IO,
 };
 
 use esp_backtrace as _;
 
 use esp_wifi::{initialize, EspWifiInitFor};
 
-use log::{info, error};
+use log::{error, info};
 
 use embassy_executor::Spawner;
 use esp_wifi::esp_now::{EspNow, EspNowError};
 
 use core::mem::MaybeUninit;
 
-use uart_keyboard::uart_receiver;
-use esp_now_keyboard::esp_now_receiver;
 use emulator::app_loop;
+use esp_now_keyboard::esp_now_receiver;
+use uart_keyboard::uart_receiver;
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -52,7 +49,7 @@ fn init_heap() {
 
 use embassy_time::{Duration, Ticker};
 
-use esp_bsp::{BoardType, lcd_gpios, DisplayConfig};
+use esp_bsp::{lcd_gpios, BoardType, DisplayConfig};
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
@@ -107,7 +104,8 @@ async fn main(spawner: Spawner) -> ! {
     spawner.spawn(uart_receiver(uart0)).unwrap();
 
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!(BoardType::ESP32C6DevKitC1, io);
+    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) =
+        lcd_gpios!(BoardType::ESP32C6DevKitC1, io);
 
     let dma = Gdma::new(peripherals.DMA);
     let dma_channel = dma.channel0;
@@ -118,24 +116,14 @@ async fn main(spawner: Spawner) -> ! {
     let rx_descriptors = make_static!([0u32; 8 * 3]);
     info!("About to initialize the SPI LED driver");
 
-    let spi = Spi::new(
-            peripherals.SPI2,
-            40u32.MHz(),
-            SpiMode::Mode0,
-            &clocks
-        ).with_pins(
-            Some(lcd_sclk),
-            Some(lcd_mosi),
-            Some(lcd_miso),
-            Some(lcd_cs),
-        ).with_dma(
-            dma_channel.configure(
-                false,
-                &mut *descriptors,
-                &mut *rx_descriptors,
-                DmaPriority::Priority0,
-        )
-    );
+    let spi = Spi::new(peripherals.SPI2, 40u32.MHz(), SpiMode::Mode0, &clocks)
+        .with_pins(Some(lcd_sclk), Some(lcd_mosi), Some(lcd_miso), Some(lcd_cs))
+        .with_dma(dma_channel.configure(
+            false,
+            &mut *descriptors,
+            &mut *rx_descriptors,
+            DmaPriority::Priority0,
+        ));
 
     let di = display_interface_spi_dma::new_no_cs(2 * 256 * 192, spi, lcd_dc);
 
@@ -161,5 +149,4 @@ async fn main(spawner: Spawner) -> ! {
         info!("Tick");
         ticker.next().await;
     }
-
 }

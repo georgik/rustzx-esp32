@@ -1,8 +1,8 @@
 // no_std implementation of File concept using memory buffer
 use rustzx_core::{
     error::IoError,
-    host::{SeekableAsset, LoadableAsset, SeekFrom}
-    };
+    host::{LoadableAsset, SeekFrom, SeekableAsset},
+};
 
 #[derive(Debug)]
 pub enum FileAssetError {
@@ -50,4 +50,3 @@ impl LoadableAsset for FileAsset {
         Ok(to_read) // Return the number of bytes read
     }
 }
-

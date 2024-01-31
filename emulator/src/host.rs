@@ -1,4 +1,3 @@
-
 extern crate alloc;
 use alloc::{vec, vec::Vec};
 use embedded_graphics::pixelcolor::RgbColor;
@@ -12,19 +11,16 @@ use rustzx_core::host::StubIoExtender;
 use rustzx_core::zx::video::colors::ZXBrightness;
 use rustzx_core::zx::video::colors::ZXColor;
 const LCD_H_RES: usize = 256;
-const LCD_PIXELS: usize = LCD_H_RES*192;
-use crate::stopwatch::InstantStopwatch;
+const LCD_PIXELS: usize = LCD_H_RES * 192;
 use crate::io::FileAsset;
+use crate::stopwatch::InstantStopwatch;
 use embedded_graphics::pixelcolor::Rgb565;
 
 use graphics::color_conv;
 
-pub(crate) struct Esp32Host
-{
-}
+pub(crate) struct Esp32Host {}
 
-impl Host for Esp32Host
-{
+impl Host for Esp32Host {
     type Context = Esp32HostContext;
     type EmulationStopwatch = InstantStopwatch;
     type FrameBuffer = EmbeddedGraphicsFrameBuffer;
@@ -35,8 +31,7 @@ impl Host for Esp32Host
 
 pub(crate) struct Esp32HostContext;
 
-impl HostContext<Esp32Host> for Esp32HostContext
-{
+impl HostContext<Esp32Host> for Esp32HostContext {
     fn frame_buffer_context(&self) -> <<Esp32Host as Host>::FrameBuffer as FrameBuffer>::Context {
         ()
     }
@@ -62,20 +57,21 @@ impl EmbeddedGraphicsFrameBuffer {
         self.bounding_box_bottom_right = Some((max_x.max(x), max_y.max(y)));
     }
 
-    pub fn get_region_pixel_iter(&self, top_left: (usize, usize), bottom_right: (usize, usize)) -> impl Iterator<Item = Rgb565> + '_ {
+    pub fn get_region_pixel_iter(
+        &self,
+        top_left: (usize, usize),
+        bottom_right: (usize, usize),
+    ) -> impl Iterator<Item = Rgb565> + '_ {
         let start_x = top_left.0;
         let end_x = bottom_right.0 + 1; // Include the pixel at bottom_right coordinates
         let start_y = top_left.1;
         let end_y = bottom_right.1 + 1; // Include the pixel at bottom_right coordinates
 
         (start_y..end_y).flat_map(move |y| {
-            (start_x..end_x).map(move |x| {
-                self.buffer[y * self.buffer_width + x]
-            })
+            (start_x..end_x).map(move |x| self.buffer[y * self.buffer_width + x])
         })
     }
 }
-
 
 impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
     type Context = ();
@@ -107,13 +103,12 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
         }
     }
 
-
     fn set_color(&mut self, x: usize, y: usize, zx_color: ZXColor, zx_brightness: ZXBrightness) {
         let index = y * self.buffer_width + x;
         let new_color = color_conv(&zx_color, zx_brightness);
         if self.buffer[index] != new_color {
             self.buffer[index] = new_color;
-            self.mark_dirty(x, y);  // Update the bounding box
+            self.mark_dirty(x, y); // Update the bounding box
         }
     }
 
@@ -127,5 +122,4 @@ impl FrameBuffer for EmbeddedGraphicsFrameBuffer {
         self.bounding_box_bottom_right = None;
         self.bounding_box_top_left = None;
     }
-
 }
