@@ -19,7 +19,7 @@ embassy-time = { version = "0.3.0" }
 log = "0.4"
 mipidsi = "0.7.1"
 rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }
-esp-display-interface-spi-dma = { version = "0.1.0", features = ["esp32s3"] }
+esp-display-interface-spi-dma = { version = "0.1.0" }
 
 esp-bsp = { version = "0.2.0" }
 graphics = { path = "../graphics" }
@@ -38,8 +38,3 @@ esp32c6 = [ "esp32c6-hal", "esp-display-interface-spi-dma/esp32c6" ]
 esp32_c6_devkit_c1 = [ "esp32c6" ]
 esp32_s3_box = [ "esp32s3", "esp32s3-hal/opsram-8m" ]
 m5stack_cores3 = [ "esp32s3", "esp32s3-hal/psram-8m" ]
-
-#[patch.crates-io]
-#embassy-executor = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
-#embassy-executor-macros = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-executor-macros", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
-#embassy-time = { git = "https://github.com/embassy-rs/embassy.git", package = "embassy-time", rev = "14f41a71b6ea9dedb4ee5b9c741fe10575772c7d"}
