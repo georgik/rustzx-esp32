@@ -2,7 +2,7 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-use spi_dma_displayinterface::spi_dma_displayinterface;
+use esp_display_interface_spi_dma::display_interface_spi_dma;
 use static_cell::make_static;
 
 use hal::{
@@ -16,33 +16,24 @@ use hal::{
         master::{prelude::*, Spi},
         SpiMode,
     },
-    Delay,
-    Rng,
-    IO,
     systimer::SystemTimer,
-    Uart
-};
-
-use spooky_embedded::{
-    embedded_display::{LCD_H_RES, LCD_V_RES},
-    // embedded_display::LCD_MEMORY_SIZE,
-    // controllers::{accel::AccelMovementController, composites::accel_composite::AccelCompositeController}
+    Delay, Rng, Uart, IO,
 };
 
 use esp_backtrace as _;
 
 use esp_wifi::{initialize, EspWifiInitFor};
 
-use log::{info, error};
+use log::{error, info};
 
 use embassy_executor::Spawner;
 use esp_wifi::esp_now::{EspNow, EspNowError};
 
 use core::mem::MaybeUninit;
 
-use uart_keyboard::uart_receiver;
-use esp_now_keyboard::esp_now_receiver;
 use emulator::app_loop;
+use esp_now_keyboard::esp_now_receiver;
+use uart_keyboard::uart_receiver;
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
@@ -58,7 +49,7 @@ fn init_heap() {
 
 use embassy_time::{Duration, Ticker};
 
-use esp_bsp::lcd_gpios;
+use esp_bsp::{lcd_gpios, BoardType, DisplayConfig};
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
@@ -72,8 +63,8 @@ async fn main(spawner: Spawner) -> ! {
     esp_println::logger::init_logger_from_env();
 
     info!("Starting up");
-    let embassy_timer = hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks).timer0;
-    embassy::init(&clocks, embassy_timer);
+    let timer_group0 = hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks);
+    embassy::init(&clocks, timer_group0);
 
     // ESP-NOW keyboard receiver
     let wifi_timer = SystemTimer::new(peripherals.SYSTIMER).alarm0;
@@ -113,7 +104,8 @@ async fn main(spawner: Spawner) -> ! {
     spawner.spawn(uart_receiver(uart0)).unwrap();
 
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) = lcd_gpios!(BoardType::ESP32C6DevKitC1, io);
+    let (lcd_sclk, lcd_mosi, lcd_cs, lcd_miso, lcd_dc, _lcd_backlight, lcd_reset) =
+        lcd_gpios!(BoardType::ESP32C6DevKitC1, io);
 
     let dma = Gdma::new(peripherals.DMA);
     let dma_channel = dma.channel0;
@@ -124,29 +116,20 @@ async fn main(spawner: Spawner) -> ! {
     let rx_descriptors = make_static!([0u32; 8 * 3]);
     info!("About to initialize the SPI LED driver");
 
-    let spi = Spi::new(
-            peripherals.SPI2,
-            40u32.MHz(),
-            SpiMode::Mode0,
-            &clocks
-        ).with_pins(
-            Some(lcd_sclk),
-            Some(lcd_mosi),
-            Some(lcd_miso),
-            Some(lcd_cs),
-        ).with_dma(
-            dma_channel.configure(
-                false,
-                &mut *descriptors,
-                &mut *rx_descriptors,
-                DmaPriority::Priority0,
-        )
-    );
+    let spi = Spi::new(peripherals.SPI2, 40u32.MHz(), SpiMode::Mode0, &clocks)
+        .with_pins(Some(lcd_sclk), Some(lcd_mosi), Some(lcd_miso), Some(lcd_cs))
+        .with_dma(dma_channel.configure(
+            false,
+            &mut *descriptors,
+            &mut *rx_descriptors,
+            DmaPriority::Priority0,
+        ));
 
-    let di = spi_dma_displayinterface::new_no_cs(2 * 256 * 192, spi, lcd_dc);
+    let di = display_interface_spi_dma::new_no_cs(2 * 256 * 192, spi, lcd_dc);
 
+    let display_config = DisplayConfig::for_board(BoardType::ESP32C6DevKitC1);
     let display = match mipidsi::Builder::ili9341_rgb565(di)
-        .with_display_size(LCD_H_RES, LCD_V_RES)
+        .with_display_size(display_config.h_res, display_config.v_res)
         .with_orientation(mipidsi::Orientation::Landscape(true))
         .with_color_order(mipidsi::ColorOrder::Rgb)
         .init(&mut delay, Some(lcd_reset))
@@ -166,5 +149,4 @@ async fn main(spawner: Spawner) -> ! {
         info!("Tick");
         ticker.next().await;
     }
-
 }

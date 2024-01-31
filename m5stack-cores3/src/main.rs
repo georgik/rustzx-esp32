@@ -2,7 +2,8 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-use spi_dma_displayinterface::spi_dma_displayinterface;
+use esp_display_interface_spi_dma::display_interface_spi_dma;
+
 use static_cell::make_static;
 
 use hal::{
@@ -39,12 +40,11 @@ use shared_bus::BusManagerSimple;
 use log::{info, error};
 
 use mipidsi::models::Model;
-use embedded_hal::digital::v2::OutputPin;
 
 use axp2101::{ I2CPowerManagementInterface, Axp2101 };
 use aw9523::I2CGpioExpanderInterface;
 
-use esp_bsp::{lcd_gpios, BoardType};
+use esp_bsp::{lcd_gpios, BoardType, DisplayConfig};
 
 use uart_keyboard::uart_receiver;
 use esp_now_keyboard::esp_now_receiver;
@@ -109,8 +109,8 @@ async fn main(spawner: Spawner) -> ! {
     delay.delay_ms(500u32);
     info!("About to initialize the SPI LED driver");
 
-    let embassy_timer = hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks).timer0;
-    embassy::init(&clocks, embassy_timer);
+    let timer_group0 = hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks);
+    embassy::init(&clocks, timer_group0);
 
     // ESP-NOW keyboard receiver
     let wifi_timer = hal::timer::TimerGroup::new(peripherals.TIMG1, &clocks).timer0;
@@ -177,10 +177,11 @@ async fn main(spawner: Spawner) -> ! {
         )
     );
 
-    let di = spi_dma_displayinterface::new_no_cs(2 * 256 * 192, spi, lcd_dc);
+    let di = display_interface_spi_dma::new_no_cs(2 * 256 * 192, spi, lcd_dc);
 
+    let display_config = DisplayConfig::for_board(BoardType::M5StackCoreS3);
     let mut display = match mipidsi::Builder::ili9342c_rgb565(di)
-        .with_display_size(320, 240)
+        .with_display_size(display_config.h_res, display_config.v_res)
         .with_color_order(mipidsi::ColorOrder::Bgr)
         .with_invert_colors(mipidsi::ColorInversion::Inverted)
         .init(&mut delay, Some(lcd_reset))

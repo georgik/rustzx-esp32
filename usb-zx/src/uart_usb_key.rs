@@ -1,4 +1,3 @@
-
 pub fn uart_code_to_usb_key(keycode: u8) -> Option<(u8, u8)> {
     match keycode {
         0x08 => Some((0x00, 0x2a)), // Backspace
@@ -99,7 +98,7 @@ pub fn uart_code_to_usb_key(keycode: u8) -> Option<(u8, u8)> {
         0x7d => Some((0x02, 0x30)), // }
         0x7c => Some((0x02, 0x31)), // |
 
-        _ => None
+        _ => None,
     }
 }
 
@@ -110,6 +109,6 @@ pub fn uart_composite_code_to_usb_key(code1: u8, code2: u8, code3: u8) -> Option
         (0x1b, 0x5b, 0x43) => Some((0x0, 0x4f)), // Right
         (0x1b, 0x5b, 0x44) => Some((0x0, 0x50)), // Left
 
-        _ => None
+        _ => None,
     }
 }

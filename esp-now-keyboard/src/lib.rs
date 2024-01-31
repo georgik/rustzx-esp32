@@ -16,16 +16,16 @@ pub use esp32s2_hal as hal;
 #[cfg(feature = "esp32s3")]
 pub use esp32s3_hal as hal;
 
-use keyboard_pipe::PIPE;
-use log::{info, error};
-use hal::embassy;
 use embassy_time::{Duration, Ticker, Timer};
+use esp_wifi::esp_now::{EspNow, EspNowError, PeerInfo};
+use hal::embassy;
+use keyboard_pipe::PIPE;
+use log::{error, info};
 use usb_zx::{
     uart_usb_key::{uart_code_to_usb_key, uart_composite_code_to_usb_key},
     usb_zx_key::usb_code_to_zxkey,
-    zx_event::Event
+    zx_event::Event,
 };
-use esp_wifi::esp_now::{EspNow, EspNowError, PeerInfo};
 
 const ESP_NOW_PAYLOAD_INDEX: usize = 20;
 
@@ -37,7 +37,7 @@ pub async fn esp_now_receiver(esp_now: EspNow<'static>) {
         peer_address: [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF],
         lmk: None,
         channel: Some(1), // Specify the channel if known
-        encrypt: false, // Set to true if encryption is needed
+        encrypt: false,   // Set to true if encryption is needed
     };
 
     // Check if the peer already exists
@@ -56,8 +56,19 @@ pub async fn esp_now_receiver(esp_now: EspNow<'static>) {
         match received_data {
             Some(data) => {
                 let bytes = data.data;
-                info!("Key code received over ESP-NOW: state = {:?}, modifier = {:?}, key = {:?}", bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]);
-                let bytes_written = PIPE.write(&[bytes[ESP_NOW_PAYLOAD_INDEX], bytes[ESP_NOW_PAYLOAD_INDEX + 1], bytes[ESP_NOW_PAYLOAD_INDEX + 2]]).await;
+                info!(
+                    "Key code received over ESP-NOW: state = {:?}, modifier = {:?}, key = {:?}",
+                    bytes[ESP_NOW_PAYLOAD_INDEX],
+                    bytes[ESP_NOW_PAYLOAD_INDEX + 1],
+                    bytes[ESP_NOW_PAYLOAD_INDEX + 2]
+                );
+                let bytes_written = PIPE
+                    .write(&[
+                        bytes[ESP_NOW_PAYLOAD_INDEX],
+                        bytes[ESP_NOW_PAYLOAD_INDEX + 1],
+                        bytes[ESP_NOW_PAYLOAD_INDEX + 2],
+                    ])
+                    .await;
                 if bytes_written != 3 {
                     error!("Failed to write to pipe");
                     break;

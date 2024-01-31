@@ -2,7 +2,7 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-use spi_dma_displayinterface::spi_dma_displayinterface;
+use esp_display_interface_spi_dma::display_interface_spi_dma;
 use static_cell::make_static;
 
 use hal::{
@@ -22,12 +22,6 @@ use hal::{
     IO,
     systimer::SystemTimer,
     Uart
-};
-
-use spooky_embedded::{
-    embedded_display::{LCD_H_RES, LCD_V_RES},
-    // embedded_display::LCD_MEMORY_SIZE,
-    // controllers::{accel::AccelMovementController, composites::accel_composite::AccelCompositeController}
 };
 
 use esp_backtrace as _;
@@ -56,7 +50,7 @@ fn init_psram_heap() {
 
 use embassy_time::{Duration, Ticker};
 
-use esp_bsp::lcd_gpios;
+use esp_bsp::{BoardType, lcd_gpios, DisplayConfig};
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
@@ -71,8 +65,8 @@ async fn main(spawner: Spawner) -> ! {
     esp_println::logger::init_logger_from_env();
 
     info!("Starting up");
-    let embassy_timer = hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks).timer0;
-    embassy::init(&clocks, embassy_timer);
+    let timer_group0 = hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks);
+    embassy::init(&clocks, timer_group0);
 
     // ESP-NOW keyboard receiver
     let wifi_timer = hal::timer::TimerGroup::new(peripherals.TIMG1, &clocks).timer0;
@@ -144,10 +138,11 @@ async fn main(spawner: Spawner) -> ! {
 
     let _ = lcd_backlight.set_high();
 
-    let di = spi_dma_displayinterface::new_no_cs(2 * 256 * 192, spi, lcd_dc);
+    let di = display_interface_spi_dma::new_no_cs(2 * 256 * 192, spi, lcd_dc);
 
+    let display_config = DisplayConfig::for_board(BoardType::ESP32S3Box);
     let mut display = match mipidsi::Builder::ili9342c_rgb565(di)
-        .with_display_size(LCD_H_RES, LCD_V_RES)
+        .with_display_size(display_config.h_res, display_config.v_res)
         .with_orientation(mipidsi::Orientation::PortraitInverted(false))
         .with_color_order(mipidsi::ColorOrder::Bgr)
         .init(&mut delay, Some(lcd_reset))

@@ -17,12 +17,12 @@ pub use esp32s2_hal as hal;
 pub use esp32s3_hal as hal;
 
 pub mod host;
-pub mod stopwatch;
 pub mod io;
+pub mod stopwatch;
 
-use rustzx_core::{zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings, host::Host};
+use rustzx_core::{host::Host, zx::machine::ZXMachine, EmulationMode, Emulator, RustzxSettings};
 
-use log::{info, error, debug};
+use log::{debug, error, info};
 
 use keyboard_pipe::PIPE;
 
@@ -37,14 +37,11 @@ use embedded_graphics::{
     Drawable,
 };
 
-use spi_dma_displayinterface::spi_dma_displayinterface;
+use esp_display_interface_spi_dma::display_interface_spi_dma;
 use hal::gpio::{GpioPin, Output};
 use hal::spi::FullDuplexMode;
 
-use usb_zx::{
-    usb_zx_key::usb_code_to_zxkey,
-    zx_event::Event
-};
+use usb_zx::{usb_zx_key::usb_code_to_zxkey, zx_event::Event};
 
 use crate::io::FileAsset;
 
@@ -55,21 +52,25 @@ type AppDisplay = define_display_type!(BoardType::M5StackCoreS3);
 #[cfg(feature = "esp32_s3_box")]
 type AppDisplay = define_display_type!(BoardType::ESP32S3Box);
 
-
 const SCREEN_OFFSET_X: u16 = (320 - 256) / 2;
 const SCREEN_OFFSET_Y: u16 = (240 - 192) / 2;
 
-fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator: &mut Emulator<H>) {
+fn handle_key_event<H: Host>(
+    key_state: u8,
+    modifier: u8,
+    key_code: u8,
+    emulator: &mut Emulator<H>,
+) {
     let is_pressed = key_state == 0;
     if let Some(mapped_key) = usb_code_to_zxkey(is_pressed, modifier, key_code) {
         match mapped_key {
             Event::ZXKey(k, p) => {
                 debug!("-> ZXKey");
                 emulator.send_key(k, p);
-            },
+            }
             Event::NoEvent => {
                 error!("Key not implemented");
-            },
+            }
             Event::ZXKeyWithModifier(k, k2, p) => {
                 debug!("-> ZXKeyWithModifier");
                 emulator.send_key(k, p);
@@ -81,10 +82,9 @@ fn handle_key_event<H: Host>(key_state: u8, modifier: u8, key_code:u8, emulator:
     }
 }
 
-
 #[embassy_executor::task]
-pub async fn app_loop(mut display:AppDisplay)
- //-> Result<(), core::fmt::Error>
+pub async fn app_loop(mut display: AppDisplay)
+//-> Result<(), core::fmt::Error>
 {
     // let _ = lcd_backlight.set_high();
 
@@ -100,7 +100,6 @@ pub async fn app_loop(mut display:AppDisplay)
     .unwrap();
 
     info!("Initialized");
-
 
     // display
     //     .clear(color_conv(ZXColor::Blue, ZXBrightness::Normal))
@@ -131,21 +130,22 @@ pub async fn app_loop(mut display:AppDisplay)
             }
         };
 
-
-
     info!("Loading tape");
     let tape_bytes = include_bytes!("../../data/hello.tap");
     let tape_asset = FileAsset::new(tape_bytes);
     let _ = emulator.load_tape(rustzx_core::host::Tape::Tap(tape_asset));
 
     info!("Entering emulator loop");
-    let mut last_modifier:u8 = 0;
+    let mut last_modifier: u8 = 0;
 
     loop {
         match emulator.emulate_frames(MAX_FRAME_DURATION) {
             Ok(_) => {
                 let framebuffer = emulator.screen_buffer();
-                if let (Some(top_left), Some(bottom_right)) = (framebuffer.bounding_box_top_left, framebuffer.bounding_box_bottom_right) {
+                if let (Some(top_left), Some(bottom_right)) = (
+                    framebuffer.bounding_box_top_left,
+                    framebuffer.bounding_box_bottom_right,
+                ) {
                     // let width = bottom_right.0 - top_left.0 + 1; // Calculate width
                     // let height = bottom_right.1 - top_left.1 + 1; // Calculate height
                     // debug!("Bounding box: {:?} {:?}", top_left, bottom_right);
@@ -156,10 +156,10 @@ pub async fn app_loop(mut display:AppDisplay)
                         top_left.1 as u16 + SCREEN_OFFSET_Y,
                         bottom_right.0 as u16 + SCREEN_OFFSET_X,
                         bottom_right.1 as u16 + SCREEN_OFFSET_Y,
-                        pixel_iterator);
+                        pixel_iterator,
+                    );
                 }
                 emulator.reset_bounding_box();
-
             }
             _ => {
                 error!("Emulation of frame failed");
