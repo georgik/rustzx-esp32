@@ -31,6 +31,7 @@ Hardware (work-in-progress):
 - use ESP-IDF 5.5
 ```
 cd esp32-s3-usb-otg-keyboard
+idf.py reconfigure
 idf.py build flash monitor
 ```
 - code is based on [ESP-IDF USB HID example](https://github.com/espressif/esp-idf/tree/master/examples/peripherals/usb/host/hid)
