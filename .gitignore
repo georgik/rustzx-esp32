@@ -7,3 +7,19 @@ build/
 managed_components/
 Cargo.lock
 cfg.toml
+
+# ESP-IDF specific
+sdkconfig
+sdkconfig.old
+dependencies.lock
+*.backup
+
+# IDE files
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+

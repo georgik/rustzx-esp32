@@ -578,7 +578,7 @@ static void gpio_isr_cb(void *arg)
 }
 
 // Global variable to store the current rotation state
-static lv_disp_rot_t current_rotation = LV_DISP_ROT_NONE;
+static lv_display_rotation_t current_rotation = LV_DISPLAY_ROTATION_0;
 
 // Rotate the screen to the left
 void rotate_screen_left() {
@@ -586,14 +586,14 @@ void rotate_screen_left() {
     lv_disp_t *disp = lv_disp_get_default();
 
     // Rotate left (counter-clockwise)
-    if (current_rotation == LV_DISP_ROT_NONE) {
-        current_rotation = LV_DISP_ROT_270;
-    } else if (current_rotation == LV_DISP_ROT_90) {
-        current_rotation = LV_DISP_ROT_NONE;
-    } else if (current_rotation == LV_DISP_ROT_180) {
-        current_rotation = LV_DISP_ROT_90;
-    } else if (current_rotation == LV_DISP_ROT_270) {
-        current_rotation = LV_DISP_ROT_180;
+    if (current_rotation == LV_DISPLAY_ROTATION_0) {
+        current_rotation = LV_DISPLAY_ROTATION_270;
+    } else if (current_rotation == LV_DISPLAY_ROTATION_90) {
+        current_rotation = LV_DISPLAY_ROTATION_0;
+    } else if (current_rotation == LV_DISPLAY_ROTATION_180) {
+        current_rotation = LV_DISPLAY_ROTATION_90;
+    } else if (current_rotation == LV_DISPLAY_ROTATION_270) {
+        current_rotation = LV_DISPLAY_ROTATION_180;
     }
 
     lv_disp_set_rotation(disp, current_rotation);
@@ -606,14 +606,14 @@ void rotate_screen_right() {
     lv_disp_t *disp = lv_disp_get_default();
 
     // Rotate right (clockwise)
-    if (current_rotation == LV_DISP_ROT_NONE) {
-        current_rotation = LV_DISP_ROT_90;
-    } else if (current_rotation == LV_DISP_ROT_90) {
-        current_rotation = LV_DISP_ROT_180;
-    } else if (current_rotation == LV_DISP_ROT_180) {
-        current_rotation = LV_DISP_ROT_270;
-    } else if (current_rotation == LV_DISP_ROT_270) {
-        current_rotation = LV_DISP_ROT_NONE;
+    if (current_rotation == LV_DISPLAY_ROTATION_0) {
+        current_rotation = LV_DISPLAY_ROTATION_90;
+    } else if (current_rotation == LV_DISPLAY_ROTATION_90) {
+        current_rotation = LV_DISPLAY_ROTATION_180;
+    } else if (current_rotation == LV_DISPLAY_ROTATION_180) {
+        current_rotation = LV_DISPLAY_ROTATION_270;
+    } else if (current_rotation == LV_DISPLAY_ROTATION_270) {
+        current_rotation = LV_DISPLAY_ROTATION_0;
     }
 
     lv_disp_set_rotation(disp, current_rotation);

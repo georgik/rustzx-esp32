@@ -28,7 +28,7 @@ Hardware (work-in-progress):
 
 #### Flashing keyboard
 
-- use ESP-IDF 5.2
+- use ESP-IDF 5.5
 ```
 cd esp32-s3-usb-otg-keyboard
 idf.py build flash monitor
