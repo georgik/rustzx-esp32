@@ -22,9 +22,15 @@ Hardware (work-in-progress):
 
 #### Assembly of the keyboard
 
-- plug USB keyboard to ESP32-S3-USB-OTG USB HOST connector
-- plug USB power supply to ESP32-S3-USB-OTG USB DEV connector
-- plug mini-USB connector to port for flashing
+**Power Configuration:**
+- **USB DEV port (USB-A Male)**: Connect main power USB cable here - powers the board and USB Host devices
+- **USB-UART port (USB-C)**: Connect separate programming cable here - used only for flashing and monitoring
+- **USB HOST port (USB-A Female)**: Connect your USB keyboard here - receives power from USB DEV port automatically
+
+**Assembly Steps:**
+- Plug USB keyboard into ESP32-S3-USB-OTG **USB HOST connector** (USB-A Female)
+- Connect power USB cable to ESP32-S3-USB-OTG **USB DEV connector** (USB-A Male) - this powers everything
+- Connect programming USB cable to **USB-UART port** (USB-C) for flashing
 
 #### Flashing keyboard
 
@@ -35,6 +41,8 @@ idf.py reconfigure
 idf.py build flash monitor
 ```
 - code is based on [ESP-IDF USB HID example](https://github.com/espressif/esp-idf/tree/master/examples/peripherals/usb/host/hid)
+
+**Note:** The firmware automatically configures power routing from USB DEV port to USB HOST port, so you only need one power cable for the entire setup. The USB-UART port cannot power USB Host devices due to hardware limitations.
 
 ### Assembly of the main part
 

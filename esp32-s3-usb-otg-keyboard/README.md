@@ -7,7 +7,8 @@ This example implements a basic USB Host HID Class Driver, and demonstrates how 
 
 ### Hardware Required
 * Development board with USB capable ESP SoC (ESP32-S2/ESP32-S3)
-* A USB cable for Power supply and programming
+* **USB DEV port**: Use this for power supply to the device and connected USB Host devices. Connect a USB cable here for power.
+* **USB-UART port**: Use this only for programming and monitoring via a separate USB cable.
 * USB OTG Cable
 
 ### Common Pin Assignments
@@ -23,7 +24,34 @@ ESP BOARD    USB CONNECTOR (type A)
 [GPIO20]  ------> | || D+
                   | || GND
                    --
-```
+
+### Power Configuration for ESP32-S3-USB-OTG Board
+
+This project is specifically configured for the ESP32-S3-USB-OTG development board with optimal power routing:
+
+#### Power Setup
+1. **USB DEV Port (USB-A Male)**: Connect your main power USB cable here
+   - Powers the ESP32-S3 board
+   - Automatically routes power to USB Host port for connected devices
+   - This single cable powers everything!
+
+2. **USB-UART Port (USB-C)**: Connect a separate programming cable here
+   - Used only for flashing firmware and serial monitoring
+   - Cannot power USB Host devices (hardware limitation)
+
+3. **USB HOST Port (USB-A Female)**: Connect your USB keyboard/mouse here
+   - Receives power from USB DEV port automatically
+   - No separate power cable needed
+
+#### GPIO Power Control (Automatic)
+The firmware automatically configures:
+- **GPIO12** (DEV_VBUS_EN): Routes power from USB DEV to USB HOST
+- **GPIO17** (IDEV_LIMIT_EN): Enables 500mA current limiting
+- **GPIO18** (USB_SEL): Selects USB DEV port for data routing
+
+#### Alternative Power Modes
+- **Battery Mode**: Can power USB Host from battery via boost converter (GPIO13)
+- **External Power**: Use separate 5V supply if needed
 
 ### Build and Flash
 
