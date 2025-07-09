@@ -6,47 +6,47 @@ edition = "2021"
 license = "MIT"
 
 [target.xtensa-esp32s3-none-elf.dependencies]
-hal = { package = "esp32s3-hal", version = "0.15.0", features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread", "opsram-8m"] }
-esp-backtrace = { version = "0.10.0", features = [
+esp-hal = { version = "1.0.0-beta.1", features = [ "esp32s3", "psram", "unstable"] }
+esp-backtrace = { version = "0.16.0", features = [
     "esp32s3",
     "panic-handler",
-    "print-uart",
+    "println"
 ] }
-esp-println = { version = "0.8.0", features = ["esp32s3", "log"] }
+esp-println = { version = "0.14.0", features = [ "log-04" ] }
 
 [dependencies]
-critical-section = { version = "1.1.2" }
-display-interface = "0.4"
-esp-alloc = "0.3.0"
-embassy-sync = { version = "0.5.0" }
-embassy-futures = { version = "0.1.0" }
-embassy-executor = { version = "0.5.0", package = "embassy-executor", features = ["nightly", "integrated-timers"] }
-embassy-time = { version = "0.3.0" }
-embedded-graphics = "0.8.0"
+critical-section = { version = "1.2.0" }
+display-interface = "0.5.0"
+esp-alloc = "0.8.0"
+embassy-executor    = { version = "0.7.0", features = ["task-arena-size-20480"] }
+embassy-sync        = "0.7.0"
+embassy-time        = "0.4.0"
+esp-hal-embassy = { version = "0.8.1", features = ["esp32s3"] }
+static_cell         = { version = "2.1.0", features = ["nightly"] }
+embedded-graphics = "0.8.1"
 embedded-hal = "1.0.0"
 embedded-graphics-framebuf = { version = "0.3.0", git = "https://github.com/georgik/embedded-graphics-framebuf.git", branch = "feature/embedded-graphics-0.8" }
 icm42670 = { git = "https://github.com/jessebraham/icm42670/" }
 log = "0.4"
-mipidsi = "0.7.1"
+mipidsi = "0.9.0"
 #panic-halt = "0.2"
-shared-bus = { version = "0.3.0" }
+shared-bus = { version = "0.3.1" }
 #spooky-core = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", default-features = false, features = ["static_maze"]}
 #spooky-embedded = { git = "https://github.com/georgik/esp32-spooky-maze-game.git", rev = "fb5f755", default-features = false, features = [ "esp32s3", "static_maze", "resolution_320x240" ] }
-esp-display-interface-spi-dma = { version = "0.1.0", features = ["esp32s3"] }
+#esp-display-interface-spi-dma = { version = "0.1.0", features = ["esp32s3"] }
 #rustzx-utils = { version = "0.16.0" }
 #rustzx-core = { version = "0.16.0", features = ["embedded-roms"] }
 #rustzx-utils = { path = "../../rustzx/rustzx-utils" }
 #rustzx-core = { path = "../../rustzx/rustzx-core" , features = ["embedded-roms"] }
 rustzx-utils = { git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box" }
 rustzx-core = {  git = "https://github.com/georgik/rustzx.git", branch = "feature/performance-bounding-box", features = ["embedded-roms"] }
-esp-wifi  = { version = "0.3.0", features = [ "wifi", "utils", "tcp", "smoltcp", "dhcpv4", "phy-enable-usb"] }
+#esp-wifi  = { version = "0.3.0", features = [ "wifi", "utils", "tcp", "smoltcp", "dhcpv4", "phy-enable-usb"] }
 
-usb-zx = { path = "../usb-zx" }
-static_cell = { version = "2.0.0", features = ["nightly"] }
+#usb-zx = { path = "../usb-zx" }
 #esp-bsp = { version = "0.1.0" }
-esp-bsp = { git = "https://github.com/georgik/esp-bsp-rs", branch = "feature/display_interface_spi_dma" }
+#esp-bsp = { git = "https://github.com/georgik/esp-bsp-rs", branch = "feature/display_interface_spi_dma" }
 graphics = { path = "../graphics" }
-keyboard-pipe = { path = "../keyboard-pipe" }
-uart-keyboard = { path = "../uart-keyboard", features = [ "esp32s3" ] }
-esp-now-keyboard = { path = "../esp-now-keyboard", features = [ "esp32s3" ] }
+#keyboard-pipe = { path = "../keyboard-pipe" }
+#uart-keyboard = { path = "../uart-keyboard", features = [ "esp32s3" ] }
+#esp-now-keyboard = { path = "../esp-now-keyboard", features = [ "esp32s3" ] }
 emulator = { path = "../emulator", features = [ "esp32_s3_box" ] }
