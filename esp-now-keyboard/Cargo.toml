@@ -11,9 +11,11 @@ esp32c3-hal = { version = "0.15.0", optional = true, default-features = false, f
 esp32c6-hal = { version = "0.8.0", optional = true, default-features = false, features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
 esp32h2-hal = { version = "0.6.0", optional = true, default-features = false, features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
 
-embassy-executor = { version = "0.5.0", package = "embassy-executor", features = ["nightly", "integrated-timers"] }
-embedded-io-async  = "0.6.1"
-embassy-time = { version = "0.3.0" }
+embassy-executor    = { version = "0.7.0", features = ["task-arena-size-20480"] }
+embassy-sync        = "0.7.0"
+embassy-time        = "0.4.0"
+esp-hal-embassy = { version = "0.8.1", features = ["esp32s3"] }
+static_cell         = { version = "2.1.0", features = ["nightly"] }
 esp-wifi  = { version = "0.3.0", features = [ "wifi", "utils", "tcp", "smoltcp", "esp-now"] }
 # hal = { package = "esp32c6-hal", version = "0.7.0" , features = ["embassy", "async", "embassy-time-timg0", "rt", "embassy-executor-thread"] }
 keyboard-pipe = { path = "../keyboard-pipe" }
