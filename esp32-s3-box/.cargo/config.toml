@@ -17,7 +17,6 @@ target = "xtensa-esp32s3-none-elf"
 build-std = [ "core", "alloc" ]
 
 [env]
-# Use clean build after changing ESP_LOGLEVEL
-#ESP_LOGLEVEL="TRACE"
-ESP_LOGLEVEL="DEBUG"
+ESP_LOG="INFO"
+ESP_HAL_CONFIG_PSRAM_MODE = "octal"
 

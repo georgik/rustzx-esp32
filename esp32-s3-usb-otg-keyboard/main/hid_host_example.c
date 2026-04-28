@@ -28,6 +28,7 @@
 #include "espnow.h"
 #include "espnow_storage.h"
 #include "espnow_utils.h"
+#include "usb_otg_detailed_logging.h"
 
 #include "esp_log.h"
 #include "bsp/esp-bsp.h"
@@ -744,7 +745,8 @@ void app_main(void)
 
     // Initialize Power configuration for ESP32-S3-USB-OTG
 // Configure GPIO12 to high (DEV_VBUS_EN)
-    ESP_LOGI(TAG, "Initializing Power configuration for ESP32-S3-USB-OTG");
+    ESP_LOGI(TAG, "Initialising Power configuration for ESP32-S3-USB-OTG");
+    log_complete_usb_otg_state(); // Detailed logging of USB OTG state
     gpio_reset_pin(GPIO_DEV_VBUS_EN);
     gpio_set_direction(GPIO_DEV_VBUS_EN, GPIO_MODE_OUTPUT);
     gpio_set_level(GPIO_DEV_VBUS_EN, 1);
